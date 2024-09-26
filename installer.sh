@@ -2,17 +2,17 @@
 
 # Function to display usage
 usage() {
-  echo "Usage: $0 [-u user] config_file machine"
+  echo "Usage: $0 [-u user] machine config_file"
   echo "  -u user      Specify the remote user (optional, defaults to current user)"
-  echo "  config_file  Path to the configuration file"
   echo "  machine      Target machine's IP address or hostname"
+  echo "  config_file  Path to the configuration file"
   exit 1
 }
 
 # Initialize variables
 REMOTE_USER=$(whoami) # Default to current user
-CONFIG_FILE=""
 MACHINE=""
+CONFIG_FILE=""
 
 # Parse options
 while getopts "u:" opt; do
@@ -34,8 +34,8 @@ if [ $# -ne 2 ]; then
   usage
 fi
 
-CONFIG_FILE="$1"
-MACHINE="$2"
+MACHINE="$1"
+CONFIG_FILE="$2"
 
 # Check if configuration file exists
 if [ ! -f "$CONFIG_FILE" ]; then
