@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Default output format
-if [ -t 1 ]; then
+if [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [ -t 1 ]; then
     OUTPUT_FORMAT="ansi"
 else
     OUTPUT_FORMAT="json"
@@ -25,6 +25,14 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
+# export set     red="%{\033[1;31m%}"
+# export set   green="%{\033[1;32m%}"
+# export set  yellow="%{\033[1;33m%}"
+# export set    blue="%{\033[1;34m%}"
+# export set magenta="%{\033[1;35m%}"
+# export set    cyan="%{\033[1;36m%}"
+# export set   white="%{\033[1;37m%}"
+# export set     end="%{\033[0m%}" 
 
 # Initialize JSON_MESSAGES
 JSON_MESSAGES=""
@@ -113,6 +121,6 @@ done
 
 # Output JSON_MESSAGES if in JSON format
 if [ "$OUTPUT_FORMAT" = "json" ]; then
-    echo "[$JSON_MESSAGES]"
+    printf "[$JSON_MESSAGES]"
 fi
 
