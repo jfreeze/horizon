@@ -1,23 +1,23 @@
 #!/bin/sh
 
-# Default output format
-if [ -n "$SSH_TTY" ] || [ -n "$SSH_CONNECTION" ] || [ -t 1 ]; then
-    OUTPUT_FORMAT="ansi"
-else
-    OUTPUT_FORMAT="json"
-fi
+# Default output format and quiet mode
+OUTPUT_FORMAT="ansi"
+QUIET="false"
 
 # Parse command-line arguments
-for arg in "$@"; do
-    case $arg in
+while [ $# -gt 0 ]; do
+    case "$1" in
         --output-format=*)
-        OUTPUT_FORMAT="${arg#*=}"
-        shift
-        ;;
+            OUTPUT_FORMAT="${1#*=}"
+            ;;
+        --quiet)
+            QUIET="true"
+            ;;
         *)
-        # Unknown option
-        ;;
+            # Unknown option
+            ;;
     esac
+    shift
 done
 
 # Define colors
@@ -25,14 +25,6 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
-# export set     red="%{\033[1;31m%}"
-# export set   green="%{\033[1;32m%}"
-# export set  yellow="%{\033[1;33m%}"
-# export set    blue="%{\033[1;34m%}"
-# export set magenta="%{\033[1;35m%}"
-# export set    cyan="%{\033[1;36m%}"
-# export set   white="%{\033[1;37m%}"
-# export set     end="%{\033[0m%}" 
 
 # Initialize JSON_MESSAGES
 JSON_MESSAGES=""
@@ -60,7 +52,7 @@ output_message() {
             ;;
         json)
             # Escape quotes and backslashes in message
-            ESCAPED_MESSAGE=$(printf '%s' "$MESSAGE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
+            ESCAPED_MESSAGE=$(echo -e "$MESSAGE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
             # Append JSON object to JSON_MESSAGES
             if [ -z "$JSON_MESSAGES" ]; then
                 JSON_MESSAGES="{\"status\":\"$STATUS\",\"message\":\"$ESCAPED_MESSAGE\"}"
@@ -83,8 +75,18 @@ is_service_app() {
     esac
 }
 
+# Function to run commands with optional quiet mode
+run_cmd() {
+    if [ "$QUIET" = "true" ]; then
+        "$@" >/dev/null 2>&1
+    else
+        "$@"
+    fi
+    return $?
+}
+
 # List of apps to install
-APPS="nginx"
+APPS="nginx git erlang-runtime27-27.0"
 
 # List of services to enable and start
 SERVICES="nginx"
@@ -95,7 +97,7 @@ for APP in $APPS; do
         output_message "not_needed" "$APP is already installed."
     else
         # Try to install the package
-        if doas pkg install -y "$APP" >/dev/null 2>&1; then
+        if run_cmd doas pkg install -y "$APP"; then
             output_message "success" "$APP installed successfully."
         else
             output_message "error" "Failed to install $APP."
@@ -105,16 +107,25 @@ for APP in $APPS; do
 
     # If app is a service, enable and start it
     if is_service_app "$APP"; then
-        if doas sysrc "${APP}_enable=YES" >/dev/null 2>&1; then
+        if run_cmd doas sysrc "${APP}_enable=YES"; then
             output_message "success" "$APP service enabled."
         else
             output_message "error" "Failed to enable $APP service."
         fi
 
-        if doas service "$APP" start >/dev/null 2>&1; then
-            output_message "success" "$APP service started."
+        # Check if the service is already running
+        run_cmd doas service "$APP" status
+        SERVICE_STATUS=$?
+
+        if [ $SERVICE_STATUS -eq 0 ]; then
+            output_message "not_needed" "$APP service is already running."
         else
-            output_message "error" "Failed to start $APP service."
+            # Attempt to start the service
+            if run_cmd doas service "$APP" start; then
+                output_message "success" "$APP service started."
+            else
+                output_message "error" "Failed to start $APP service."
+            fi
         fi
     fi
 done
