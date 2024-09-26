@@ -12,8 +12,11 @@ INSTALL_SCRIPT="./install_script.sh"
 ARGS=""
 
 while IFS= read -r line; do
-  # Remove comments and skip empty lines
-  line=$(echo "$line" | sed 's/#.*//')
+  # Remove comments starting with '#' and trim whitespace
+  line="${line%%\#*}"    # Remove comments
+  line="$(echo "$line")" # Remove leading and trailing whitespace
+
+  # Skip empty lines
   if [ -z "$line" ]; then
     continue
   fi
@@ -33,8 +36,8 @@ while IFS= read -r line; do
     ARGS="$ARGS --service $SERVICE"
     ;;
   path:*)
-    PATH="${line#path:}"
-    ARGS="$ARGS --path $PATH"
+    PATH_VAL="${line#path:}"
+    ARGS="$ARGS --path $PATH_VAL"
     ;;
   *)
     echo "Unknown config line: $line"
@@ -44,4 +47,5 @@ while IFS= read -r line; do
 done <"$CONFIG_FILE"
 
 # Call the installer script with the parsed arguments
-sh "$INSTALL_SCRIPT" $ARGS
+echo $ARGS
+#sh "$INSTALL_SCRIPT" $ARGS
