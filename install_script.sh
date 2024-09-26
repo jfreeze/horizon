@@ -45,16 +45,16 @@ output_message() {
         ansi)
             case "$STATUS" in
                 success)
-                    echo "${GREEN}${MESSAGE}${NC}"
+                    echo -e "${GREEN}${MESSAGE}${NC}"
                     ;;
                 error)
-                    echo "${RED}${MESSAGE}${NC}"
+                    echo -e "${RED}${MESSAGE}${NC}"
                     ;;
                 not_needed)
-                    echo "${YELLOW}${MESSAGE}${NC}"
+                    echo -e "${YELLOW}${MESSAGE}${NC}"
                     ;;
                 *)
-                    echo "$MESSAGE"
+                    echo -e "$MESSAGE"
                     ;;
             esac
             ;;
@@ -69,7 +69,7 @@ output_message() {
             fi
             ;;
         *)
-            echo "$MESSAGE"
+            echo -e "$MESSAGE"
             ;;
     esac
 }
@@ -121,6 +121,5 @@ done
 
 # Output JSON_MESSAGES if in JSON format
 if [ "$OUTPUT_FORMAT" = "json" ]; then
-    printf "[$JSON_MESSAGES]"
+    echo -e "[$JSON_MESSAGES]"
 fi
-
