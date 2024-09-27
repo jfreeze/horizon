@@ -5,12 +5,13 @@
 # ==============================
 APP_NAME="fbsd_deploy" # Replace with your application's name
 TARGET_DIR="/usr/local/$APP_NAME"
-BUILD_MACHINE_USER="jimfreeze"       # Replace with your build machine username
-BUILD_MACHINE_HOST="192.168.100.176" # Replace with your build machine hostname or IP
-REPO_DIR="."                         # Local repository path
+BUILD_MACHINE_USER="jimfreeze"                                            # Replace with your build machine username
+BUILD_MACHINE_HOST="192.168.100.176"                                      # Replace with your build machine hostname or IP
+REPO_DIR="/Users/jimfreeze/Documents/PARA/Projects/dev/freebsd-installer" # Ensure no trailing space
 
 # Default deployment method
 DEPLOY_METHOD="auto" # Options: auto, rsync, tar
+FORCE_DEPLOY=0       # 0 = do not force, 1 = force deployment with uncommitted changes
 
 # ==============================
 # Functions
@@ -18,7 +19,7 @@ DEPLOY_METHOD="auto" # Options: auto, rsync, tar
 
 # Function to display usage
 usage() {
-  echo "Usage: $0 [--rsync | --tar]"
+  echo "Usage: $0 [--rsync | --tar] [--force]"
   exit 1
 }
 
@@ -30,8 +31,12 @@ get_commit_hash() {
 # Function to check for uncommitted changes
 check_uncommitted_changes() {
   if ! git -C "$REPO_DIR" diff-index --quiet HEAD --; then
-    echo "Error: You have uncommitted changes. Please commit or stash them before deploying."
-    exit 1
+    if [ "$FORCE_DEPLOY" -eq 1 ]; then
+      echo "Warning: You have uncommitted changes. Proceeding with deployment."
+    else
+      echo "Error: You have uncommitted changes. Please commit or stash them before deploying."
+      exit 1
+    fi
   fi
 }
 
@@ -58,8 +63,11 @@ deploy_tar_scp() {
   ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "
         doas mkdir -p $TARGET_DIR &&
         doas tar -xzf /tmp/deploy.tar.gz -C $TARGET_DIR &&
-        rm /tmp/deploy.tar.gz
+        doas rm /tmp/deploy.tar.gz
     "
+
+  # Transfer the commit hash for verification with doas
+  echo "$COMMIT_HASH" | ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas mkdir -p $TARGET_DIR && doas tee $TARGET_DIR/COMMIT_HASH > /dev/null"
 
   # Remove the temporary tarball locally
   rm "$TAR_FILE"
@@ -112,6 +120,10 @@ while [[ $# -gt 0 ]]; do
     DEPLOY_METHOD="tar"
     shift
     ;;
+  --force)
+    FORCE_DEPLOY=1
+    shift
+    ;;
   -h | --help)
     usage
     ;;
@@ -144,8 +156,11 @@ echo "Current commit hash: $COMMIT_HASH"
 # Deploy the files using the selected method
 deploy_files
 
-# Transfer the commit hash for verification
-echo "$COMMIT_HASH" | ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas mkdir -p $TARGET_DIR && cat > $TARGET_DIR/COMMIT_HASH"
+# Transfer the commit hash for verification (handled in deploy_rsync or deploy_tar_scp)
+# If deploying via rsync, ensure the commit hash is transferred
+if [ "$DEPLOY_METHOD" = "rsync" ] || [ "$DEPLOY_METHOD" = "auto" ]; then
+  echo "$COMMIT_HASH" | ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas mkdir -p $TARGET_DIR && doas tee $TARGET_DIR/COMMIT_HASH > /dev/null"
+fi
 
 # Verify the deployment
 verify_deployment
