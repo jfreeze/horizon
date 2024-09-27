@@ -84,51 +84,20 @@ deploy_rsync() {
   fi
 }
 
-# Function to deploy files using tar and scp
+# Function to deploy files using tar and ssh pipeline
 deploy_tar_scp() {
-  echo -e "${GREEN}Deploying using tar and scp...${NC}"
+  echo -e "${GREEN}Deploying using tar and ssh pipeline...${NC}"
 
-  # Create a unique temporary directory
-  TEMP_DIR=$(mktemp -d /tmp/deploy.XXXXXX)
-  if [ ! -d "$TEMP_DIR" ]; then
-    echo -e "${RED}Error: Failed to create temporary directory.${NC}"
-    exit 1
-  fi
+  # Create the target directory on the remote machine if it doesn't exist
+  ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas mkdir -p \"$TARGET_DIR\""
 
-  # Define the tarball path
-  TAR_FILE="$TEMP_DIR/deploy.tar.gz"
-
-  # Create the tarball excluding the .git directory and other unwanted files
-  tar --exclude='.git' --exclude='*.tmp' -czf "$TAR_FILE" -C "$REPO_DIR" .
+  # Stream the tarball directly to the remote machine and extract it
+  tar --exclude='.git' --exclude='*.tmp' -czvp . | ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas tar -xzvp -C \"$TARGET_DIR\""
 
   if [ $? -ne 0 ]; then
-    echo -e "${RED}Error: Failed to create tarball.${NC}"
-    rm -rf "$TEMP_DIR"
+    echo -e "${RED}Error: tar and ssh pipeline failed.${NC}" >&2
     exit 1
   fi
-
-  # Transfer the tarball to the build machine
-  scp "$TAR_FILE" "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST:/tmp/deploy.tar.gz"
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}Error: Failed to transfer tarball via scp.${NC}"
-    rm -rf "$TEMP_DIR"
-    exit 1
-  fi
-
-  # Extract the tarball on the build machine
-  ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "
-    doas mkdir -p $TARGET_DIR &&
-    doas tar -xzf /tmp/deploy.tar.gz -C $TARGET_DIR &&
-    doas rm /tmp/deploy.tar.gz
-  "
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}Error: Failed to extract tarball on the build machine.${NC}"
-    rm -rf "$TEMP_DIR"
-    exit 1
-  fi
-
-  # Remove the temporary tarball locally
-  rm -rf "$TEMP_DIR"
 }
 
 verify() {
