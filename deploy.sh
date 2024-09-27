@@ -68,10 +68,10 @@ compute_remote_hash() {
   ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "cd \"$TARGET_DIR\" && find . -type f ! -path \"./.git/*\" ! -name \"*.tmp\" -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print \$1}'"
 }
 
-# Function to deploy files using rsync
+# Function to deploy files using rsync with checksum verification
 deploy_rsync() {
-  echo -e "${GREEN}Deploying using rsync...${NC}"
-  rsync -avz --delete \
+  echo -e "${GREEN}Deploying using rsync with checksum verification...${NC}"
+  rsync -avzc --delete \
     --rsync-path="doas rsync" \
     --exclude='.git' \
     --exclude='*.tmp' \
@@ -79,7 +79,7 @@ deploy_rsync() {
     "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST:$TARGET_DIR/"
 
   if [ $? -ne 0 ]; then
-    echo -e "${RED}Error: rsync failed.${NC}"
+    echo -e "${RED}Error: rsync failed.${NC}" >&2
     exit 1
   fi
 }
@@ -129,6 +129,17 @@ deploy_tar_scp() {
 
   # Remove the temporary tarball locally
   rm -rf "$TEMP_DIR"
+}
+
+verify() {
+  case "$DEPLOY_METHOD" in
+  tar)
+    verify_deployment
+    ;;
+  *)
+    echo -e "Using rsync checksum for verification"
+    ;;
+  esac
 }
 
 # Function to verify deployment integrity by comparing hashes
@@ -222,6 +233,6 @@ echo -e "${GREEN}Current commit hash: $COMMIT_HASH${NC}"
 deploy_files
 
 # Verify the deployment
-verify_deployment
+verify
 
 echo -e "${GREEN}Deployment process completed.${NC}"
