@@ -171,9 +171,11 @@ deploy_files() {
   auto)
     if command -v rsync >/dev/null 2>&1; then
       deploy_rsync
+      DEPLOY_METHOD="rsync"
     else
       echo -e "${RED}rsync not found. Falling back to tar and scp.${NC}"
       deploy_tar_scp
+      DEPLOY_METHOD="tar"
     fi
     ;;
   *)
