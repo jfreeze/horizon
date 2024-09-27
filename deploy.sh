@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 
 # ==============================
 # Configuration
@@ -45,8 +45,9 @@ deploy_rsync() {
   echo "Deploying using rsync..."
   rsync -avz --delete \
     --exclude='.git' \
-    --exclude='*.tmp' \  # Add any other patterns to exclude
-  "$REPO_DIR/$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST:$TARGET_DIR/"
+    --exclude='*.tmp' \
+    "$REPO_DIR/" \
+    "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST:$TARGET_DIR/"
 }
 
 # Function to deploy files using tar and scp
@@ -57,7 +58,7 @@ deploy_tar_scp() {
   tar --exclude='.git' --exclude='*.tmp' -czf "$TAR_FILE" -C "$REPO_DIR" .
 
   # Transfer the tarball to the build machine
-  scp -X "$TAR_FILE" "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST:/tmp/deploy.tar.gz"
+  scp "$TAR_FILE" "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST:/tmp/deploy.tar.gz"
 
   # Extract the tarball on the build machine
   ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "
