@@ -47,6 +47,27 @@ check_uncommitted_changes() {
   fi
 }
 
+# Function to compute a hash of the local directory
+compute_local_hash() {
+  echo -e "${GREEN}Computing local deployment hash...${NC}" >&2
+
+  # Change to the repository directory
+  cd "$REPO_DIR" || {
+    echo -e "${RED}Error: Repository directory not found!${NC}" >&2
+    exit 1
+  }
+
+  # Find all files, sort them, compute SHA256 hashes, and aggregate them
+  # Excluding .git and other unwanted files
+  find . -type f ! -path "./.git/*" ! -name "*.tmp" -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}'
+}
+# Function to compute a hash of the remote directory
+compute_remote_hash() {
+  echo -e "${GREEN}Computing remote deployment hash...${NC}" >&2
+
+  ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "cd \"$TARGET_DIR\" && find . -type f ! -path \"./.git/*\" ! -name \"*.tmp\" -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print \$1}'"
+}
+
 # Function to deploy files using rsync
 deploy_rsync() {
   echo -e "${GREEN}Deploying using rsync...${NC}"
@@ -106,25 +127,24 @@ deploy_tar_scp() {
     exit 1
   fi
 
-  # Transfer the commit hash for verification with doas
-  echo "$COMMIT_HASH" | ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas mkdir -p $TARGET_DIR && doas tee $TARGET_DIR/COMMIT_HASH > /dev/null"
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}Error: Failed to transfer commit hash.${NC}"
-    rm -rf "$TEMP_DIR"
-    exit 1
-  fi
-
   # Remove the temporary tarball locally
   rm -rf "$TEMP_DIR"
 }
 
-# Function to verify deployment
+# Function to verify deployment integrity by comparing hashes
 verify_deployment() {
-  REMOTE_COMMIT_HASH=$(ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "cat $TARGET_DIR/COMMIT_HASH 2>/dev/null")
-  if [ "$COMMIT_HASH" == "$REMOTE_COMMIT_HASH" ]; then
-    echo -e "${GREEN}Deployment verified: Commit hash matches.${NC}"
+  echo -e "${GREEN}Verifying deployment integrity...${NC}"
+
+  LOCAL_HASH=$(compute_local_hash)
+  REMOTE_HASH=$(compute_remote_hash)
+
+  echo -e "${GREEN}Local deployment hash: $LOCAL_HASH${NC}"
+  echo -e "${GREEN}Remote deployment hash: $REMOTE_HASH${NC}"
+
+  if [ "$LOCAL_HASH" == "$REMOTE_HASH" ]; then
+    echo -e "${GREEN}Deployment verified: Deployment hashes match.${NC}"
   else
-    echo -e "${RED}Warning: Commit hash does not match. Deployment may be incomplete.${NC}"
+    echo -e "${RED}Warning: Deployment hashes do not match. Deployment may be incomplete or corrupted.${NC}"
   fi
 }
 
@@ -200,16 +220,6 @@ echo -e "${GREEN}Current commit hash: $COMMIT_HASH${NC}"
 
 # Deploy the files using the selected method
 deploy_files
-
-# Transfer the commit hash for verification (handled in deploy_rsync or deploy_tar_scp)
-# If deploying via rsync, ensure the commit hash is transferred
-if [ "$DEPLOY_METHOD" = "rsync" ] || [ "$DEPLOY_METHOD" = "auto" ]; then
-  echo "$COMMIT_HASH" | ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas mkdir -p $TARGET_DIR && doas tee $TARGET_DIR/COMMIT_HASH > /dev/null"
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}Error: Failed to transfer commit hash.${NC}"
-    exit 1
-  fi
-fi
 
 # Verify the deployment
 verify_deployment
