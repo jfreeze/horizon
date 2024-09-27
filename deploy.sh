@@ -17,6 +17,7 @@ FORCE_DEPLOY=0       # 0 = do not force, 1 = force deployment with uncommitted c
 # Color Definitions
 # ==============================
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
@@ -39,9 +40,9 @@ get_commit_hash() {
 check_uncommitted_changes() {
   if ! git -C "$REPO_DIR" diff-index --quiet HEAD --; then
     if [ "$FORCE_DEPLOY" -eq 1 ]; then
-      echo -e "${RED}Warning: You have uncommitted changes. Proceeding with deployment.${NC}"
+      echo -e "${RED}Warning: You have uncommitted changes. Proceeding with deployment.${NC}" >&2
     else
-      echo -e "${RED}Error: You have uncommitted changes. Please commit or stash them before deploying.${NC}"
+      echo -e "${RED}Error: You have uncommitted changes. Please commit or stash them before deploying.${NC}" >&2
       exit 1
     fi
   fi
@@ -124,7 +125,7 @@ verify_deployment() {
   if [ "$LOCAL_HASH" == "$REMOTE_HASH" ]; then
     echo -e "${GREEN}Deployment verified: Deployment hashes match.${NC}"
   else
-    echo -e "${RED}Warning: Deployment hashes do not match. Deployment may be incomplete or corrupted.${NC}"
+    echo -e "${YELLOW}Warning: Deployment hashes do not match. Target may have pre-existing files or deployment may be incomplete or corrupted.${NC}"
   fi
 }
 
@@ -142,13 +143,13 @@ deploy_files() {
       deploy_rsync
       DEPLOY_METHOD="rsync"
     else
-      echo -e "${RED}rsync not found. Falling back to tar and scp.${NC}"
+      echo -e "${RED}rsync not found. Falling back to tar and ssh pipeline.${NC}" >&2
       deploy_tar_scp
       DEPLOY_METHOD="tar"
     fi
     ;;
   *)
-    echo -e "${RED}Invalid deployment method: $DEPLOY_METHOD${NC}"
+    echo -e "${RED}Invalid deployment method: $DEPLOY_METHOD${NC}" >&2
     exit 1
     ;;
   esac
@@ -175,11 +176,26 @@ while [[ $# -gt 0 ]]; do
     usage
     ;;
   *)
-    echo -e "${RED}Unknown option: $1${NC}"
+    echo -e "${RED}Unknown option: $1${NC}" >&2
     usage
     ;;
   esac
 done
+
+# ==============================
+# Locking Mechanism to Prevent Concurrent Deployments
+# ==============================
+LOCK_FILE="/tmp/deploy.lock"
+
+if [ -e "$LOCK_FILE" ]; then
+  echo -e "${RED}Another deployment is in progress. Exiting.${NC}" >&2
+  exit 1
+fi
+
+touch "$LOCK_FILE"
+
+# Ensure the lock is removed on script exit
+trap "rm -f $LOCK_FILE" EXIT
 
 # ==============================
 # Main Deployment Steps
@@ -189,7 +205,7 @@ echo -e "${GREEN}Starting deployment process...${NC}"
 
 # Navigate to the repository directory
 cd "$REPO_DIR" || {
-  echo -e "${RED}Error: Repository directory not found!${NC}"
+  echo -e "${RED}Error: Repository directory not found!${NC}" >&2
   exit 1
 }
 
