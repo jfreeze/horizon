@@ -5,9 +5,8 @@
 # ==============================
 APP_NAME="fbsd_deploy" # Replace with your application's name
 TARGET_DIR="/usr/local/$APP_NAME"
-BUILD_MACHINE_USER="jimfreeze"                                            # Replace with your build machine username
-BUILD_MACHINE_HOST="192.168.100.176"                                      # Replace with your build machine hostname or IP
-REPO_DIR="/Users/jimfreeze/Documents/PARA/Projects/dev/freebsd-installer" # Ensure no trailing space
+BUILD_MACHINE_USER="jimfreeze"       # Replace with your build machine username
+BUILD_MACHINE_HOST="192.168.100.176" # Replace with your build machine hostname or IP
 REPO_DIR=$(cd "$(dirname "$0")/.." && pwd)
 
 # Default deployment method
