@@ -53,25 +53,50 @@ deploy_rsync() {
 # Function to deploy files using tar and scp
 deploy_tar_scp() {
   echo "Deploying using tar and scp..."
-  # Create a temporary tarball excluding the .git directory and other unwanted files
-  TAR_FILE=$(mktemp /tmp/deploy.XXXXXX.tar.gz)
+
+  # Create a unique temporary directory
+  TEMP_DIR=$(mktemp -d /tmp/deploy.XXXXXX)
+  if [ ! -d "$TEMP_DIR" ]; then
+    echo "Error: Failed to create temporary directory."
+    exit 1
+  fi
+
+  # Define the tarball path
+  TAR_FILE="$TEMP_DIR/deploy.tar.gz"
+
+  # Create the tarball excluding the .git directory and other unwanted files
   tar --exclude='.git' --exclude='*.tmp' -czf "$TAR_FILE" -C "$REPO_DIR" .
 
   # Transfer the tarball to the build machine
   scp "$TAR_FILE" "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST:/tmp/deploy.tar.gz"
+  if [ $? -ne 0 ]; then
+    echo "Error: Failed to transfer tarball via scp."
+    rm -rf "$TEMP_DIR"
+    exit 1
+  fi
 
   # Extract the tarball on the build machine
   ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "
-        doas mkdir -p $TARGET_DIR &&
-        doas tar -xzf /tmp/deploy.tar.gz -C $TARGET_DIR &&
-        doas rm /tmp/deploy.tar.gz
-    "
+    doas mkdir -p $TARGET_DIR &&
+    doas tar -xzf /tmp/deploy.tar.gz -C $TARGET_DIR &&
+    doas rm /tmp/deploy.tar.gz
+  "
+  if [ $? -ne 0 ]; then
+    echo "Error: Failed to extract tarball on the build machine."
+    rm -rf "$TEMP_DIR"
+    exit 1
+  fi
 
   # Transfer the commit hash for verification with doas
   echo "$COMMIT_HASH" | ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas mkdir -p $TARGET_DIR && doas tee $TARGET_DIR/COMMIT_HASH > /dev/null"
+  if [ $? -ne 0 ]; then
+    echo "Error: Failed to transfer commit hash."
+    rm -rf "$TEMP_DIR"
+    exit 1
+  fi
 
   # Remove the temporary tarball locally
-  rm "$TAR_FILE"
+  rm -rf "$TEMP_DIR"
 }
 
 # Function to verify deployment
