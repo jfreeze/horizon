@@ -41,13 +41,20 @@ check_uncommitted_changes() {
 }
 
 # Function to deploy files using rsync
+# Function to deploy files using rsync
 deploy_rsync() {
   echo "Deploying using rsync..."
   rsync -avz --delete \
+    --rsync-path="doas rsync" \
     --exclude='.git' \
     --exclude='*.tmp' \
     "$REPO_DIR/" \
     "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST:$TARGET_DIR/"
+
+  if [ $? -ne 0 ]; then
+    echo "Error: rsync failed."
+    exit 1
+  fi
 }
 
 # Function to deploy files using tar and scp
