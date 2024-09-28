@@ -1,13 +1,26 @@
 #!/bin/bash -e
 
+#
+# This script is used to copy the application to a remote machine.
+# It is a part of the deploy process, and limits its function
+# to copying the project files to the remote machine.
+#
+# Required Assigns:
+# - app
+# - build_machine_user
+# - build_machine_host
+# - build_dir
+# - data_dir
+#
+
 # ==============================
 # Configuration
 # ==============================
-APP_NAME="fbsd_deploy" # Replace with your application's name
-TARGET_DIR="/usr/local/$APP_NAME"
-BUILD_MACHINE_USER="jimfreeze"       # Replace with your build machine username
-BUILD_MACHINE_HOST="192.168.100.176" # Replace with your build machine hostname or IP
-REPO_DIR=$(cd "$(dirname "$0")/.." && pwd)
+APP_NAME="<%= @app %>"
+TARGET_DIR=<%= @build_dir %>
+BUILD_MACHINE_USER="<%= @build_machine_user %>"
+BUILD_MACHINE_HOST="<%= @build_machine_host %>"
+LOCAL_REPO_DIR=$(cd "$(dirname "$0")/.." && pwd)
 
 # Default deployment method
 DEPLOY_METHOD="auto" # Options: auto, rsync, tar
@@ -33,12 +46,12 @@ usage() {
 
 # Function to get the current commit hash
 get_commit_hash() {
-  git -C "$REPO_DIR" rev-parse HEAD
+  git -C "$LOCAL_REPO_DIR" rev-parse HEAD
 }
 
 # Function to check for uncommitted changes
 check_uncommitted_changes() {
-  if ! git -C "$REPO_DIR" diff-index --quiet HEAD --; then
+  if ! git -C "$LOCAL_REPO_DIR" diff-index --quiet HEAD --; then
     if [ "$FORCE_DEPLOY" -eq 1 ]; then
       echo -e "${RED}Warning: You have uncommitted changes. Proceeding with deployment.${NC}" >&2
     else
@@ -53,7 +66,7 @@ compute_local_hash() {
   echo -e "${GREEN}Computing local deployment hash...${NC}" >&2
 
   # Change to the repository directory
-  cd "$REPO_DIR" || {
+  cd "$LOCAL_REPO_DIR" || {
     echo -e "${RED}Error: Repository directory not found!${NC}" >&2
     exit 1
   }
@@ -62,6 +75,7 @@ compute_local_hash() {
   # Excluding .git and other unwanted files
   find . -type f ! -path "./.git/*" ! -name "*.tmp" -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}'
 }
+
 # Function to compute a hash of the remote directory
 compute_remote_hash() {
   echo -e "${GREEN}Computing remote deployment hash...${NC}" >&2
@@ -71,12 +85,13 @@ compute_remote_hash() {
 
 # Function to deploy files using rsync with checksum verification
 deploy_rsync() {
+  ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas mkdir -p $TARGET_DIR"
   echo -e "${GREEN}Deploying using rsync with checksum verification...${NC}"
   rsync -avzc --delete \
     --rsync-path="doas rsync" \
     --exclude='.git' \
     --exclude='*.tmp' \
-    "$REPO_DIR/" \
+    "$LOCAL_REPO_DIR/" \
     "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST:$TARGET_DIR/"
 
   if [ $? -ne 0 ]; then
@@ -185,7 +200,7 @@ done
 # ==============================
 # Locking Mechanism to Prevent Concurrent Deployments
 # ==============================
-LOCK_FILE="/tmp/deploy.lock"
+LOCK_FILE="/tmp/<%= @app %>.deploy.lock"
 
 if [ -e "$LOCK_FILE" ]; then
   echo -e "${RED}Another deployment is in progress. Exiting.${NC}" >&2
@@ -204,7 +219,7 @@ trap "rm -f $LOCK_FILE" EXIT
 echo -e "${GREEN}Starting deployment process...${NC}"
 
 # Navigate to the repository directory
-cd "$REPO_DIR" || {
+cd "$LOCAL_REPO_DIR" || {
   echo -e "${RED}Error: Repository directory not found!${NC}" >&2
   exit 1
 }

@@ -70,7 +70,7 @@ echo "Arguments to pass: $INSTALL_ARGS"
 # Using SSH with the specified user and machine
 # The -- ensures that sh does not interpret any further options
 # Properly quote the arguments to handle spaces or special characters
-# ssh "${REMOTE_USER}@${MACHINE}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"
+ssh "${REMOTE_USER}@${MACHINE}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"
 
 # Alternatively, if you prefer piping:
-cat "$INSTALL_SCRIPT" | ssh "${REMOTE_USER}@${MACHINE}" "sh -s -- $INSTALL_ARGS"
+# cat "$INSTALL_SCRIPT" | ssh "${REMOTE_USER}@${MACHINE}" "sh -s -- $INSTALL_ARGS"

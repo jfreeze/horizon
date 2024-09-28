@@ -1,13 +1,16 @@
-#!/bin/bash
+#!/bin/sh
 
 # Exit immediately if a command exits with a non-zero status
 set -e
+
+. ./horizon_helpers.sh
 
 # Set the Mix environment to production
 export MIX_ENV=prod
 
 # Define paths (adjust if your project structure differs)
 APP_DIR=$(cd "$(dirname "$0")/.." && pwd)
+DATA_DIR=<%= @data_dir %>
 
 # Navigate to the project directory
 cd "$APP_DIR"
@@ -16,7 +19,20 @@ echo "=== Starting Release Process ==="
 
 # Step 1: Setup Assets
 echo "--- Setting up assets ---"
-mix assets.setup
+mix local.hex --force
+mix deps.get
+
+# Will need to manually check if tailwind for freebsd is installed as currently the --if-missing flag is not supported when passing in an argument
+## install tailwind if it is not installed
+arch = get_arch()
+echo $arch
+
+if [ ! -d "/usr/local/horizon/builds/phx_only/_build/tailwind-freebsd-x64" ]; then
+  mix assets.setup.freebsd
+fi
+
+## 14:37:15.794 [debug] Downloading tailwind from https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.0/tailwindcss-freebsd-x64
+## ** (RuntimeError) Couldn't fetch https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.0/tailwindcss-freebsd-x64
 
 # Step 2: Clean Existing Digests
 echo "--- Cleaning existing digests ---"
