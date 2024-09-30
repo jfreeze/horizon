@@ -1,5 +1,15 @@
 #!/bin/bash -e
 
+# let's name this
+# copy_phx_only.sh
+# there will be one for each release.
+# copy_<release_name>.sh
+# The problem with this is that is we're getting
+# the build_dir from config, and we should be getting
+# it from release since each release will need it's own
+# build_dir.
+#
+
 #
 # This script is used to copy the application to a remote machine.
 # It is a part of the deploy process, and limits its function
@@ -17,10 +27,10 @@
 # Configuration
 # ==============================
 APP_NAME="<%= @app %>"
-TARGET_DIR=<%= @build_dir %>
+SRC_REPO_DIR=$(cd "$(dirname "$0")/.." && pwd)
+TGT_REPO_DIR=<%= @build_dir %>
 BUILD_MACHINE_USER="<%= @build_machine_user %>"
 BUILD_MACHINE_HOST="<%= @build_machine_host %>"
-LOCAL_REPO_DIR=$(cd "$(dirname "$0")/.." && pwd)
 
 # Default deployment method
 DEPLOY_METHOD="auto" # Options: auto, rsync, tar
@@ -46,12 +56,12 @@ usage() {
 
 # Function to get the current commit hash
 get_commit_hash() {
-  git -C "$LOCAL_REPO_DIR" rev-parse HEAD
+  git -C "$SRC_REPO_DIR" rev-parse HEAD
 }
 
 # Function to check for uncommitted changes
 check_uncommitted_changes() {
-  if ! git -C "$LOCAL_REPO_DIR" diff-index --quiet HEAD --; then
+  if ! git -C "$SRC_REPO_DIR" diff-index --quiet HEAD --; then
     if [ "$FORCE_DEPLOY" -eq 1 ]; then
       echo -e "${RED}Warning: You have uncommitted changes. Proceeding with deployment.${NC}" >&2
     else
@@ -66,7 +76,7 @@ compute_local_hash() {
   echo -e "${GREEN}Computing local deployment hash...${NC}" >&2
 
   # Change to the repository directory
-  cd "$LOCAL_REPO_DIR" || {
+  cd "$SRC_REPO_DIR" || {
     echo -e "${RED}Error: Repository directory not found!${NC}" >&2
     exit 1
   }
@@ -80,19 +90,21 @@ compute_local_hash() {
 compute_remote_hash() {
   echo -e "${GREEN}Computing remote deployment hash...${NC}" >&2
 
-  ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "cd \"$TARGET_DIR\" && find . -type f ! -path \"./.git/*\" ! -name \"*.tmp\" -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print \$1}'"
+  ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "cd \"$TGT_REPO_DIR\" && find . -type f ! -path \"./.git/*\" ! -name \"*.tmp\" -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print \$1}'"
 }
 
 # Function to deploy files using rsync with checksum verification
 deploy_rsync() {
-  ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas mkdir -p $TARGET_DIR"
+  ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas mkdir -p \"$TGT_REPO_DIR\""
+
   echo -e "${GREEN}Deploying using rsync with checksum verification...${NC}"
   rsync -avzc --delete \
     --rsync-path="doas rsync" \
     --exclude='.git' \
     --exclude='*.tmp' \
-    "$LOCAL_REPO_DIR/" \
-    "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST:$TARGET_DIR/"
+    --exclude='_build' \
+    "$SRC_REPO_DIR/" \
+    "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST:$TGT_REPO_DIR/"
 
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: rsync failed.${NC}" >&2
@@ -105,10 +117,10 @@ deploy_tar_scp() {
   echo -e "${GREEN}Deploying using tar and ssh pipeline...${NC}"
 
   # Create the target directory on the remote machine if it doesn't exist
-  ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas mkdir -p \"$TARGET_DIR\""
+  ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas mkdir -p \"$TGT_REPO_DIR\""
 
   # Stream the tarball directly to the remote machine and extract it
-  tar --exclude='.git' --exclude='*.tmp' -czvp . | ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas tar -xzvp -C \"$TARGET_DIR\""
+  tar --exclude='.git' --exclude='*.tmp' --exclude='_build' -czvp . | ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas tar -xzvp -C \"$TGT_REPO_DIR\""
 
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: tar and ssh pipeline failed.${NC}" >&2
@@ -219,7 +231,7 @@ trap "rm -f $LOCK_FILE" EXIT
 echo -e "${GREEN}Starting deployment process...${NC}"
 
 # Navigate to the repository directory
-cd "$LOCAL_REPO_DIR" || {
+cd "$SRC_REPO_DIR" || {
   echo -e "${RED}Error: Repository directory not found!${NC}" >&2
   exit 1
 }
