@@ -1,9 +1,9 @@
 defmodule Mix.Tasks.Horizon.Init do
   use Mix.Task
-  @shortdoc "Initializes Horizon deployment scripts in bin/"
+  @shortdoc "Creates Horizon deployment scripts"
 
   @moduledoc """
-  Initializes Horizon deploy scripts
+  Creates Horizon deploy scripts in `bin/` and `rel/` directories.
 
   ## Options
 
@@ -11,12 +11,22 @@ defmodule Mix.Tasks.Horizon.Init do
 
   ## Configuration
 
-  You can configure the pathnames and deployment settings in your project's `config/config.exs`.
+  You can configure the path names and deployment settings in your project's `config/config.exs`.
+
+  # Optional configurations for Horizon with their defaults
+  config :horizon, :horizon,
+  #    build_machine_user: System.get_env("BUILD_MACHINE_USER"),
+  #    build_machine_host: System.get_env("BUILD_MACHINE_HOST")
+    bin_dir: "bin",
+    deploy_app: "my_app",
+    build_dir: "/usr/local/opt/my_app/build",
+    data_dir: "/usr/local/opt/my_app/data"
 
   ## Examples
 
       mix horizon.init
       mix horizon.init -y
+
   """
 
   @impl true
@@ -33,6 +43,8 @@ defmodule Mix.Tasks.Horizon.Init do
     config = Application.get_env(:horizon, :horizon, [])
     dbg(config)
     mix_config = Mix.Project.config()
+    dbg(mix_config)
+    dbg(mix_config[:releases])
 
     # Verify mix alias assets.setup.freebsd exists.
     if is_nil(mix_config[:aliases][:"assets.setup.freebsd"]) do
@@ -121,14 +133,18 @@ defmodule Mix.Tasks.Horizon.Init do
 
     # write the full path to tailwind in tailwind.data
     # the fullpath will be in build_dir/tailwind-freebsd-#{arch}
-    tailwind = Path.join([build_dir, "_build", "tailwind-#{target()}"])
-    dbg(tailwind)
+    # tailwind = Path.join([build_dir, "_build", "tailwind-#{Horizon.target()}"])
+    # dbg(tailwind)
 
     # copy horizon_helpers.sh to bin/
     {:ok, script} = get_script_path("horizon_helpers.sh")
-    dbg(script)
+    target = Path.join(bin_dir, "horizon_helpers.sh")
 
-    File.cp(script, Path.join(bin_dir, "horizon_helpers.sh"))
+    IO.puts("\u001b[32;1m  ===> ----------------\u001b[0m")
+    dbg(script)
+    dbg(target)
+    result = File.cp(script, target)
+    dbg(result)
 
     # target_dir = Path.join(File.cwd!(), bin_dir)
     # File.mkdir_p!(target_dir)
@@ -152,26 +168,6 @@ defmodule Mix.Tasks.Horizon.Init do
     # end)
   end
 
-  defp get_template_path(source_template) do
-    case Application.app_dir(:horizon, "priv/templates/horizon/#{source_template}") do
-      nil ->
-        {:error, "Template not found."}
-
-      path ->
-        {:ok, path}
-    end
-  end
-
-  defp get_script_path(source_script) do
-    case Application.app_dir(:horizon, "bin/#{source_script}") do
-      nil ->
-        {:error, "Script not found."}
-
-      path ->
-        {:ok, path}
-    end
-  end
-
   # defp copy_script(source, target) do
   #   case File.cp(source, target) do
   #     :ok ->
@@ -183,22 +179,4 @@ defmodule Mix.Tasks.Horizon.Init do
   #       Mix.shell().error("Failed to copy #{Path.basename(target)}: #{reason}")
   #   end
   # end
-
-  defp target do
-    arch_str = :erlang.system_info(:system_architecture)
-    [arch | _] = arch_str |> List.to_string() |> String.split("-")
-
-    case {:os.type(), arch, :erlang.system_info(:wordsize) * 8} do
-      {{:win32, _}, _arch, 64} -> "windows-x64.exe"
-      {{:unix, :darwin}, arch, 64} when arch in ~w(arm aarch64) -> "macos-arm64"
-      {{:unix, :darwin}, "x86_64", 64} -> "macos-x64"
-      {{:unix, :freebsd}, "aarch64", 64} -> "freebsd-arm64"
-      {{:unix, :freebsd}, "amd64", 64} -> "freebsd-x64"
-      {{:unix, :linux}, "aarch64", 64} -> "linux-arm64"
-      {{:unix, :linux}, "arm", 32} -> "linux-armv7"
-      {{:unix, :linux}, "armv7" <> _, 32} -> "linux-armv7"
-      {{:unix, _osname}, arch, 64} when arch in ~w(x86_64 amd64) -> "linux-x64"
-      {_os, _arch, _wordsize} -> raise "tailwind is not available for architecture: #{arch_str}"
-    end
-  end
 end

@@ -3,7 +3,7 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-. ./horizon_helpers.sh
+. ./bin/horizon_helpers.sh
 
 # Set the Mix environment to production
 export MIX_ENV=prod
@@ -20,14 +20,14 @@ echo "=== Starting Release Process ==="
 # Step 1: Setup Assets
 echo "--- Setting up assets ---"
 mix local.hex --force
-mix deps.get
+mix deps.get --only prod
+
 
 # Will need to manually check if tailwind for freebsd is installed as currently the --if-missing flag is not supported when passing in an argument
 ## install tailwind if it is not installed
-arch = get_arch()
-echo $arch
 
-if [ ! -d "/usr/local/horizon/builds/phx_only/_build/tailwind-freebsd-x64" ]; then
+echo "add code to check if tailwind is installed"
+if [ ! -f "/usr/local/opt/phx_only/build/_build/tailwind-freebsd-x64" ]; then
   mix assets.setup.freebsd
 fi
 
@@ -44,10 +44,16 @@ mix assets.deploy
 
 # Step 4: Create/Update Release
 echo "--- Creating/updating the release ---"
-mix release --overwrite
+user=$(whoami)
+group=$(groups)
+doas mkdir /usr/local/phx_only
+doas chown -R $user:$group /usr/local/phx_only
+MIX_ENV=prod mix release --overwrite
+#MIX_ENV=prod mix release --path ../other/path
 
 # Step 5: Restart the Server
 echo "--- Restarting the server ---"
-doas server app restart
+#doas service <%= @app %> restart
+/usr/local/phx_only/bin/phx_only start_iex
 
 echo "=== Release Process Completed Successfully ==="

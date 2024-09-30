@@ -47,9 +47,9 @@ get_arch() {
 # Description:
 #   Updates the PATH environment variable by adding the binary path of specified packages.
 #   The update is also appended to the .shrc file to persist across sessions.
-#   Supports partial package name matching (e.g., 'erlang-runtime' matches 'erlang-runtime27', 'erlang-runtime28', etc.)
+#   Supports both exact and partial package name matching.
 # Usage:
-#   update_path partial_package_name1 partial_package_name2 ...
+#   update_path package_name1 package_name2 ...
 
 update_path() {
   # Define the shell RC file (modify if using a different shell)
@@ -63,87 +63,125 @@ update_path() {
     }
   fi
 
-  # Iterate over all provided partial package names
-  for partial_pkg in "$@"; do
-    # Find all installed packages matching the partial name
-    matching_pkgs=$(pkg info | awk -v prefix="$partial_pkg" '$1 ~ "^"prefix {print $1}')
-
-    if [ -z "$matching_pkgs" ]; then
-      echo "⚠️  No installed packages match: $partial_pkg"
-      continue
-    fi
-
-    # Select the latest version by sorting numerically and picking the last one
-    selected_pkg=$(echo "$matching_pkgs" | sort -V | tail -n 1)
-
-    echo "🔍  Selected package: $selected_pkg"
-
+  # Iterate over all provided package names
+  for input_pkg in "$@"; do
     path=""
 
-    case "$partial_pkg" in
-    erlang-runtime*)
-      # Method 1: Parse pkg info -D output to find the binary path
-      path=$(pkg info -D "$selected_pkg" 2>/dev/null |
-        grep 'binary path' |
-        sed -n 's/.*binary path ["'\'']\([^"\'']*\)["'\''].*/\1/p')
+    # Check if the exact package exists
+    exact_match=$(pkg info | awk -v pkg="$input_pkg" '$1 == pkg {print $1}')
 
-      # If Method 1 fails, try Method 2
-      if [ -z "$path" ]; then
-        # Method 2: Find the directory containing 'erl' binary
-        erl_binary=$(pkg info -l "$selected_pkg" 2>/dev/null |
-          grep "bin/erl\$" |
-          grep -v "erts")
+    if [ -n "$exact_match" ]; then
+      selected_pkg="$exact_match"
+      echo "🔍  Found exact match: $selected_pkg"
+    else
+      # If no exact match, treat input as partial and find matching packages
+      matching_pkgs=$(pkg info | awk -v prefix="$input_pkg" '$1 ~ "^"prefix {print $1}')
 
-        if [ -n "$erl_binary" ]; then
-          path=$(dirname "$erl_binary")
+      if [ -z "$matching_pkgs" ]; then
+        echo "⚠️  No installed packages match: $input_pkg"
+        continue
+      fi
+
+      # Extract version numbers and sort numerically to find the latest version
+      # Assumes package names follow the pattern name-version (e.g., erlang-runtime27-27.0)
+      selected_pkg=$(echo "$matching_pkgs" | awk -v prefix="$input_pkg" '
+                {
+                    # Split the package name by "-"
+                    n = split($0, parts, "-")
+                    # The version is the last part
+                    version = parts[n]
+                    # Print version and full package name
+                    print version, $0
+                }
+            ' | sort -n | tail -n 1 | awk '{print $2}')
+
+      if [ -z "$selected_pkg" ]; then
+        echo "⚠️  No valid numeric version found for partial package: $input_pkg"
+        continue
+      fi
+
+      echo "🔍  Selected package based on partial match: $selected_pkg"
+    fi
+
+    # Proceed only if a package has been selected
+    if [ -n "$selected_pkg" ]; then
+      # Determine extraction logic based on the package pattern
+      case "$selected_pkg" in
+      erlang-runtime*)
+        # Method 1: Parse pkg info -D output to find the binary path
+        path=$(pkg info -D "$selected_pkg" 2>/dev/null |
+          grep 'binary path' |
+          sed -n 's/.*binary path ["'"'"']\([^"'"'"']*\)["'"'"'].*/\1/p')
+
+        # If Method 1 fails, try Method 2
+        if [ -z "$path" ]; then
+          # Method 2: Find the directory containing 'erl' binary
+          erl_binary=$(pkg info -l "$selected_pkg" 2>/dev/null |
+            grep "bin/erl\$" |
+            grep -v "erts")
+
+          if [ -n "$erl_binary" ]; then
+            path=$(dirname "$erl_binary")
+          fi
         fi
-      fi
-      ;;
+        ;;
 
-    # Add additional partial package cases here
-    # Example:
-    # another-pkg*)
-    #     # Extraction logic for another-pkg
-    #     ;;
+      # Add additional package cases here
+      # Example:
+      # another-pkg*)
+      #     # Extraction logic for another-pkg
+      #     ;;
 
-    *)
-      echo "⚠️  No extraction logic defined for partial package: $partial_pkg"
-      continue
-      ;;
-    esac
+      *)
+        echo "⚠️  No extraction logic defined for package: $selected_pkg"
+        continue
+        ;;
+      esac
 
-    # Check if the path was successfully extracted
-    if [ -n "$path" ]; then
-      # Check if the path is already in the current PATH
-      echo "$PATH" | tr ':' '\n' | grep -Fxq "$path"
-      if [ $? -ne 0 ]; then
-        # Prepend the new path to PATH
-        export PATH="$path:$PATH"
-        echo "✅  Updated PATH with: $path"
+      # Check if the path was successfully extracted
+      if [ -n "$path" ]; then
+        # Trim leading and trailing whitespace from the path
+        trimmed_path=$(printf '%s' "$path" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+        # Verify that trimming was successful and path is not empty
+        if [ -z "$trimmed_path" ]; then
+          echo "❌  Extracted path is empty after trimming for package: $selected_pkg"
+          continue
+        fi
+
+        # Check if the trimmed path is already in the current PATH
+        echo "$PATH" | tr ':' '\n' | grep -Fxq "$trimmed_path"
+        if [ $? -ne 0 ]; then
+          # Prepend the new path to PATH
+          export PATH="$trimmed_path:$PATH"
+          echo "✅  Updated PATH with: $trimmed_path"
+        else
+          echo "🔍  Path already exists in PATH: $trimmed_path"
+        fi
+
+        # Prepare the export line for the RC file
+        export_line="export PATH=\"$trimmed_path:\$PATH\""
+
+        # Check if the export line already exists in the RC file
+        grep -Fxq "$export_line" "$RC_FILE"
+        if [ $? -ne 0 ]; then
+          # Append the export line to the RC file
+          echo "$export_line" >>"$RC_FILE" &&
+            echo "📝  Added PATH update to $RC_FILE"
+        else
+          echo "🔍  PATH update already exists in $RC_FILE"
+        fi
       else
-        echo "🔍  Path already exists in PATH: $path"
-      fi
-
-      # Prepare the export line for the RC file
-      export_line="export PATH=\"$path:\$PATH\""
-
-      # Check if the export line already exists in the RC file
-      grep -Fxq "$export_line" "$RC_FILE"
-      if [ $? -ne 0 ]; then
-        # Append the export line to the RC file
-        echo "$export_line" >>"$RC_FILE" &&
-          echo "📝  Added PATH update to $RC_FILE"
-      else
-        echo "🔍  PATH update already exists in $RC_FILE"
+        echo "❌  Failed to extract path for package: $selected_pkg"
       fi
     else
-      echo "❌  Failed to extract path for package: $selected_pkg"
+      echo "❌  No package selected for input: $input_pkg"
     fi
   done
 }
 
 # Example Usage:
-# Uncomment the following line to test the function with 'erlang-runtime'
-# update_path erlang-runtime
+# Uncomment the following line to test the function with 'erlang-runtime27-27.0'
+# update_path erlang-runtime27-27.0
 
 # To use the function in your shell, source this script or include it in your .shrc
