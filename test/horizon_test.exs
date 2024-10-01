@@ -6,13 +6,13 @@ defmodule HorizonTest do
 
   alias Horizon
 
-  describe "safe_write/4" do
-    setup do
-      {tmp_dir, _} = System.cmd("mktemp", ["-d"])
-      {tmp_file, _} = System.cmd("mktemp", [])
-      %{tmp_dir: String.trim(tmp_dir), tmp_file: String.trim(tmp_file)}
-    end
+  setup do
+    {tmp_dir, _} = System.cmd("mktemp", ["-d"])
+    {tmp_file, _} = System.cmd("mktemp", [])
+    %{tmp_dir: String.trim(tmp_dir), tmp_file: String.trim(tmp_file)}
+  end
 
+  describe "safe_write/4" do
     test "creates a new file when it does not exist", %{tmp_dir: tmp_dir} do
       file = Path.join(tmp_dir, "test_file.txt")
       data = "Sample data"
@@ -102,6 +102,121 @@ defmodule HorizonTest do
 
       assert output =~ "Failed to write to #{file}"
       assert File.read!(file) == "Existing data"
+    end
+  end
+
+  describe "safe_copy_file/4" do
+    test "copies the file when target does not exist", %{tmp_dir: tmp_dir} do
+      source = Path.join(tmp_dir, "source_file.txt")
+      target = Path.join(tmp_dir, "target_file.txt")
+      File.write!(source, "Sample data")
+
+      output =
+        capture_io(fn ->
+          Horizon.safe_copy_file(source, target, false)
+        end)
+
+      assert File.exists?(target)
+      assert File.read!(target) == "Sample data"
+      assert output =~ "Created #{target}"
+    end
+
+    test "overwrites the file when overwrite is true", %{tmp_dir: tmp_dir} do
+      source = Path.join(tmp_dir, "source_file.txt")
+      target = Path.join(tmp_dir, "target_file.txt")
+      File.write!(source, "New data")
+      File.write!(target, "Old data")
+
+      output =
+        capture_io(fn ->
+          Horizon.safe_copy_file(source, target, true)
+        end)
+
+      assert File.read!(target) == "New data"
+      assert output =~ "Overwrote #{target}"
+    end
+
+    test "prompts and overwrites when user agrees", %{tmp_dir: tmp_dir} do
+      source = Path.join(tmp_dir, "source_file.txt")
+      target = Path.join(tmp_dir, "target_file.txt")
+      File.write!(source, "New data")
+      File.write!(target, "Old data")
+
+      # Mock Mix.shell to simulate user input
+      Mix.shell(Mix.Shell.Process)
+      send(self(), {:mix_shell_input, :yes?, true})
+
+      Horizon.safe_copy_file(source, target, false)
+
+      # Assert that the prompt was sent
+      assert_received {:mix_shell, :yes?, [message]}
+      assert message == "#{target} already exists. Overwrite? [y/N]"
+
+      # Assert that the info message was sent
+      assert_received {:mix_shell, :info, [info_message]}
+      assert info_message == "Overwrote #{target}"
+
+      # Assert that the file content was updated
+      assert File.read!(target) == "New data"
+
+      # Reset Mix.shell
+      Mix.shell(Mix.Shell.IO)
+    end
+
+    test "prompts and skips when user declines", %{tmp_dir: tmp_dir} do
+      source = Path.join(tmp_dir, "source_file.txt")
+      target = Path.join(tmp_dir, "target_file.txt")
+      File.write!(source, "New data")
+      File.write!(target, "Old data")
+
+      # Mock Mix.shell to simulate user input
+      Mix.shell(Mix.Shell.Process)
+      send(self(), {:mix_shell_input, :yes?, false})
+
+      Horizon.safe_copy_file(source, target, false)
+
+      # Assert that the prompt was sent
+      assert_received {:mix_shell, :yes?, [message]}
+      assert message == "#{target} already exists. Overwrite? [y/N]"
+
+      # Assert that the info message was sent
+      assert_received {:mix_shell, :info, [info_message]}
+      assert info_message == "Skipped #{target}"
+
+      # Assert that the file content remains unchanged
+      assert File.read!(target) == "Old data"
+
+      # Reset Mix.shell
+      Mix.shell(Mix.Shell.IO)
+    end
+
+    test "handles missing source file gracefully", %{tmp_dir: tmp_dir} do
+      source = Path.join(tmp_dir, "non_existent_source.txt")
+      target = Path.join(tmp_dir, "target_file.txt")
+
+      output =
+        capture_io(:stderr, fn ->
+          Horizon.safe_copy_file(source, target, false)
+        end)
+
+      assert output =~ "Failed to copy #{target}"
+      refute File.exists?(target)
+    end
+
+    test "sets executable permission when specified", %{tmp_dir: tmp_dir} do
+      source = Path.join(tmp_dir, "source_script.sh")
+      target = Path.join(tmp_dir, "target_script.sh")
+      File.write!(source, "#!/bin/bash\necho 'Hello World'")
+
+      output =
+        capture_io(fn ->
+          Horizon.safe_copy_file(source, target, false, true)
+        end)
+
+      assert File.exists?(target)
+      assert File.read!(target) == "#!/bin/bash\necho 'Hello World'"
+      assert (File.stat!(target).mode &&& 0o111) != 0
+      assert output =~ "Created #{target}"
     end
   end
 end
