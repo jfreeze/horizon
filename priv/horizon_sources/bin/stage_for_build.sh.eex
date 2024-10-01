@@ -5,11 +5,6 @@
 # It is a part of the deploy process, and limits its function
 # to copying the project files to the remote host.
 #
-# ## TARGET HOST
-# - HOST: <%= @build_host %>
-# - USER: <%= @build_user %>
-# - PATH: <%= @build_path %>
-#
 # ## Required Assigns:
 # - app - name of release
 # - path - root of release
@@ -27,6 +22,7 @@ YELLOW='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+
 # ==============================
 # Configuration
 # ==============================
@@ -38,7 +34,7 @@ BUILD_HOST="${BUILD_HOST:-<%= @build_host %>}"
 
 # Default staging method
 STAGING_METHOD="auto" # Options: auto, rsync, tar
-FORCE_STAGE=0       # 0 = do not force, 1 = force staging with uncommitted changes
+FORCE_STAGE=0         # 0 = do not force, 1 = force staging with uncommitted changes
 
 echo ""
 echo -e "${GREEN}== STAGING SUMMARY ==${NC}"
@@ -50,8 +46,43 @@ echo -e "${YELLOW}Build host:          ${NC}$BUILD_HOST"
 echo ""
 
 # ==============================
+# Exclude Patterns
+# ==============================
+EXCLUDE_PATTERNS=".git deps .elixir_ls *.tmp _build ._* .DS_Store"
+EXCLUDE_DIRS=".git deps .elixir_ls _build"
+EXCLUDE_FILES="*.tmp ._* .DS_Store"
+
+
+# ==============================
 # Functions
 # ==============================
+
+# Helper function to generate find exclude expressions
+generate_find_excludes() {
+  excludes=""
+  for pattern in $EXCLUDE_PATTERNS; do
+    case "$pattern" in
+      */*)
+        # Pattern contains a slash, treat as path
+        excludes="$excludes -not -path './$pattern' -not -path './$pattern/*'"
+        ;;
+      *)
+        # Pattern is a filename or wildcard
+        excludes="$excludes ! -name '$pattern'"
+        ;;
+    esac
+  done
+  echo "$excludes"
+}
+
+# Helper function to generate --exclude options for rsync and tar
+generate_exclude_options() {
+  options=""
+  for pattern in $EXCLUDE_PATTERNS; do
+    options="$options --exclude='$pattern'"
+  done
+  echo "$options"
+}
 
 # Function to display usage
 usage() {
@@ -78,42 +109,61 @@ check_uncommitted_changes() {
 
 # Function to compute a hash of the local directory
 compute_local_hash() {
-  echo -e "${GREEN}Computing local project hash...${NC}" >&2
+  echo "${GREEN}Computing local project hash...${NC}" >&2
 
   # Change to the repository directory
   cd "$SRC_REPO_DIR" || {
-    echo -e "${RED}Error: Repository directory not found!${NC}" >&2
+    echo "${RED}Error: Repository directory not found!${NC}" >&2
     exit 1
   }
 
-  # Find all files, sort them, compute SHA256 hashes, and aggregate them
-  # Excluding .git and other unwanted files
-  find . -type f ! -path "./.git/*" ! -name "*.tmp" -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | aw
-k '{print $1}'
+  # Build the find command
+  find_cmd="find ."
+  for dir in $EXCLUDE_DIRS; do
+    find_cmd="$find_cmd -path './$dir' -prune -o"
+  done
+  find_cmd="$find_cmd -type f"
+  for file in $EXCLUDE_FILES; do
+    find_cmd="$find_cmd ! -name '$file'"
+  done
+  find_cmd="$find_cmd -print0"
+
+  echo "Local find command: $find_cmd" >&2
+
+  eval "$find_cmd" | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}'
 }
+
 
 # Function to compute a hash of the remote directory
 compute_remote_hash() {
-  echo -e "${GREEN}Computing remote project hash...${NC}" >&2
+  echo "${GREEN}Computing remote project hash...${NC}" >&2
 
-  ssh "$BUILD_USER@$BUILD_HOST" "cd \"$BUILD_PATH\" && find . -type f ! -path \"./.git/*\" ! -nam
-e \"*.tmp\" -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print \$1}'"
+  # Build the find command
+  find_cmd="find ."
+  for dir in $EXCLUDE_DIRS; do
+    find_cmd="$find_cmd -path './$dir' -prune -o"
+  done
+  find_cmd="$find_cmd -type f"
+  for file in $EXCLUDE_FILES; do
+    find_cmd="$find_cmd ! -name '$file'"
+  done
+  find_cmd="$find_cmd -print0"
+
+  echo "Remote find command: $find_cmd" >&2
+
+  ssh "$BUILD_USER@$BUILD_HOST" "cd '$BUILD_PATH' && $find_cmd | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print \$1}'"
 }
+
 
 # Function to stage files using rsync with checksum verification
 deploy_rsync() {
   ssh "$BUILD_USER@$BUILD_HOST" "doas mkdir -p \"$BUILD_PATH\""
 
+  EXCLUDE_OPTIONS=$(generate_exclude_options)
+
   echo -e "${GREEN}Staging using rsync with checksum verification...${NC}"
-  rsync -avzc --delete \
-    --rsync-path="doas rsync" \
-    --exclude='.git' \
-    --exclude='deps' \
-    --exclude='.elixir_ls' \
-    --exclude='*.tmp' \
-    --exclude='_build' \
-    "$SRC_REPO_DIR/" \
-    "$BUILD_USER@$BUILD_HOST:$BUILD_PATH/"
+
+  eval "rsync -avzc --delete --rsync-path='doas rsync' $EXCLUDE_OPTIONS '$SRC_REPO_DIR/' '$BUILD_USER@$BUILD_HOST:$BUILD_PATH/'"
 
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: rsync failed.${NC}" >&2
@@ -126,10 +176,27 @@ deploy_tar_scp() {
   echo -e "${GREEN}Staging using tar and ssh pipeline...${NC}"
 
   # Create the target directory on the remote host if it doesn't exist
-  ssh "$BUILD_USER@$BUILD_HOST" "doas mkdir -p \"$BUILD_PATH\""
+  ssh "$BUILD_USER@$BUILD_HOST" "doas mkdir -p \"$BUILD_PATH\" && doas rm -rf \"$BUILD_PATH/*\" && doas mkdir -p \"$BUILD_PATH\""
 
-  # Stream the tarball directly to the remote host and extract it
-  tar --exclude='.git' --exclude='.elixir_ls' --exclude='deps' --exclude='*.tmp' --exclude='_build' -czvp . | ssh "$BUILD_USER@$BUILD_HOST" "doas tar -xzvp -C \"$BUILD_PATH\""
+  # Generate exclude options for tar
+  EXCLUDE_OPTIONS=$(generate_exclude_options)
+
+  # Use eval to handle the dynamic options
+  eval "COPYFILE_DISABLE=1 tar --no-xattrs --no-acls --no-mac-metadata $EXCLUDE_OPTIONS -czvp . | ssh '$BUILD_USER@$BUILD_HOST' 'doas tar --no-xattrs --no-acls -xzvp -C \"$BUILD_PATH\"'"
+
+  # # Stream the tarball directly to the remote host and extract it
+  # COPYFILE_DISABLE=1 tar \
+  #   --no-xattrs \
+  #   --no-acls \
+  #   --no-mac-metadata \
+  #   --exclude='._*' \
+  #   --exclude='.DS_Store' \
+  #   --exclude='.git' \
+  #   --exclude='.elixir_ls' \
+  #   --exclude='deps' \
+  #   --exclude='*.tmp' \
+  #   --exclude='_build' \
+  #   -czvp . | ssh "$BUILD_USER@$BUILD_HOST" "doas tar -xzvp -C \"$BUILD_PATH\""
 
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: tar and ssh pipeline failed.${NC}" >&2
@@ -155,12 +222,13 @@ verify_deployment() {
   LOCAL_HASH=$(compute_local_hash)
   REMOTE_HASH=$(compute_remote_hash)
 
-  echo -e "${GREEN}Local project hash: $LOCAL_HASH${NC}"
-  echo -e "${GREEN}Remote project hash: $REMOTE_HASH${NC}"
-
   if [ "$LOCAL_HASH" == "$REMOTE_HASH" ]; then
+    echo -e "${GREEN}Local project hash: $LOCAL_HASH${NC}"
+    echo -e "${GREEN}Remote project hash: $REMOTE_HASH${NC}"
     echo -e "${GREEN}Staging verified: Project hashes match.${NC}"
   else
+    echo -e "${RED}Local project hash: $LOCAL_HASH${NC}"
+    echo -e "${RED}Remote project hash: $REMOTE_HASH${NC}"
     echo -e "${YELLOW}Warning: Project hashes do not match. Target may have pre-existing files or staging may be incomplete or corrupted.${NC}"
   fi
 }
@@ -258,4 +326,4 @@ deploy_files
 # Verify the deployment
 verify
 
-echo -e "${GREEN}Deployment process completed.${NC}"
+echo -e "${GREEN}Staging completed.${NC}"
