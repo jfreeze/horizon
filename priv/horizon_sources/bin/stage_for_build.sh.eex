@@ -1,25 +1,21 @@
 #!/bin/bash -e
 
-# let's name this
-# copy_phx_only.sh
-# there will be one for each release.
-# copy_<release_name>.sh
-# The problem with this is that is we're getting
-# the build_dir from config, and we should be getting
-# it from release since each release will need it's own
-# build_dir.
 #
-
-#
-# This script is used to copy the application to a remote machine.
+# This script copies the project source to the build host.
 # It is a part of the deploy process, and limits its function
 # to copying the project files to the remote machine.
 #
-# Required Assigns:
-# - app
-# - build_machine_user
-# - build_machine_host
-# - build_dir
+# ## TARGET MACHINE
+# - HOST: <%= @build_host %>
+# - USER: <%= @build_user %>
+# - PATH: <%= @build_path %>
+#
+# ## Required Assigns:
+# - app - name of release
+# - path - root of release
+# - build_path - root of build sources
+# - build_user
+# - build_host
 # - data_dir
 #
 
@@ -28,9 +24,9 @@
 # ==============================
 APP_NAME="<%= @app %>"
 SRC_REPO_DIR=$(cd "$(dirname "$0")/.." && pwd)
-TGT_REPO_DIR=<%= @build_dir %>
-BUILD_MACHINE_USER="<%= @build_machine_user %>"
-BUILD_MACHINE_HOST="<%= @build_machine_host %>"
+TGT_BUILD_DIR=<%= @build_path %>
+BUILD_USER="<%= @build_user %>"
+BUILD_HOST="<%= @build_host %>"
 
 # Default deployment method
 DEPLOY_METHOD="auto" # Options: auto, rsync, tar
@@ -63,10 +59,10 @@ get_commit_hash() {
 check_uncommitted_changes() {
   if ! git -C "$SRC_REPO_DIR" diff-index --quiet HEAD --; then
     if [ "$FORCE_DEPLOY" -eq 1 ]; then
-      echo -e "${RED}Warning: You have uncommitted changes. Proceeding with deployment.${NC}" >&2
+        echo -e "${RED}Warning: You have uncommitted changes. Proceeding with deployment.${NC}" >&2
     else
-      echo -e "${RED}Error: You have uncommitted changes. Please commit or stash them before deploying.${NC}" >&2
-      exit 1
+        echo -e "${RED}Error: You have uncommitted changes. Please commit or stash them before deploying.${NC}" >&2
+        exit 1
     fi
   fi
 }
@@ -83,19 +79,21 @@ compute_local_hash() {
 
   # Find all files, sort them, compute SHA256 hashes, and aggregate them
   # Excluding .git and other unwanted files
-  find . -type f ! -path "./.git/*" ! -name "*.tmp" -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}'
+  find . -type f ! -path "./.git/*" ! -name "*.tmp" -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | aw
+k '{print $1}'
 }
 
 # Function to compute a hash of the remote directory
 compute_remote_hash() {
   echo -e "${GREEN}Computing remote deployment hash...${NC}" >&2
 
-  ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "cd \"$TGT_REPO_DIR\" && find . -type f ! -path \"./.git/*\" ! -name \"*.tmp\" -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print \$1}'"
+  ssh "$BUILD_USER@$BUILD_MACHINE_HOST" "cd \"$TGT_BUILD_DIR\" && find . -type f ! -path \"./.git/*\" ! -nam
+e \"*.tmp\" -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print \$1}'"
 }
 
 # Function to deploy files using rsync with checksum verification
 deploy_rsync() {
-  ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas mkdir -p \"$TGT_REPO_DIR\""
+  ssh "$BUILD_USER@$BUILD_MACHINE_HOST" "doas mkdir -p \"$TGT_BUILD_DIR\""
 
   echo -e "${GREEN}Deploying using rsync with checksum verification...${NC}"
   rsync -avzc --delete \
@@ -104,7 +102,7 @@ deploy_rsync() {
     --exclude='*.tmp' \
     --exclude='_build' \
     "$SRC_REPO_DIR/" \
-    "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST:$TGT_REPO_DIR/"
+    "$BUILD_USER@$BUILD_MACHINE_HOST:$TGT_BUILD_DIR/"
 
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: rsync failed.${NC}" >&2
@@ -112,15 +110,15 @@ deploy_rsync() {
   fi
 }
 
-# Function to deploy files using tar and ssh pipeline
+
 deploy_tar_scp() {
   echo -e "${GREEN}Deploying using tar and ssh pipeline...${NC}"
 
   # Create the target directory on the remote machine if it doesn't exist
-  ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas mkdir -p \"$TGT_REPO_DIR\""
+  ssh "$BUILD_USER@$BUILD_HOST" "doas mkdir -p \"$TGT_BUILD_DIR\""
 
   # Stream the tarball directly to the remote machine and extract it
-  tar --exclude='.git' --exclude='*.tmp' --exclude='_build' -czvp . | ssh "$BUILD_MACHINE_USER@$BUILD_MACHINE_HOST" "doas tar -xzvp -C \"$TGT_REPO_DIR\""
+  tar --exclude='.git' --exclude='*.tmp' --exclude='_build' -czvp . | ssh "$BUILD_USER@$BUILD_HOST" "doas tar -xzvp -C \"$TGT_BUILD_DIR\""
 
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: tar and ssh pipeline failed.${NC}" >&2
