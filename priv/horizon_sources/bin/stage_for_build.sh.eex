@@ -81,10 +81,11 @@ generate_exclude_options() {
   for pattern in $EXCLUDE_PATTERNS; do
     # Remove the type prefix
     clean_pattern="${pattern#*:}"
-    options="$options --exclude='$clean_pattern'"
+    options="$options --exclude=$clean_pattern"
   done
   echo "$options"
 }
+
 
 # Function to display usage
 usage() {
@@ -117,11 +118,11 @@ check_uncommitted_changes() {
 
 # Function to compute a hash of the local directory
 compute_local_hash() {
-  echo "${GREEN}Computing local project hash...${NC}" >&2
+  echo -e "${GREEN}Computing local project hash...${NC}" >&2
 
   # Change to the repository directory
   cd "$SRC_REPO_DIR" || {
-    echo "${RED}Error: Repository directory not found!${NC}" >&2
+    echo -e "${RED}Error: Repository directory not found!${NC}" >&2
     exit 1
   }
 
@@ -130,22 +131,18 @@ compute_local_hash() {
   # Build the find command
   find_cmd="find . $excludes -type f -print0"
 
-  echo "Local find command: $find_cmd" >&2
-
   eval "$find_cmd" | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print $1}'
 }
 
 
 # Function to compute a hash of the remote directory
 compute_remote_hash() {
-  echo "${GREEN}Computing remote project hash...${NC}" >&2
+  echo -e "${GREEN}Computing remote project hash...${NC}" >&2
 
   excludes=$(generate_find_excludes)
 
   # Build the find command
   find_cmd="find . $excludes -type f -print0"
-
-  echo "Remote find command: $find_cmd" >&2
 
   ssh "$BUILD_USER@$BUILD_HOST" "cd '$BUILD_PATH' && $find_cmd | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print \$1}'"
 }
@@ -153,13 +150,18 @@ compute_remote_hash() {
 
 # Function to stage files using rsync with checksum verification
 deploy_rsync() {
-  ssh "$BUILD_USER@$BUILD_HOST" "doas mkdir -p \"$BUILD_PATH\""
+  echo -e "${GREEN}Staging using rsync...${NC}"
 
+  # Create the target directory on the remote host if it doesn't exist
+  ssh "$BUILD_USER@$BUILD_HOST" "doas mkdir -p '$BUILD_PATH'"
+
+  # Generate exclude options for rsync
   EXCLUDE_OPTIONS=$(generate_exclude_options)
 
-  echo -e "${GREEN}Staging using rsync with checksum verification...${NC}"
+  # Build the rsync arguments
+  set -- -avzc --delete --rsync-path="doas rsync" $EXCLUDE_OPTIONS "$SRC_REPO_DIR/" "$BUILD_USER@$BUILD_HOST:$BUILD_PATH/"
 
-  eval "rsync -avzc --delete --rsync-path='doas rsync' $EXCLUDE_OPTIONS '$SRC_REPO_DIR/' '$BUILD_USER@$BUILD_HOST:$BUILD_PATH/'"
+  rsync "$@"
 
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: rsync failed.${NC}" >&2
@@ -168,26 +170,29 @@ deploy_rsync() {
 }
 
 
+
 deploy_tar_scp() {
   echo -e "${GREEN}Staging using tar and ssh pipeline...${NC}"
 
-  # Create the target directory on the remote host if it doesn't exist
-  ssh "$BUILD_USER@$BUILD_HOST" "doas mkdir -p \"$BUILD_PATH\" && doas rm -rf \"$BUILD_PATH/*\" && doas mkdir -p \"$BUILD_PATH\""
+  # Create an empty target directory on the remote host
+  ssh "$BUILD_USER@$BUILD_HOST" "doas rm -rf \"$BUILD_PATH\" && doas mkdir -p \"$BUILD_PATH\""
 
   # Generate exclude options for tar
   EXCLUDE_OPTIONS=$(generate_exclude_options)
-  echo "EXCLUDE_OPTIONS: $EXCLUDE_OPTIONS"
 
-  # Use eval to handle the dynamic options
-  eval "COPYFILE_DISABLE=1 tar --no-xattrs --no-acls --no-mac-metadata $EXCLUDE_OPTIONS -czvp . | ssh '$BUILD_USER@$BUILD_HOST' 'doas tar --no-xattrs --no-acls -xzvp -C \"$BUILD_PATH\"'"
+  # Use set to handle options with potential spaces
+  set -- --no-xattrs --no-acls --no-mac-metadata $EXCLUDE_OPTIONS -czvp .
 
-
+  # Run the tar command without eval
+  COPYFILE_DISABLE=1 tar "$@" \
+  | ssh "$BUILD_USER@$BUILD_HOST" "doas tar --no-xattrs --no-acls -xzvp -C '$BUILD_PATH'"
 
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: tar and ssh pipeline failed.${NC}" >&2
     exit 1
   fi
 }
+
 
 verify() {
   case "$STAGING_METHOD" in
