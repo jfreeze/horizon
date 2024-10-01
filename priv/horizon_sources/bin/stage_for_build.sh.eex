@@ -46,11 +46,9 @@ echo -e "${YELLOW}Build host:          ${NC}$BUILD_HOST"
 echo ""
 
 # ==============================
-# Exclude Patterns
+# Exclude Patterns with type prefixes
 # ==============================
-EXCLUDE_PATTERNS=".git deps .elixir_ls *.tmp _build ._* .DS_Store"
-EXCLUDE_DIRS=".git deps .elixir_ls _build"
-EXCLUDE_FILES="*.tmp ._* .DS_Store"
+EXCLUDE_PATTERNS="d:.git d:deps d:.elixir_ls d:_build f:*.tmp f:._* f:.DS_Store"
 
 
 # ==============================
@@ -58,28 +56,32 @@ EXCLUDE_FILES="*.tmp ._* .DS_Store"
 # ==============================
 
 # Helper function to generate find exclude expressions
+# Helper function to generate find exclude expressions
 generate_find_excludes() {
   excludes=""
   for pattern in $EXCLUDE_PATTERNS; do
     case "$pattern" in
-      */*)
-        # Pattern contains a slash, treat as path
-        excludes="$excludes -not -path './$pattern' -not -path './$pattern/*'"
+      d:*)
+        dir="${pattern#d:}"
+        excludes="$excludes -path './$dir' -prune -o"
         ;;
-      *)
-        # Pattern is a filename or wildcard
-        excludes="$excludes ! -name '$pattern'"
+      f:*)
+        file="${pattern#f:}"
+        excludes="$excludes ! -name '$file'"
         ;;
     esac
   done
   echo "$excludes"
 }
 
+
 # Helper function to generate --exclude options for rsync and tar
 generate_exclude_options() {
   options=""
   for pattern in $EXCLUDE_PATTERNS; do
-    options="$options --exclude='$pattern'"
+    # Remove the type prefix
+    clean_pattern="${pattern#*:}"
+    options="$options --exclude='$clean_pattern'"
   done
   echo "$options"
 }
@@ -87,6 +89,12 @@ generate_exclude_options() {
 # Function to display usage
 usage() {
   echo -e "${GREEN}Usage: $0 [--rsync | --tar] [--force]${NC}"
+  echo ""
+  echo "To override user and host:"
+  echo ""
+  echo -e "${GREEN}Usage: ${YELLOW}BUILD_USER=user BUILD_HOST=host${NC} $0 [--rsync | --tar] [--force]"
+  echo ""
+  
   exit 1
 }
 
@@ -117,16 +125,10 @@ compute_local_hash() {
     exit 1
   }
 
+  excludes=$(generate_find_excludes)
+
   # Build the find command
-  find_cmd="find ."
-  for dir in $EXCLUDE_DIRS; do
-    find_cmd="$find_cmd -path './$dir' -prune -o"
-  done
-  find_cmd="$find_cmd -type f"
-  for file in $EXCLUDE_FILES; do
-    find_cmd="$find_cmd ! -name '$file'"
-  done
-  find_cmd="$find_cmd -print0"
+  find_cmd="find . $excludes -type f -print0"
 
   echo "Local find command: $find_cmd" >&2
 
@@ -138,16 +140,10 @@ compute_local_hash() {
 compute_remote_hash() {
   echo "${GREEN}Computing remote project hash...${NC}" >&2
 
+  excludes=$(generate_find_excludes)
+
   # Build the find command
-  find_cmd="find ."
-  for dir in $EXCLUDE_DIRS; do
-    find_cmd="$find_cmd -path './$dir' -prune -o"
-  done
-  find_cmd="$find_cmd -type f"
-  for file in $EXCLUDE_FILES; do
-    find_cmd="$find_cmd ! -name '$file'"
-  done
-  find_cmd="$find_cmd -print0"
+  find_cmd="find . $excludes -type f -print0"
 
   echo "Remote find command: $find_cmd" >&2
 
@@ -180,23 +176,12 @@ deploy_tar_scp() {
 
   # Generate exclude options for tar
   EXCLUDE_OPTIONS=$(generate_exclude_options)
+  echo "EXCLUDE_OPTIONS: $EXCLUDE_OPTIONS"
 
   # Use eval to handle the dynamic options
   eval "COPYFILE_DISABLE=1 tar --no-xattrs --no-acls --no-mac-metadata $EXCLUDE_OPTIONS -czvp . | ssh '$BUILD_USER@$BUILD_HOST' 'doas tar --no-xattrs --no-acls -xzvp -C \"$BUILD_PATH\"'"
 
-  # # Stream the tarball directly to the remote host and extract it
-  # COPYFILE_DISABLE=1 tar \
-  #   --no-xattrs \
-  #   --no-acls \
-  #   --no-mac-metadata \
-  #   --exclude='._*' \
-  #   --exclude='.DS_Store' \
-  #   --exclude='.git' \
-  #   --exclude='.elixir_ls' \
-  #   --exclude='deps' \
-  #   --exclude='*.tmp' \
-  #   --exclude='_build' \
-  #   -czvp . | ssh "$BUILD_USER@$BUILD_HOST" "doas tar -xzvp -C \"$BUILD_PATH\""
+
 
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: tar and ssh pipeline failed.${NC}" >&2
