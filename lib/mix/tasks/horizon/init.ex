@@ -1,150 +1,96 @@
 defmodule Mix.Tasks.Horizon.Init do
-  use Mix.Task
   @shortdoc "Creates Horizon deployment scripts"
+
+  use Mix.Task
 
   @moduledoc """
   Creates Horizon deploy scripts in `bin/` and `rel/` directories.
-
-  ## Options
-
-    * `-y` - Overwrite files without asking for confirmation.
-
-  ## Configuration
-
-  You can configure the path names and deployment settings in your project's `config/config.exs`.
-
-  # Optional configurations for Horizon with their defaults
-  config :horizon, :horizon,
-  #    build_machine_user: System.get_env("BUILD_MACHINE_USER"),
-  #    build_machine_host: System.get_env("BUILD_MACHINE_HOST")
-    bin_dir: "bin",
-    deploy_app: "my_app",
-    build_dir: "/usr/local/opt/my_app/build",
-    data_dir: "/usr/local/opt/my_app/data"
 
   ## Examples
 
       mix horizon.init
       mix horizon.init -y
 
+  ### Options
+
+    * `-y` - Overwrite files without asking for confirmation.
+
+  ## Description
+
+  Horizon.init creates several scripts for deploying an Elixir application to a host.
+  Horizon is customized for FreeBSD hsts, but should be able to accomodate Linux hosts.
+
+  ### Files Created
+
+  A `stage` script is created in `bin/` for each release.
+  If you have multiple releases, a `stage` script is created for each release.
+  For example, imagine you have releases `app_web` and `app_worker`.
+  Horizon.init will create
+
+  - `bin/stage_app_web.sh`
+  - `bin/stage_app_worker.sh`
+
+  A rc.d script is created in `??/` for each release.
+  A `release` script is created in `bin/` for each release.
+
+
+  Release options used by Horizon.MixProject
+
+  - `path` - The path to the release directory on the build host. This same directory will be used on the deploy host.
+  - `build_path` - The path to the project source code on the build host.
+  - `build_host` - The hostname of the build machine.
+  - `build_user` - The username on the build machine.
+
+  If `releases` are not specified in `mix.exs`, the default release
+  parameters using FreeBSD conventional paths are used.
+
+  ### Files created
+  - `bin/stage_my_app.sh` - copies project to build machine
+  - `bin/horizon_helpers.sh` - functions for Horizon scripts
+  - rc.d???
+  - release...
+
   """
 
   @impl true
   def run(args) do
-    # Ensure the app is started
-    Mix.Task.run("app.start")
+    # Application.ensure_all_started(:horizon)
 
     {opts, _, _} = OptionParser.parse(args, switches: [yes: :boolean], aliases: [y: :yes])
-
     overwrite = Keyword.get(opts, :yes, false)
-    dbg(overwrite)
 
-    # Fetch configuration
-    config = Application.get_env(:horizon, :horizon, [])
-    dbg(config)
     mix_config = Mix.Project.config()
     dbg(mix_config)
-    dbg(mix_config[:releases])
 
-    # Verify mix alias assets.setup.freebsd exists.
-    if is_nil(mix_config[:aliases][:"assets.setup.freebsd"]) do
-      Mix.shell().error("Please add the assets.setup.freebsd alias to your mix.exs file.")
+    Horizon.warn_is_missing_freebsd_alias(mix_config)
 
-      msg = ~S"""
+    releases = Horizon.get_config_releases()
+    dbg(releases)
 
-      A common alias for setting up a FreeBSD build environment is as follows:
+    for {app, opts} = release <- releases do
+      dbg(app)
+      dbg(opts)
 
-      "assets.setup.freebsd": [
-        "tailwind.install #{@tailwindcss_freebsd_x64}",
-        "esbuild.install --if-missing"
-      ]
+      create_file_from_template(:stage_for_build, app, overwrite, true, opts, fn tgt, opts ->
+        Path.join(opts[:bin_path], tgt)
+      end)
 
-      with @tailwindcss_freebsd_x64 defined in your mix.exs file as:
-
-      @tailwindcss_freebsd_x64 "https://people.freebsd.org/~dch/pub/tailwind/v$version/tailwindcss-$target"
-      """
-
-      Mix.shell().info(msg)
-
-      exit(1)
+      ## create release
     end
 
-    app = Keyword.get(config, :deploy_app, Mix.Project.config()[:app])
-    dbg(app)
+    # build_dir = Keyword.get(config, :build_dir, "/usr/local/opt/#{app}/build")
+    # dbg(build_dir)
 
-    bin_dir = Keyword.get(config, :bin_dir, "bin")
-    dbg(bin_dir)
-
-    build_machine_user = Keyword.get(config, :build_machine_user, "$(whoami)")
-    dbg(build_machine_user)
-
-    build_machine_host = Keyword.get(config, :build_machine_host)
-    dbg(build_machine_host)
-
-    build_dir = Keyword.get(config, :build_dir, "/usr/local/opt/#{app}/build")
-    dbg(build_dir)
-
-    data_dir = Keyword.get(config, :data_dir, "/usr/local/opt/#{app}/data")
-    dbg(data_dir)
+    # data_dir = Keyword.get(config, :data_dir, "/usr/local/opt/#{app}/data")
+    # dbg(data_dir)
 
     # Generate the cpproj.sh script
     # priv/templates/horizon/cpproj.sh.eex
-    source_template = "cpproj.sh.eex"
-    {:ok, cpproj_path} = get_template_path(source_template)
-    dbg(cpproj_path)
-
-    {:ok, template_content} = File.read(cpproj_path)
-
-    eex_template =
-      EEx.eval_string(template_content,
-        assigns: %{
-          app: app,
-          build_machine_user: build_machine_user,
-          build_machine_host: build_machine_host,
-          build_dir: build_dir,
-          data_dir: data_dir
-        }
-      )
-
-    file = Path.join(bin_dir, "horizon_cp_proj.sh")
-    File.write!(file, eex_template)
-    File.chmod!(file, 0o755)
-
-    source_template = "release.sh.eex"
-    {:ok, release_path} = get_template_path(source_template)
-    dbg(release_path)
-
-    {:ok, template_content} = File.read(release_path)
-
-    eex_template =
-      EEx.eval_string(template_content,
-        assigns: %{
-          app: app,
-          build_machine_user: build_machine_user,
-          build_machine_host: build_machine_host,
-          build_dir: build_dir,
-          data_dir: data_dir
-        }
-      )
-
-    file = Path.join(bin_dir, "release.sh")
-    File.write!(file, eex_template)
-    File.chmod!(file, 0o755)
 
     # write the full path to tailwind in tailwind.data
     # the fullpath will be in build_dir/tailwind-freebsd-#{arch}
     # tailwind = Path.join([build_dir, "_build", "tailwind-#{Horizon.target()}"])
     # dbg(tailwind)
-
-    # copy horizon_helpers.sh to bin/
-    {:ok, script} = get_script_path("horizon_helpers.sh")
-    target = Path.join(bin_dir, "horizon_helpers.sh")
-
-    IO.puts("\u001b[32;1m  ===> ----------------\u001b[0m")
-    dbg(script)
-    dbg(target)
-    result = File.cp(script, target)
-    dbg(result)
 
     # target_dir = Path.join(File.cwd!(), bin_dir)
     # File.mkdir_p!(target_dir)
@@ -152,31 +98,61 @@ defmodule Mix.Tasks.Horizon.Init do
     # Enum.each(scripts, fn %{source: source_script, target: target_script} ->
     #   source_path = Path.expand("priv/scripts/#{source_script}", :horizon)
     #   target_path = Path.join(target_dir, target_script)
-
-    #   if File.exists?(target_path) and not overwrite do
-    #     overwrite? =
-    #       Mix.shell().yes?("#{target_script} already exists in #{bin_dir}. Overwrite? [y/N]")
-
-    #     if overwrite? do
-    #       copy_script(source_path, target_path)
-    #     else
-    #       Mix.shell().info("Skipped #{target_script}")
-    #     end
-    #   else
-    #     copy_script(source_path, target_path)
-    #   end
-    # end)
   end
 
-  # defp copy_script(source, target) do
-  #   case File.cp(source, target) do
-  #     :ok ->
-  #       # Ensure the script is executable
-  #       File.chmod(target, 0o755)
-  #       Mix.shell().info("Copied #{Path.basename(target)} to #{Path.dirname(target)}")
+  def create_file_from_template(template, app, overwrite, executable, opts, target_fn) do
+    {source, target} = Horizon.get_src_tgt(template, app)
+    target = target_fn.(target, opts)
 
-  #     {:error, reason} ->
-  #       Mix.shell().error("Failed to copy #{Path.basename(target)}: #{reason}")
-  #   end
+    {:ok, template_content} = File.read(source)
+    eex_template = EEx.eval_string(template_content, assigns(app, opts))
+    Horizon.safe_write(eex_template, target, overwrite, executable)
+  end
+
+  def assigns(app, opts) do
+    [
+      assigns: [
+        app: app,
+        path: opts[:path],
+        build_path: opts[:build_path],
+        build_host: opts[:build_host],
+        build_user: opts[:build_user] || "$(whoami)"
+        # path: optsdata_dir\
+      ]
+    ]
+  end
+
+  def write_some_file do
+    # {:ok, release_path} = Horizon.get_src_path(:release)
+    # dbg(release_path)
+
+    # {:ok, template_content} = File.read(release_path)
+
+    # eex_template =
+    #   EEx.eval_string(template_content,
+    #     assigns: %{
+    #       app: app,
+    #       build_user: build_user,
+    #       build_host: build_host,
+    #       build_dir: build_dir,
+    #       data_dir: data_dir
+    #     }
+    #   )
+
+    # file = Path.join(bin_dir, "release.sh")
+    # File.write!(file, eex_template)
+    # File.chmod!(file, 0o755)
+  end
+
+  # def copy_file do
+  # copy horizon_helpers.sh to bin/
+  # {:ok, script} = Horizon.get_src_path(:helpers)
+  # target = Path.join(bin_dir, "horizon_helpers.sh")
+
+  # IO.puts("\u001b[32;1m  ===> ----------------\u001b[0m")
+  # dbg(script)
+  # dbg(target)
+  # result = File.cp(script, target)
+  # dbg(result)
   # end
 end
