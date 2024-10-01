@@ -3,9 +3,9 @@
 #
 # This script copies the project source to the build host.
 # It is a part of the deploy process, and limits its function
-# to copying the project files to the remote machine.
+# to copying the project files to the remote host.
 #
-# ## TARGET MACHINE
+# ## TARGET HOST
 # - HOST: <%= @build_host %>
 # - USER: <%= @build_user %>
 # - PATH: <%= @build_path %>
@@ -20,25 +20,34 @@
 #
 
 # ==============================
-# Configuration
-# ==============================
-APP_NAME="<%= @app %>"
-SRC_REPO_DIR=$(cd "$(dirname "$0")/.." && pwd)
-TGT_BUILD_DIR=<%= @build_path %>
-BUILD_USER="<%= @build_user %>"
-BUILD_HOST="<%= @build_host %>"
-
-# Default deployment method
-DEPLOY_METHOD="auto" # Options: auto, rsync, tar
-FORCE_DEPLOY=0       # 0 = do not force, 1 = force deployment with uncommitted changes
-
-# ==============================
 # Color Definitions
 # ==============================
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
+
+# ==============================
+# Configuration
+# ==============================
+APP_NAME="<%= @app %>"
+SRC_REPO_DIR=$(cd "$(dirname "$0")/.." && pwd)
+BUILD_PATH=<%= @build_path %>
+BUILD_USER="${BUILD_USER:-<%= @build_user %>}"
+BUILD_HOST="${BUILD_HOST:-<%= @build_host %>}"
+
+# Default staging method
+STAGING_METHOD="auto" # Options: auto, rsync, tar
+FORCE_STAGE=0       # 0 = do not force, 1 = force staging with uncommitted changes
+
+echo ""
+echo -e "${GREEN}== STAGING SUMMARY ==${NC}"
+echo -e "${GREEN}Staging application: ${NC}$APP_NAME"
+echo -e "${GREEN}Source Repo path:    ${NC}$SRC_REPO_DIR"
+echo -e "${GREEN}Build path:          ${NC}$BUILD_PATH"
+echo -e "${YELLOW}Build user:          ${NC}$BUILD_USER"
+echo -e "${YELLOW}Build host:          ${NC}$BUILD_HOST"
+echo ""
 
 # ==============================
 # Functions
@@ -58,10 +67,10 @@ get_commit_hash() {
 # Function to check for uncommitted changes
 check_uncommitted_changes() {
   if ! git -C "$SRC_REPO_DIR" diff-index --quiet HEAD --; then
-    if [ "$FORCE_DEPLOY" -eq 1 ]; then
-        echo -e "${RED}Warning: You have uncommitted changes. Proceeding with deployment.${NC}" >&2
+    if [ "$FORCE_STAGE" -eq 1 ]; then
+        echo -e "${RED}Warning: You have uncommitted changes. Proceeding with staging.${NC}" >&2
     else
-        echo -e "${RED}Error: You have uncommitted changes. Please commit or stash them before deploying.${NC}" >&2
+        echo -e "${RED}Error: You have uncommitted changes. Please commit or stash them before staging.${NC}" >&2
         exit 1
     fi
   fi
@@ -69,7 +78,7 @@ check_uncommitted_changes() {
 
 # Function to compute a hash of the local directory
 compute_local_hash() {
-  echo -e "${GREEN}Computing local deployment hash...${NC}" >&2
+  echo -e "${GREEN}Computing local project hash...${NC}" >&2
 
   # Change to the repository directory
   cd "$SRC_REPO_DIR" || {
@@ -85,24 +94,26 @@ k '{print $1}'
 
 # Function to compute a hash of the remote directory
 compute_remote_hash() {
-  echo -e "${GREEN}Computing remote deployment hash...${NC}" >&2
+  echo -e "${GREEN}Computing remote project hash...${NC}" >&2
 
-  ssh "$BUILD_USER@$BUILD_MACHINE_HOST" "cd \"$TGT_BUILD_DIR\" && find . -type f ! -path \"./.git/*\" ! -nam
+  ssh "$BUILD_USER@$BUILD_HOST" "cd \"$BUILD_PATH\" && find . -type f ! -path \"./.git/*\" ! -nam
 e \"*.tmp\" -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print \$1}'"
 }
 
-# Function to deploy files using rsync with checksum verification
+# Function to stage files using rsync with checksum verification
 deploy_rsync() {
-  ssh "$BUILD_USER@$BUILD_MACHINE_HOST" "doas mkdir -p \"$TGT_BUILD_DIR\""
+  ssh "$BUILD_USER@$BUILD_HOST" "doas mkdir -p \"$BUILD_PATH\""
 
-  echo -e "${GREEN}Deploying using rsync with checksum verification...${NC}"
+  echo -e "${GREEN}Staging using rsync with checksum verification...${NC}"
   rsync -avzc --delete \
     --rsync-path="doas rsync" \
     --exclude='.git' \
+    --exclude='deps' \
+    --exclude='.elixir_ls' \
     --exclude='*.tmp' \
     --exclude='_build' \
     "$SRC_REPO_DIR/" \
-    "$BUILD_USER@$BUILD_MACHINE_HOST:$TGT_BUILD_DIR/"
+    "$BUILD_USER@$BUILD_HOST:$BUILD_PATH/"
 
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: rsync failed.${NC}" >&2
@@ -112,13 +123,13 @@ deploy_rsync() {
 
 
 deploy_tar_scp() {
-  echo -e "${GREEN}Deploying using tar and ssh pipeline...${NC}"
+  echo -e "${GREEN}Staging using tar and ssh pipeline...${NC}"
 
-  # Create the target directory on the remote machine if it doesn't exist
-  ssh "$BUILD_USER@$BUILD_HOST" "doas mkdir -p \"$TGT_BUILD_DIR\""
+  # Create the target directory on the remote host if it doesn't exist
+  ssh "$BUILD_USER@$BUILD_HOST" "doas mkdir -p \"$BUILD_PATH\""
 
-  # Stream the tarball directly to the remote machine and extract it
-  tar --exclude='.git' --exclude='*.tmp' --exclude='_build' -czvp . | ssh "$BUILD_USER@$BUILD_HOST" "doas tar -xzvp -C \"$TGT_BUILD_DIR\""
+  # Stream the tarball directly to the remote host and extract it
+  tar --exclude='.git' --exclude='.elixir_ls' --exclude='deps' --exclude='*.tmp' --exclude='_build' -czvp . | ssh "$BUILD_USER@$BUILD_HOST" "doas tar -xzvp -C \"$BUILD_PATH\""
 
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: tar and ssh pipeline failed.${NC}" >&2
@@ -127,7 +138,7 @@ deploy_tar_scp() {
 }
 
 verify() {
-  case "$DEPLOY_METHOD" in
+  case "$STAGING_METHOD" in
   tar)
     verify_deployment
     ;;
@@ -139,24 +150,24 @@ verify() {
 
 # Function to verify deployment integrity by comparing hashes
 verify_deployment() {
-  echo -e "${GREEN}Verifying deployment integrity...${NC}"
+  echo -e "${GREEN}Verifying staging integrity...${NC}"
 
   LOCAL_HASH=$(compute_local_hash)
   REMOTE_HASH=$(compute_remote_hash)
 
-  echo -e "${GREEN}Local deployment hash: $LOCAL_HASH${NC}"
-  echo -e "${GREEN}Remote deployment hash: $REMOTE_HASH${NC}"
+  echo -e "${GREEN}Local project hash: $LOCAL_HASH${NC}"
+  echo -e "${GREEN}Remote project hash: $REMOTE_HASH${NC}"
 
   if [ "$LOCAL_HASH" == "$REMOTE_HASH" ]; then
-    echo -e "${GREEN}Deployment verified: Deployment hashes match.${NC}"
+    echo -e "${GREEN}Staging verified: Project hashes match.${NC}"
   else
-    echo -e "${YELLOW}Warning: Deployment hashes do not match. Target may have pre-existing files or deployment may be incomplete or corrupted.${NC}"
+    echo -e "${YELLOW}Warning: Project hashes do not match. Target may have pre-existing files or staging may be incomplete or corrupted.${NC}"
   fi
 }
 
 # Function to deploy using the selected method
 deploy_files() {
-  case "$DEPLOY_METHOD" in
+  case "$STAGING_METHOD" in
   rsync)
     deploy_rsync
     ;;
@@ -166,15 +177,15 @@ deploy_files() {
   auto)
     if command -v rsync >/dev/null 2>&1; then
       deploy_rsync
-      DEPLOY_METHOD="rsync"
+      STAGING_METHOD="rsync"
     else
       echo -e "${RED}rsync not found. Falling back to tar and ssh pipeline.${NC}" >&2
       deploy_tar_scp
-      DEPLOY_METHOD="tar"
+      STAGING_METHOD="tar"
     fi
     ;;
   *)
-    echo -e "${RED}Invalid deployment method: $DEPLOY_METHOD${NC}" >&2
+    echo -e "${RED}Invalid deployment method: $STAGING_METHOD${NC}" >&2
     exit 1
     ;;
   esac
@@ -186,15 +197,15 @@ deploy_files() {
 while [[ $# -gt 0 ]]; do
   case "$1" in
   --rsync)
-    DEPLOY_METHOD="rsync"
+    STAGING_METHOD="rsync"
     shift
     ;;
   --tar)
-    DEPLOY_METHOD="tar"
+    STAGING_METHOD="tar"
     shift
     ;;
   --force)
-    FORCE_DEPLOY=1
+    FORCE_STAGE=1
     shift
     ;;
   -h | --help)
@@ -226,7 +237,7 @@ trap "rm -f $LOCK_FILE" EXIT
 # Main Deployment Steps
 # ==============================
 
-echo -e "${GREEN}Starting deployment process...${NC}"
+echo -e "${GREEN}Starting staging process...${NC}"
 
 # Navigate to the repository directory
 cd "$SRC_REPO_DIR" || {
