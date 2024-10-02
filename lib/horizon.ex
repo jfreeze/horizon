@@ -101,7 +101,7 @@ defmodule Horizon do
     releases =
       case mix_config[:releases] do
         nil ->
-          configure_default_paths([{app_name, []}])
+          configure_default_paths([{app_name, [is_default?: true]}])
 
         releases ->
           configure_default_paths(releases)
