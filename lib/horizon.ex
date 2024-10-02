@@ -22,8 +22,8 @@ defmodule Horizon do
     {get_src_path("bin", "bsd_install.sh.eex"), "bsd_install.sh"}
   end
 
-  def get_src_tgt(:release, _app) do
-    {get_src_path("bin", "release.sh.eex"), "release.sh"}
+  def get_src_tgt(:release, app) do
+    {get_src_path("bin", "release.sh.eex"), "release-#{app}.sh"}
   end
 
   def get_src_tgt(:helpers, _app) do
@@ -101,10 +101,10 @@ defmodule Horizon do
     releases =
       case mix_config[:releases] do
         nil ->
-          configure_default_paths([default: []], app_name)
+          configure_default_paths([{app_name, []}])
 
         releases ->
-          configure_default_paths(releases, app_name)
+          configure_default_paths(releases)
       end
 
     validate_releases(releases)
@@ -116,9 +116,9 @@ defmodule Horizon do
 
   ## Examples
 
-          iex> configure_default_paths([default: []], "my_app")
+          iex> configure_default_paths([my_app: []], "my_app")
           [
-            default: [
+            my_app: [
               bin_path: "bin",
               path: "/usr/local/my_app",
               build_path: "/usr/local/opt/my_app/build",
@@ -128,14 +128,14 @@ defmodule Horizon do
           ]
 
   """
-  @spec configure_default_paths(keyword(), String.t()) :: keyword()
-  def configure_default_paths(releases, app_name) do
+  @spec configure_default_paths(keyword()) :: keyword()
+  def configure_default_paths(releases) do
     releases
-    |> maybe_set_default(:bin_path, app_name, "bin")
-    |> maybe_set_default(:path, app_name, &"/usr/local/#{&1}")
-    |> maybe_set_default(:build_path, app_name, &"/usr/local/opt/#{&1}/build")
-    |> maybe_set_default(:build_host, app_name, "HOSTUNKNOWN")
-    |> maybe_set_default(:build_user, app_name, "$(whoami)")
+    |> maybe_set_default(:bin_path, "bin")
+    |> maybe_set_default(:path, &"/usr/local/#{&1}")
+    |> maybe_set_default(:build_path, &"/usr/local/opt/#{&1}/build")
+    |> maybe_set_default(:build_host, "HOSTUNKNOWN")
+    |> maybe_set_default(:build_user, "$(whoami)")
   end
 
   #
@@ -143,11 +143,9 @@ defmodule Horizon do
   #   iex> maybe_set_default(releases, :path, app_name, &"/usr/local/#{&1}")
   #   iex> maybe_set_default(releases, :build_path, app_name, &"/usr/local/opt/#{&1}/build")
   #
-  defp maybe_set_default(releases, key, app_name, path_fn) do
+  defp maybe_set_default(releases, key, path_fn) do
     Enum.map(releases, fn {app, opts} ->
-      app_name = if app == :default, do: app_name, else: app
-      updated_opts = Keyword.update(opts, key, get_path(path_fn, app_name), & &1)
-      {app, updated_opts}
+      {app, Keyword.update(opts, key, get_path(path_fn, app), & &1)}
     end)
   end
 
