@@ -43,13 +43,24 @@ get_arch() {
   echo "${os_mapped}-${arch_mapped}"
 }
 
+#
 # Function: update_path
+#
 # Description:
+#
 #   Updates the PATH environment variable by adding the binary path of specified packages.
 #   The update is also appended to the .shrc file to persist across sessions.
 #   Supports both exact and partial package name matching.
+#
 # Usage:
 #   update_path package_name1 package_name2 ...
+#
+# ## Example:
+#
+# update_path erlang-runtime27-27.0
+#
+# To use the function in your shell, source this script or include it in your .shrc
+#
 
 update_path() {
   # Define the shell RC file (modify if using a different shell)
@@ -179,9 +190,3 @@ update_path() {
     fi
   done
 }
-
-# Example Usage:
-# Uncomment the following line to test the function with 'erlang-runtime27-27.0'
-# update_path erlang-runtime27-27.0
-
-# To use the function in your shell, source this script or include it in your .shrc
