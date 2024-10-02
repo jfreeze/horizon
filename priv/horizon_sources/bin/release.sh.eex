@@ -1,23 +1,32 @@
 #!/bin/sh
 
+#
+# Release script for a project.
+# This app is located in the `bin_path` for each release.
+#
+
 # Exit immediately if a command exits with a non-zero status
 set -e
 
 . ./bin/horizon_helpers.sh
 
+# ==============================
+# Color Definitions
+# ==============================
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
 # Set the Mix environment to production
 export MIX_ENV=prod
 
-# Define paths (adjust if your project structure differs)
-APP_DIR=$(cd "$(dirname "$0")/.." && pwd)
-DATA_DIR=<%= @data_dir %>
+APP_DIR=<%= @build_path %>
 
 # Navigate to the project directory
 cd "$APP_DIR"
 
-echo "=== Starting Release Process ==="
-
-# Step 1: Setup Assets
+echo -e"${GREEN}=== Starting Release Process ===${NC}"
 echo "--- Setting up assets ---"
 mix local.hex --force
 mix deps.get --only prod
@@ -26,34 +35,35 @@ mix deps.get --only prod
 # Will need to manually check if tailwind for freebsd is installed as currently the --if-missing flag is not supported when passing in an argument
 ## install tailwind if it is not installed
 
-echo "add code to check if tailwind is installed"
-if [ ! -f "/usr/local/opt/phx_only/build/_build/tailwind-freebsd-x64" ]; then
+echo -e "${GREEN}=> Checking for tailwind-$(get_arch)${NC}"
+if [ ! -f "<%= @build_path %>/_build/tailwind-$(get_arch)" ]; then
+  echo -e "${GREEN}  ✔ Installing Tailwind <%= @build_path %>/_build/tailwind-$(get_arch)${NC}"
   mix assets.setup.freebsd
+else
+  echo -e "${GREEN}   ✔ Tailwind installed <%= @build_path %>/_build/tailwind-$(get_arch)${NC}"
 fi
+echo ""
 
-## 14:37:15.794 [debug] Downloading tailwind from https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.0/tailwindcss-freebsd-x64
-## ** (RuntimeError) Couldn't fetch https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.0/tailwindcss-freebsd-x64
-
-# Step 2: Clean Existing Digests
-echo "--- Cleaning existing digests ---"
+echo -e "${GREEN}=> Cleaning existing digests${NC}"
 mix phx.digest.clean --all
+echo ""
 
-# Step 3: Deploy Assets
-echo "--- Deploying assets ---"
+echo -e "${GREEN}=> Deploying assets${NC}"
 mix assets.deploy
+echo ""
 
-# Step 4: Create/Update Release
-echo "--- Creating/updating the release ---"
+echo -e "${GREEN}=> Creating/Updating the release${NC}"
 user=$(whoami)
 group=$(groups)
-doas mkdir /usr/local/phx_only
+doas mkdir -p /usr/local/phx_only
 doas chown -R $user:$group /usr/local/phx_only
-MIX_ENV=prod mix release --overwrite
-#MIX_ENV=prod mix release --path ../other/path
+MIX_ENV=prod mix release <%= if not @is_default?, do: @app %> --overwrite
+echo ""
 
 # Step 5: Restart the Server
-echo "--- Restarting the server ---"
+echo -e "${GREEN}=> Restarting the server ${NC}"
 #doas service <%= @app %> restart
 /usr/local/phx_only/bin/phx_only start_iex
+echo ""
 
-echo "=== Release Process Completed Successfully ==="
+echo -e "${GREEN}=> 🚀 Release Process Completed Successfully${NC}"

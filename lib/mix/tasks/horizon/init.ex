@@ -108,18 +108,6 @@ defmodule Mix.Tasks.Horizon.Init do
         )
       end
     end
-
-    # write the full path to tailwind in tailwind.data
-    # the fullpath will be in build_dir/tailwind-freebsd-#{arch}
-    # tailwind = Path.join([build_dir, "_build", "tailwind-#{Horizon.target()}"])
-    # dbg(tailwind)
-
-    # target_dir = Path.join(File.cwd!(), bin_dir)
-    # File.mkdir_p!(target_dir)
-
-    # Enum.each(scripts, fn %{source: source_script, target: target_script} ->
-    #   source_path = Path.expand("priv/scripts/#{source_script}", :horizon)
-    #   target_path = Path.join(target_dir, target_script)
   end
 
   @doc """
@@ -170,7 +158,6 @@ defmodule Mix.Tasks.Horizon.Init do
         build_host: opts[:build_host],
         build_user: opts[:build_user] || "$(whoami)",
         is_default?: opts[:is_default?] || false
-        # path: optsdata_dir
       ]
     ]
   end
