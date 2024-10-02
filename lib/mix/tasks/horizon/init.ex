@@ -68,24 +68,25 @@ defmodule Mix.Tasks.Horizon.Init do
     dbg(releases)
 
     for {app, opts} = release <- releases do
-      dbg(app)
-      dbg(opts)
+      # list of files and their executable status
+      bin_targets = [
+        {:stage_for_build, true},
+        {:helpers, false},
+        {:bsd_install, true},
+        {:release, true}
+      ]
 
-      create_file_from_template(:stage_for_build, app, overwrite, true, opts, fn tgt, opts ->
-        Path.join(opts[:bin_path], tgt)
-      end)
-
-      ## create release
+      for {template, executable} <- bin_targets do
+        create_file_from_template(
+          template,
+          app,
+          overwrite,
+          executable,
+          opts,
+          &Path.join(&2[:bin_path], &1)
+        )
+      end
     end
-
-    # build_dir = Keyword.get(config, :build_dir, "/usr/local/opt/#{app}/build")
-    # dbg(build_dir)
-
-    # data_dir = Keyword.get(config, :data_dir, "/usr/local/opt/#{app}/data")
-    # dbg(data_dir)
-
-    # Generate the cpproj.sh script
-    # priv/templates/horizon/cpproj.sh.eex
 
     # write the full path to tailwind in tailwind.data
     # the fullpath will be in build_dir/tailwind-freebsd-#{arch}
@@ -117,42 +118,8 @@ defmodule Mix.Tasks.Horizon.Init do
         build_path: opts[:build_path],
         build_host: opts[:build_host],
         build_user: opts[:build_user] || "$(whoami)"
-        # path: optsdata_dir\
+        # path: optsdata_dir
       ]
     ]
   end
-
-  def write_some_file do
-    # {:ok, release_path} = Horizon.get_src_path(:release)
-    # dbg(release_path)
-
-    # {:ok, template_content} = File.read(release_path)
-
-    # eex_template =
-    #   EEx.eval_string(template_content,
-    #     assigns: %{
-    #       app: app,
-    #       build_user: build_user,
-    #       build_host: build_host,
-    #       build_dir: build_dir,
-    #       data_dir: data_dir
-    #     }
-    #   )
-
-    # file = Path.join(bin_dir, "release.sh")
-    # File.write!(file, eex_template)
-    # File.chmod!(file, 0o755)
-  end
-
-  # def copy_file do
-  # copy horizon_helpers.sh to bin/
-  # {:ok, script} = Horizon.get_src_path(:helpers)
-  # target = Path.join(bin_dir, "horizon_helpers.sh")
-
-  # IO.puts("\u001b[32;1m  ===> ----------------\u001b[0m")
-  # dbg(script)
-  # dbg(target)
-  # result = File.cp(script, target)
-  # dbg(result)
-  # end
 end

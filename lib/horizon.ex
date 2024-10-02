@@ -26,10 +26,9 @@ defmodule Horizon do
     {get_src_path("bin", "release.sh.eex"), "release.sh"}
   end
 
-  # may need more than one folder for helpers
-  # def get_src_tgt(:helpers, _app) do
-  #   {get_src_path("bin", "horizon_helpers.sh"), Path.join(opts[:local_])"horizon_helpers.sh"}
-  # end
+  def get_src_tgt(:helpers, _app) do
+    {get_src_path("bin", "horizon_helpers.sh"), "horizon_helpers.sh"}
+  end
 
   @spec get_src_path(atom, String.t()) :: String.t() | no_return()
   def get_src_path(dir, source) do
