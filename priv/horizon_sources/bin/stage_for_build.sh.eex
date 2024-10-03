@@ -95,7 +95,7 @@ usage() {
   echo ""
   echo -e "${GREEN}Usage: ${YELLOW}BUILD_USER=user BUILD_HOST=host${NC} $0 [--rsync | --tar] [--force]"
   echo ""
-  
+
   exit 1
 }
 
@@ -316,4 +316,4 @@ deploy_files
 # Verify the deployment
 verify
 
-echo -e "${GREEN}Staging completed.${NC}"
+echo -e "${GREEN}Staging completed for <%= @app %>.${NC}"
