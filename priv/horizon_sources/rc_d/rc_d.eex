@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# PROVIDE: <%= @app %>
+# REQUIRE: LOGIN
+
+. /etc/rc.subr
+
+name="<%= @app %>"
+rcvar="${name}_enable"
+
+# Define elixir release variables
+export RELEASE_ROOT=${RELEASE_ROOT:-"<%= @app_path %>"}
+export RELEASE_PROG=${RELEASE_PROG:-"${0##*/}"}
+export RELEASE_COOKIE=${RELEASE_COOKIE:-"$(cat "$RELEASE_ROOT/releases/COOKIE")"}
+export RELEASE_VSN="$(cut -d' ' -f2 "$RELEASE_ROOT/releases/start_erl.data")"
+export REL_VSN_DIR="$RELEASE_ROOT/releases/$RELEASE_VSN"
+export RELEASE_NODE=${RELEASE_NODE:-$name}
+export RELEASE_MODE=${RELEASE_MODE:-"embedded"}
+export RELEASE_BOOT_SCRIPT=${RELEASE_BOOT_SCRIPT:-"start"}
+export RELEASE_VM_ARGS=${RELEASE_VM_ARGS:-"$REL_VSN_DIR/vm.args"}
+export RELEASE_SYS_CONFIG=${RELEASE_SYS_CONFIG:-"$REL_VSN_DIR/sys"}
+
+. "$REL_VSN_DIR/env.sh"
+
+: ${release_distribution:="sname"}
+: ${<%= @app %>_enable:=no}
+
+pidfile="/var/run/${name}.pid"
+logfile="/var/log/${name}.log"
+procname="*${RELEASE_PROG}*beam.smp"
+
+load_rc_config $name
+
+elixir_command="${REL_VSN_DIR}/elixir"
+command="/usr/sbin/daemon"
+
+<%= @app %>_args="--no-halt"
+<%= @app %>_args="$<%= @app %>_args --cookie \"$RELEASE_COOKIE\""
+<%= @app %>_args="$<%= @app %>_args --$release_distribution \"$RELEASE_NODE\""
+<%= @app %>_args="$<%= @app %>_args --erl \"-mode $RELEASE_MODE\""
+<%= @app %>_args="$<%= @app %>_args --erl-config \"$RELEASE_SYS_CONFIG\""
+<%= @app %>_args="$<%= @app %>_args --boot \"$REL_VSN_DIR/$RELEASE_BOOT_SCRIPT\""
+<%= @app %>_args="$<%= @app %>_args --boot-var RELEASE_LIB \"$RELEASE_ROOT/lib\""
+<%= @app %>_args="$<%= @app %>_args --vm-args \"$RELEASE_VM_ARGS\""
+
+command_args="-f -u ${name} -p ${pidfile} -t ${name} -o ${logfile} ${elixir_command} ${<%= @app %>_args}"
+
+run_rc_command $1
