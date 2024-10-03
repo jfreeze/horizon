@@ -214,7 +214,7 @@ add_user() {
   else
     # Add the user with nologin shell
     echo "Adding user..."
-    pw user add -n $username -c 'Service user for $username' -s /usr/sbin/nologin
+    pw user add -n $username -c "Service user for $username" -s /usr/sbin/nologin
 
     if [ $? -eq 0 ]; then
       echo "User '$username' added successfully."
