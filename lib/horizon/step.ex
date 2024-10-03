@@ -1,8 +1,18 @@
 defmodule Horizon.Step do
   @moduledoc """
-  The Horizon.Step module contains functions that are used to
+  The Horizon.Step module contains steps that are used to
   perform specific tasks during the release process.
   """
+
+  @doc """
+  Run all the needed release steps.
+  """
+  @spec setup(Mix.Release.t()) :: Mix.Release.t()
+  def setup(%Mix.Release{} = release) do
+    release
+    |> merge_defaults()
+    |> setup_rcd()
+  end
 
   @doc """
   Echo the release name and options to the console.
