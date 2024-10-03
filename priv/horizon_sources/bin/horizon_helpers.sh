@@ -210,11 +210,11 @@ add_user() {
 
   # Check if the user exists
   if id "$username" >/dev/null 2>&1; then
-    echo "User '$username' already exists."
+    echo "User '$username' already exists. Skipping..."
   else
     # Add the user with nologin shell
     echo "Adding user..."
-    pw user add -n <%= @app %> -c 'Service user for <%= @app %>' -s /usr/sbin/nologin
+    pw user add -n $username -c 'Service user for $username' -s /usr/sbin/nologin
 
     if [ $? -eq 0 ]; then
       echo "User '$username' added successfully."
