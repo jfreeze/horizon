@@ -11,17 +11,29 @@ defmodule Horizon.Step do
     release = Map.put(release, :options, options_with_defaults)
 
     file = "/usr/local/etc/rc.d/#{name}"
-    dbg(System.cmd("/usr/bin/whoami", []))
 
-    if !File.exists?(file) do
-      System.cmd("/usr/local/bin/doas", ["touch", file])
-      System.cmd("/usr/local/bin/doas", ["chmod", "755", file])
+    # We don't overwrite the rc.d script.
+    # The admin must delete it then run release.sh.
+    if File.exists?(file) do
+      IO.puts([
+        IO.ANSI.yellow(),
+        IO.ANSI.bright(),
+        "  => #{file} exists",
+        IO.ANSI.reset()
+      ])
+    else
+      IO.puts([
+        IO.ANSI.yellow(),
+        IO.ANSI.bright(),
+        "  => Creating #{file}",
+        IO.ANSI.reset()
+      ])
 
       Horizon.create_file_from_template(
         :rc_d,
         name,
         false,
-        false,
+        true,
         options_with_defaults,
         &Horizon.assigns/2,
         fn _app, _opts -> file end

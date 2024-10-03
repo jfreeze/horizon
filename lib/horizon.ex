@@ -1,8 +1,74 @@
 defmodule Horizon do
   @moduledoc """
-  Horizon is a tool for building and deploying Elixir applications.
+  Horizon is a tool for building and deploying
+  Elixir applications to FreeBSD hosts.
 
   """
+
+  @doc """
+  Copy a file from source to target, overwriting if necessary.
+
+  ## Example
+
+        iex> safe_copy_file(:helpers, app, overwrite, false, opts, &Path.join(&2[:bin_path], &1))
+
+  """
+  def copy_static_file(template, app, overwrite, executable, opts, target_fn) do
+    {source, target} = Horizon.get_src_tgt(template, app)
+
+    target = target_fn.(target, opts)
+
+    # Ensure the target directory exists
+    File.mkdir_p(Path.dirname(target))
+    Horizon.safe_copy_file(source, target, overwrite, executable)
+  end
+
+  @doc """
+  Create a file from a template.
+
+  ## Example
+
+        iex> create_file_from_template("source", "target", true, false, %{}, &assigns/2, fn target, opts -> target end)
+
+  """
+  @spec create_file_from_template(
+          String.t(),
+          String.t(),
+          boolean(),
+          boolean(),
+          keyword(),
+          function(),
+          function()
+        ) ::
+          no_return()
+  def create_file_from_template(template, app, overwrite, executable, opts, assigns_fn, target_fn) do
+    {source, target} = Horizon.get_src_tgt(template, app)
+
+    target = target_fn.(target, opts)
+
+    {:ok, template_content} = File.read(source)
+    eex_template = EEx.eval_string(template_content, assigns_fn.(app, opts))
+    Horizon.safe_write(eex_template, target, overwrite, executable)
+  end
+
+  @doc """
+  Assigns the application and options to a keyword list.
+
+  """
+  @spec assigns(atom(), keyword()) :: [keyword()]
+  def assigns(app, opts) do
+    [
+      assigns: [
+        app: app,
+        app_path: opts[:path],
+        bin_path: opts[:bin_path],
+        build_path: opts[:build_path],
+        build_host: opts[:build_host],
+        build_user: opts[:build_user] || "$(whoami)",
+        is_default?: opts[:is_default?] || false
+      ]
+    ]
+  end
 
   @doc """
   Returns a tuple with the full source path and the target file name.
@@ -28,6 +94,10 @@ defmodule Horizon do
 
   def get_src_tgt(:helpers, _app) do
     {get_src_path("bin", "horizon_helpers.sh"), "horizon_helpers.sh"}
+  end
+
+  def get_src_tgt(:rc_d, app) do
+    {get_src_path("rc_d", "rc_d.eex"), "#{app}"}
   end
 
   @spec get_src_path(atom, String.t()) :: String.t() | no_return()
@@ -101,60 +171,17 @@ defmodule Horizon do
     releases =
       case mix_config[:releases] do
         nil ->
-          configure_default_paths([{app_name, [is_default?: true]}])
+          Horizon.Config.merge_defaults([{app_name, [is_default?: true]}])
+
+        # configure_default_paths([{app_name, [is_default?: true]}])
 
         releases ->
-          configure_default_paths(releases)
+          # configure_default_paths(releases)
+          Horizon.Config.merge_defaults(releases)
       end
 
     validate_releases(releases)
     releases
-  end
-
-  @doc """
-  Configure default paths for releases.
-
-  ## Examples
-
-          iex> configure_default_paths([my_app: []], "my_app")
-          [
-            my_app: [
-              bin_path: "bin",
-              path: "/usr/local/my_app",
-              build_path: "/usr/local/opt/my_app/build",
-              build_host: "HOSTUNKNOWN",
-              build_user: "$(whoami)"
-            ]
-          ]
-
-  """
-  @spec configure_default_paths(keyword()) :: keyword()
-  def configure_default_paths(releases) do
-    releases
-    |> maybe_set_default(:bin_path, "bin")
-    |> maybe_set_default(:path, &"/usr/local/#{&1}")
-    |> maybe_set_default(:build_path, &"/usr/local/opt/#{&1}/build")
-    |> maybe_set_default(:build_host, "HOSTUNKNOWN")
-    |> maybe_set_default(:build_user, "$(whoami)")
-  end
-
-  #
-  # ## Examples
-  #   iex> maybe_set_default(releases, :path, app_name, &"/usr/local/#{&1}")
-  #   iex> maybe_set_default(releases, :build_path, app_name, &"/usr/local/opt/#{&1}/build")
-  #
-  defp maybe_set_default(releases, key, path_fn) do
-    Enum.map(releases, fn {app, opts} ->
-      {app, Keyword.update(opts, key, get_path(path_fn, app), & &1)}
-    end)
-  end
-
-  defp get_path(path_fn, app_name) when is_function(path_fn) do
-    path_fn.(app_name)
-  end
-
-  defp get_path(path_fn, _app_name) do
-    path_fn
   end
 
   @doc """
@@ -206,7 +233,7 @@ defmodule Horizon do
         write_file(data, file, executable)
         Mix.shell().info("Overwrote #{file}")
 
-      Mix.shell().yes?("#{file} already exists. Overwrite? [y/N]") ->
+      Mix.shell().yes?("#{file} already exists. Overwrite? [y/N]xx") ->
         write_file(data, file, executable)
         Mix.shell().info("Overwrote #{file}")
 

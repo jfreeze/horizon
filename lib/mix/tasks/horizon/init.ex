@@ -80,7 +80,7 @@ defmodule Mix.Tasks.Horizon.Init do
 
     for {app, opts} = _release <- unique_releases do
       for {template, executable} <- static_targets do
-        copy_static_file(
+        Horizon.copy_static_file(
           template,
           app,
           overwrite,
@@ -98,67 +98,16 @@ defmodule Mix.Tasks.Horizon.Init do
 
     for {app, opts} = _release <- releases do
       for {template, executable} <- bin_targets do
-        create_file_from_template(
+        Horizon.create_file_from_template(
           template,
           app,
           overwrite,
           executable,
           opts,
+          &Horizon.assigns/2,
           &Path.join(&2[:bin_path], &1)
         )
       end
     end
-  end
-
-  @doc """
-  Copy a file from source to target, overwriting if necessary.
-
-  ## Example
-
-        iex> safe_copy_file(:helpers, app, overwrite, false, opts, &Path.join(&2[:bin_path], &1))
-
-  """
-  def copy_static_file(template, app, overwrite, executable, opts, target_fn) do
-    {source, target} = Horizon.get_src_tgt(template, app)
-
-    target = target_fn.(target, opts)
-
-    # Ensure the target directory exists
-    File.mkdir_p(Path.dirname(target))
-    Horizon.safe_copy_file(source, target, overwrite, executable)
-  end
-
-  @doc """
-  Create a file from a template.
-
-  ## Example
-
-        iex> create_file_from_template("source", "target", true, false, %{}, fn target, opts -> target end)
-
-  """
-  @spec create_file_from_template(String.t(), String.t(), boolean(), boolean(), map(), function()) ::
-          no_return()
-  def create_file_from_template(template, app, overwrite, executable, opts, target_fn) do
-    {source, target} = Horizon.get_src_tgt(template, app)
-
-    target = target_fn.(target, opts)
-
-    {:ok, template_content} = File.read(source)
-    eex_template = EEx.eval_string(template_content, assigns(app, opts))
-    Horizon.safe_write(eex_template, target, overwrite, executable)
-  end
-
-  def assigns(app, opts) do
-    [
-      assigns: [
-        app: app,
-        path: opts[:path],
-        bin_path: opts[:bin_path],
-        build_path: opts[:build_path],
-        build_host: opts[:build_host],
-        build_user: opts[:build_user] || "$(whoami)",
-        is_default?: opts[:is_default?] || false
-      ]
-    ]
   end
 end
