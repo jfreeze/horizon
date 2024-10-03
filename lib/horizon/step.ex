@@ -19,8 +19,6 @@ defmodule Horizon.Step do
   @spec merge_defaults(Mix.Release.t()) :: Mix.Release.t()
   def merge_defaults(%Mix.Release{name: name} = release) do
     Map.update(release, :options, [], &Horizon.Config.merge_defaults(&1, name))
-    # options_with_defaults = Horizon.Config.merge_defaults(options, name)
-    # Map.put(release, :options, options_with_defaults)
   end
 
   @doc """
