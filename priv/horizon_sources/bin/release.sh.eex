@@ -21,13 +21,13 @@ NC='\033[0m' # No Color
 # Set the Mix environment to production
 export MIX_ENV=prod
 
-APP_DIR=<%= @build_path %>
+APP_DIR=<%= @app_path %>
 
 # Navigate to the project directory
 cd "$APP_DIR"
 
-echo -e"${GREEN}=== Starting Release Process ===${NC}"
-echo "--- Setting up assets ---"
+echo -e "${GREEN}=== Starting Release Process ===${NC}"
+echo "=> Setting up assets"
 mix local.hex --force
 mix deps.get --only prod
 
@@ -70,7 +70,7 @@ echo -e "${GREEN}=> Restarting the server ${NC}"
 rcd="/usr/local/etc/rc.d/<%= @app %>"
 if [ -e "$rcd" ]; then
   echo -e "Start the service <%= @app %>"
-  service <%= @app %> restart
+  PHX_SERVER=true service <%= @app %> restart
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: unable to start <%= @app %>.${NC}" >&2
     echo -e "${RED}Release Process Completed Unsuccessfully${NC}"
@@ -85,3 +85,10 @@ else
   echo -e "Start the app"
   <%= @app_path %>/bin/<%= @app %> start_iex
 fi
+
+
+## Debugging
+### Verify ipv4 is listening
+#
+# doas netstat -an | grep LISTEN
+#
