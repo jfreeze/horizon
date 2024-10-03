@@ -21,10 +21,8 @@ NC='\033[0m' # No Color
 # Set the Mix environment to production
 export MIX_ENV=prod
 
-APP_DIR=<%= @app_path %>
-
 # Navigate to the project directory
-cd "$APP_DIR"
+cd "<%= @build_path %>"
 
 echo -e "${GREEN}=== Starting Release Process ===${NC}"
 echo "=> Setting up assets"
@@ -37,10 +35,10 @@ mix deps.get --only prod
 
 echo -e "${GREEN}=> Checking for tailwind-$(get_arch)${NC}"
 if [ ! -f "<%= @build_path %>/_build/tailwind-$(get_arch)" ]; then
-  echo -e "${GREEN}  ✔ Installing Tailwind <%= @build_path %>/_build/tailwind-$(get_arch)${NC}"
+  echo -e "${GREEN}  + Installing Tailwind <%= @build_path %>/_build/tailwind-$(get_arch)${NC}"
   mix assets.setup.freebsd
 else
-  echo -e "${GREEN}   ✔ Tailwind installed <%= @build_path %>/_build/tailwind-$(get_arch)${NC}"
+  echo -e "${GREEN}   + Tailwind installed <%= @build_path %>/_build/tailwind-$(get_arch)${NC}"
 fi
 echo ""
 
@@ -77,7 +75,7 @@ if [ -e "$rcd" ]; then
     echo ""
     exit 1
   else
-    echo -e "${GREEN}=> 🚀 Release Process Completed Successfully${NC}"
+    echo -e "${GREEN}=> + Release Process Completed Successfully${NC}"
     echo ""
   fi
 
