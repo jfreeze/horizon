@@ -1,3 +1,15 @@
+#!/bin/sh
+
+# Helper functions for Horizon
+
+exit_if_not_root() {
+  # Check if the current user is root (UID 0)
+  if [ "$(id -u)" -ne 0 ]; then
+    echo "Insufficient privileges. Please run this script as root. Exiting..."
+    exit 1
+  fi
+}
+
 get_arch() {
   # Retrieve the operating system name
   os=$(uname -s)
@@ -189,4 +201,25 @@ update_path() {
       echo "❌  No package selected for input: $input_pkg"
     fi
   done
+}
+
+add_user() {
+  username="$1"
+
+  exit_if_not_root
+
+  # Check if the user exists
+  if id "$username" >/dev/null 2>&1; then
+    echo "User '$username' already exists."
+  else
+    # Add the user with nologin shell
+    echo "Adding user..."
+    pw user add -n <%= @app %> -c 'Service user for <%= @app %>' -s /usr/sbin/nologin
+
+    if [ $? -eq 0 ]; then
+      echo "User '$username' added successfully."
+    else
+      echo "Failed to add user '$username'."
+    fi
+  fi
 }
