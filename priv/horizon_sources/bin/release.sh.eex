@@ -8,6 +8,9 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+# Set ELIXIR_ERL_OPTIONS to force UTF-8 encoding
+export ELIXIR_ERL_OPTIONS="+fnu"
+
 . ./<%= @bin_path %>/horizon_helpers.sh
 
 # ==============================
