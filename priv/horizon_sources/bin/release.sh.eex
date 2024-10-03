@@ -8,7 +8,7 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-. ./bin/horizon_helpers.sh
+. ./<%= @bin_path %>/horizon_helpers.sh
 
 # ==============================
 # Color Definitions
@@ -53,17 +53,35 @@ mix assets.deploy
 echo ""
 
 echo -e "${GREEN}=> Creating/Updating the release${NC}"
-user=$(whoami)
-group=$(groups)
-doas mkdir -p /usr/local/phx_only
-doas chown -R $user:$group /usr/local/phx_only
+exit_if_not_root
+
+mkdir -p <%= @app_path %>
+chown -R <%= @build_user %> <%= @app_path %>
 MIX_ENV=prod mix release <%= if not @is_default?, do: @app %> --overwrite
 echo ""
 
+sysrc <%= @app %>_enable="YES"
+
+add_user <%= @app %>
+
 # Step 5: Restart the Server
 echo -e "${GREEN}=> Restarting the server ${NC}"
-#doas service <%= @app %> restart
-/usr/local/phx_only/bin/phx_only start_iex
-echo ""
 
-echo -e "${GREEN}=> 🚀 Release Process Completed Successfully${NC}"
+rcd="/usr/local/etc/rc.d/<%= @app %>"
+if [ -e "$rcd" ]; then
+  echo -e "Start the service <%= @app %>"
+  service <%= @app %> restart
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}Error: unable to start <%= @app %>.${NC}" >&2
+    echo -e "${RED}Release Process Completed Unsuccessfully${NC}"
+    echo ""
+    exit 1
+  else
+    echo -e "${GREEN}=> 🚀 Release Process Completed Successfully${NC}"
+    echo ""
+  fi
+
+else
+  echo -e "Start the app"
+  <%= @app_path %>/bin/<%= @app %> start_iex
+fi
