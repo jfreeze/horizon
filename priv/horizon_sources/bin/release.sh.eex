@@ -13,13 +13,6 @@ export ELIXIR_ERL_OPTIONS="+fnu"
 
 . ./<%= @bin_path %>/horizon_helpers.sh
 
-# ==============================
-# Color Definitions
-# ==============================
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
 
 # Set the Mix environment to production
 export MIX_ENV=prod
@@ -30,7 +23,8 @@ cd "<%= @build_path %>"
 echo -e "${GREEN}=== Starting Release Process ===${NC}"
 echo "=> Setting up assets"
 mix local.hex --force
-mix deps.get --only prod
+## do we want to do that on the build machine????
+##mix deps.get --only prod
 
 
 # Will need to manually check if tailwind for freebsd is installed as currently the --if-missing flag is not supported when passing in an argument
