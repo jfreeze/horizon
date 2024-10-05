@@ -1,7 +1,8 @@
 #!/bin/sh
 
 #
-# This script is self contained and run on the target host machine.
+# The script that does the actual install on the remote host.
+# This script is self contained and runs on the target host machine.
 #
 
 # Default output format and quiet mode

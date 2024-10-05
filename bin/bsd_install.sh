@@ -1,5 +1,14 @@
 #!/bin/sh
 
+#
+# Usage: bsd_install.sh [-u user] host config_file
+#
+# Use this script to install software on a remote host using SSH.
+# This script utilizes `bsd_install_args.sh` to parse the configuration file
+# and generate arguments which it then sends to `bsd_install_script.sh`,
+# the installation script that does the actual installation.
+#
+
 export SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 . "$SCRIPT_DIR/horizon_helpers.sh"
 
