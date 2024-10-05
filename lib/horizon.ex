@@ -72,6 +72,14 @@ defmodule Horizon do
 
   @doc """
   Returns a tuple with the full source path and the target file name.
+  Files are referenced with an atom.
+
+  - `:stage_for_build` => `bin/stage-my_app.sh`
+  - `:bsd_install` => `bin/bsd_install.sh`
+  - `:release` => `bin/release-my_app.sh`
+  - `:helpers` => `bin/horizon_helpers.sh`
+  - `:rc_d` => `rc_d/my_app`
+
 
   ## Examples
 

@@ -6,10 +6,9 @@ defmodule Mix.Tasks.Horizon.Init do
   @moduledoc """
   Creates Horizon deploy scripts in `bin/` and `rel/` directories.
 
-  ## Examples
+  ## Usage
 
-      mix horizon.init
-      mix horizon.init -y
+      mix horizon.init [-y]
 
   ### Options
 
@@ -18,11 +17,61 @@ defmodule Mix.Tasks.Horizon.Init do
   ## Description
 
   Horizon.init creates several scripts for deploying an Elixir application to a host.
-  Horizon is customized for FreeBSD hsts, but should be able to accomodate Linux hosts.
+  Horizon is customized for FreeBSD hosts, but several scripts are platform independent,
+  meaning they can be used on a Linux host.
+
+  ### Customization
+
+  Horizon.init uses the `releases` configuration in `mix.exs` to customize the deployment scripts.
+  The available options are:
+
+  - `bin_path`: default :`bin`
+  - `path`: default: `/usr/local/<app_name>`
+  - `build_user`: default: `whoami`
+  - `build_host`: default: `HOSTUNKNOWN`
+
+  #### `bin_path`
+
+  The directory where the scripts are created. If there is a `bin_path` for each release, scripts
+  are copied to each bin directory.
+
+  #### `path`
+
+  The final destination of the release on the deploy host. This will be the same on deploy only hosts and the build host.
+
+  #### `build_user`
+
+  The username on the build machine. This is used to copy the release to the build machine.
+  This is used by the `stage` script to copy the release to the build machine, but may be overridden
+  on the commandline.
+
+  #### `build_host`
+
+  The hostname of the build machine. This is used to copy the release to the build machine.
+  This is used by the `stage` script to copy the release to the build machine, but may be overridden
+  on the commandline.
 
   ### Files Created
 
-  A `stage` script is created in `bin/` for each release.
+  Running `mix horizon.init` creates several files in the `bin_path` directory.
+  For the project `my_app`, these files include:
+
+  - `bsd_install.sh`
+  - `bsd_install_args.sh`
+  - `bsd_install_script.sh`
+  - `horizon_helpers.sh`
+  - `release-my_app.sh`
+  - `build-my_app.sh`
+  - `stage-my_app.sh`
+
+  #### `stage-my_app.sh`
+
+  Copies the project to the build machine.
+  This script uses `build_path` for the project and `path` for the target of `mix release`.
+  A stage script is created for each release.
+
+  #### `bsd_install_args.sh`
+
   If you have multiple releases, a `stage` script is created for each release.
   For example, imagine you have releases `app_web` and `app_worker`.
   Horizon.init will create
