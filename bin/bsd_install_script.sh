@@ -1,12 +1,24 @@
 #!/bin/sh
 
+#
+# This script is self contained and run on the target host machine.
+#
+
 # Default output format and quiet mode
 OUTPUT_FORMAT="ansi"
 QUIET="false"
 ELIXIR_VERSION=""
 COMMANDS="" # Use a string to store commands
 
+# Define colors
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+NC='\033[0m' # No Color
+
+#
 # Parse command-line arguments
+#
 while [ $# -gt 0 ]; do
     case "$1" in
     --output-format=*)
@@ -20,7 +32,7 @@ while [ $# -gt 0 ]; do
         if [ -n "$1" ]; then
             COMMANDS="$COMMANDS pkg:$1"
         else
-            echo "Error: --pkg requires an argument"
+            echo "${RED}[ERROR]${NC} --pkg requires an argument"
             exit 1
         fi
         ;;
@@ -29,7 +41,7 @@ while [ $# -gt 0 ]; do
         if [ -n "$1" ]; then
             COMMANDS="$COMMANDS service:$1"
         else
-            echo "Error: --service requires an argument"
+            echo "${RED}[ERROR]${NC} --service requires an argument$"
             exit 1
         fi
         ;;
@@ -39,22 +51,27 @@ while [ $# -gt 0 ]; do
             ELIXIR_VERSION="$1"
             COMMANDS="$COMMANDS elixir"
         else
-            echo "Error: --elixir requires a version argument"
+            echo "${RED}[ERROR]${NC} --elixir requires a version argument"
             exit 1
         fi
+        ;;
+    --postgres)
+        # shift - no arguments to shift
+        echo "Postgres - parsing script args"
+        COMMANDS="$COMMANDS postgres"
         ;;
     --path)
         shift
         if [ -n "$1" ]; then
             CUSTOM_PATHS="$1:$CUSTOM_PATHS"
         else
-            echo "Error: --path requires an argument"
+            echo "${RED}[ERROR]${NC} --path requires an argument"
             exit 1
         fi
         ;;
     *)
         # Unknown option
-        echo "Unknown option: $1"
+        echo "Unknown option: '$1'"
         exit 1
         ;;
     esac
@@ -66,12 +83,6 @@ if [ -n "$CUSTOM_PATHS" ]; then
     PATH="$CUSTOM_PATHS$PATH"
     export PATH
 fi
-
-# Define colors
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[0;33m'
-NC='\033[0m' # No Color
 
 # Initialize JSON_MESSAGES
 JSON_MESSAGES=""
@@ -103,7 +114,7 @@ output_message() {
     json)
         # Escape quotes and backslashes in message
         # ESCAPED_MESSAGE=$(printf '%s' "$MESSAGE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
-        ESCAPED_MESSAGE=$(echo -e "$MESSAGE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
+        ESCAPED_MESSAGE=$(echo "$MESSAGE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
         # Append JSON object to JSON_MESSAGES
         if [ -z "$JSON_MESSAGES" ]; then
             JSON_MESSAGES="{\"status\":\"$STATUS\",\"message\":\"$ESCAPED_MESSAGE\"}"
@@ -112,7 +123,7 @@ output_message() {
         fi
         ;;
     *)
-        echo -e "$MESSAGE"
+        echo "$MESSAGE"
         ;;
     esac
 }
@@ -197,6 +208,7 @@ install_elixir() {
     return 0
 }
 
+echo "COMMANDS: $COMMANDS"
 # Process commands in the order they were provided
 for CMD in $COMMANDS; do
     case "$CMD" in
@@ -257,6 +269,10 @@ for CMD in $COMMANDS; do
             fi
         fi
         ;;
+    postgres)
+        # Handle Postgres configuration
+        echo "Configuring Postgres..."
+        ;;
     *)
         output_message "error" "Unknown command: $CMD"
         exit 1
@@ -266,5 +282,5 @@ done
 
 # Output JSON_MESSAGES if in JSON format
 if [ "$OUTPUT_FORMAT" = "json" ]; then
-    echo -e "[${JSON_MESSAGES}]"
+    echo "[${JSON_MESSAGES}]"
 fi

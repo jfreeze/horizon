@@ -1,5 +1,11 @@
 #!/bin/sh
 
+#
+# Parses a configuration file and generate arguments for the installation script
+#
+# Usage: bsd_install_args.sh <config_file>
+#
+
 CONFIG_FILE="$1"
 
 if [ -z "$CONFIG_FILE" ]; then
@@ -23,21 +29,24 @@ while IFS= read -r line; do
 
   # Parse the line
   case "$line" in
+  path:*)
+    PATH_VAL="${line#path:}"
+    ARGS="$ARGS --path $PATH_VAL"
+    ;;
   pkg:*)
     APP="${line#pkg:}"
     ARGS="$ARGS --pkg $APP"
-    ;;
-  elixir:*)
-    ELIXIR_VERSION="${line#elixir:}"
-    ARGS="$ARGS --elixir $ELIXIR_VERSION"
     ;;
   service:*)
     SERVICE="${line#service:}"
     ARGS="$ARGS --service $SERVICE"
     ;;
-  path:*)
-    PATH_VAL="${line#path:}"
-    ARGS="$ARGS --path $PATH_VAL"
+  elixir:*)
+    ELIXIR_VERSION="${line#elixir:}"
+    ARGS="$ARGS --elixir $ELIXIR_VERSION"
+    ;;
+  postgres)
+    ARGS="$ARGS --postgres"
     ;;
   *)
     echo "Unknown config line: $line"

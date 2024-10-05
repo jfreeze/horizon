@@ -1,11 +1,14 @@
 #!/bin/sh
 
+export SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+. "$SCRIPT_DIR/horizon_helpers.sh"
+
 # Function to display usage
 usage() {
   echo "\n"
-  echo "Usage: $0 [-u user] machine config_file"
+  echo "${GREEN}Usage: $0 [-u user] machine config_file${NC}"
   echo "  -u user      Specify the remote user (optional, defaults to current user)"
-  echo "  machine      Target machine's IP address or hostname"
+  echo "  host         Target host's IP address or hostname"
   echo "  config_file  Path to the configuration file"
   echo "\n"
   exit 1
@@ -13,11 +16,9 @@ usage() {
 
 # Initialize variables
 REMOTE_USER=$(whoami) # Default to current user
-MACHINE=""
-CONFIG_FILE=""
 
 # Parse options
-while getopts "u:" opt; do
+while getopts ":u:" opt; do
   case "$opt" in
   u)
     REMOTE_USER="$OPTARG"
@@ -36,30 +37,34 @@ if [ $# -ne 2 ]; then
   usage
 fi
 
-MACHINE="$1"
+# Assign positional arguments after options have been shifted
+HOST="$1"
 CONFIG_FILE="$2"
+
+# Display parsed values
+echo_info "Installing $CONFIG_FILE on $REMOTE_USER@$HOST"
 
 # Check if configuration file exists
 if [ ! -f "$CONFIG_FILE" ]; then
-  echo "Error: Configuration file '$CONFIG_FILE' does not exist."
+  echo_error "Configuration file '$CONFIG_FILE' does not exist."
   exit 1
 fi
 
 # Path to the installation script
-INSTALL_SCRIPT="./install_script.sh"
+INSTALL_SCRIPT="${SCRIPT_DIR}/bsd_install_script.sh"
 
 # Check if installation script exists
 if [ ! -f "$INSTALL_SCRIPT" ]; then
-  echo "Error: Installation script '$INSTALL_SCRIPT' does not exist."
+  echo_error "Installation script '$INSTALL_SCRIPT' does not exist."
   exit 1
 fi
 
 # Generate installation arguments using install_args.sh
-INSTALL_ARGS=$(./install_args.sh "$CONFIG_FILE")
+INSTALL_ARGS=$("${SCRIPT_DIR}/bsd_install_args.sh" "$CONFIG_FILE")
 
 # Check if arguments were generated
 if [ -z "$INSTALL_ARGS" ]; then
-  echo "Error: No installation arguments generated. Please check the configuration file."
+  echo_error "No installation arguments generated. Please check the configuration file."
   exit 1
 fi
 
@@ -70,7 +75,7 @@ echo "Arguments to pass: $INSTALL_ARGS"
 # Using SSH with the specified user and machine
 # The -- ensures that sh does not interpret any further options
 # Properly quote the arguments to handle spaces or special characters
-# ssh "${REMOTE_USER}@${MACHINE}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"
+ssh "${REMOTE_USER}@${HOST}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"
 
 # Alternatively, if you prefer piping:
-cat "$INSTALL_SCRIPT" | ssh "${REMOTE_USER}@${MACHINE}" "sh -s -- $INSTALL_ARGS"
+# cat "$INSTALL_SCRIPT" | ssh "${REMOTE_USER}@${HOST}" "sh -s -- $INSTALL_ARGS"

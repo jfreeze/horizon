@@ -1,15 +1,66 @@
 #!/bin/sh
 
-# Helper functions for Horizon
+#
+# COLOR DEFINITIONS
+#
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
+# Variables
+LOGIN_CONF="/etc/login.conf"
+BACKUP_CONF="/etc/login.conf.bak"
+POSTGRES_CLASS_NAME="postgres"
+POSTGRES_CLASS_DEFINITION="postgres:\
+  :lang=en_US.UTF-8:\
+  :setenv=LC_COLLATE=C:\
+  :tc=default:"
+
+#
+# HELPER FUNCTIONS
+#
+
+#
+# Function: exit_if_not_root
+#
+# Description:
+#
+#   Check if the current user is root (UID 0) and exit if not.
+#
 exit_if_not_root() {
-  # Check if the current user is root (UID 0)
   if [ "$(id -u)" -ne 0 ]; then
     echo "Insufficient privileges. Please run this script as root. Exiting..."
     exit 1
   fi
 }
 
+#
+# Functions: echo_info, echo_warn, echo_error
+#
+# Description:
+#
+#  Display messages with label and color
+#
+echo_info() {
+  echo "${GREEN}[INFO]${NC} $1\n"
+}
+
+echo_warn() {
+  echo "${YELLOW}[WARN]${NC} $1\n"
+}
+
+echo_error() {
+  echo "${RED}[ERROR]${NC} $1\n" >&2
+}
+
+#
+# Function: get_arch
+#
+# Description:
+#
+#  Get the os-arch pair for the current system
+#
 get_arch() {
   # Retrieve the operating system name
   os=$(uname -s)
@@ -73,7 +124,6 @@ get_arch() {
 #
 # To use the function in your shell, source this script or include it in your .shrc
 #
-
 update_path() {
   # Define the shell RC file (modify if using a different shell)
   RC_FILE="$HOME/.shrc"
@@ -203,6 +253,22 @@ update_path() {
   done
 }
 
+#
+# Function: add_user
+#
+# Description:
+#
+#   Adds a user
+#
+# Usage:
+#   add_user username
+#
+# ## Example:
+#
+#   add_user postgres
+#
+# To use the function in your shell, source this script or include it in your .shrc
+#
 add_user() {
   username="$1"
 

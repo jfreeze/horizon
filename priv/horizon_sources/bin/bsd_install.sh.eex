@@ -1,9 +1,12 @@
 #!/bin/sh
 
+export SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+. "$SCRIPT_DIR/horizon_helpers.sh"
+
 # Function to display usage
 usage() {
   echo "\n"
-  echo "Usage: $0 [-u user] machine config_file"
+  echo "${GREEN}Usage: $0 [-u user] machine config_file${NC}"
   echo "  -u user      Specify the remote user (optional, defaults to current user)"
   echo "  host         Target host's IP address or hostname"
   echo "  config_file  Path to the configuration file"
@@ -13,11 +16,9 @@ usage() {
 
 # Initialize variables
 REMOTE_USER=$(whoami) # Default to current user
-HOST="$1"
-CONFIG_FILE="$2"
 
 # Parse options
-while getopts "u:" opt; do
+while getopts ":u:" opt; do
   case "$opt" in
   u)
     REMOTE_USER="$OPTARG"
@@ -36,27 +37,34 @@ if [ $# -ne 2 ]; then
   usage
 fi
 
+# Assign positional arguments after options have been shifted
+HOST="$1"
+CONFIG_FILE="$2"
+
+# Display parsed values
+echo_info "Installing $CONFIG_FILE on $REMOTE_USER@$HOST"
+
 # Check if configuration file exists
 if [ ! -f "$CONFIG_FILE" ]; then
-  echo "Error: Configuration file '$CONFIG_FILE' does not exist."
+  echo_error "Configuration file '$CONFIG_FILE' does not exist."
   exit 1
 fi
 
 # Path to the installation script
-INSTALL_SCRIPT="./install_script.sh"
+INSTALL_SCRIPT="${SCRIPT_DIR}/bsd_install_script.sh"
 
 # Check if installation script exists
 if [ ! -f "$INSTALL_SCRIPT" ]; then
-  echo "Error: Installation script '$INSTALL_SCRIPT' does not exist."
+  echo_error "Installation script '$INSTALL_SCRIPT' does not exist."
   exit 1
 fi
 
 # Generate installation arguments using install_args.sh
-INSTALL_ARGS=$(./install_args.sh "$CONFIG_FILE")
+INSTALL_ARGS=$("${SCRIPT_DIR}/bsd_install_args.sh" "$CONFIG_FILE")
 
 # Check if arguments were generated
 if [ -z "$INSTALL_ARGS" ]; then
-  echo "Error: No installation arguments generated. Please check the configuration file."
+  echo_error "No installation arguments generated. Please check the configuration file."
   exit 1
 fi
 
