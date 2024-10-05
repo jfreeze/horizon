@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -euo pipefail
+
 #
 # The script that does the actual install on the remote host.
 # This script is self contained and runs on the target host machine.
@@ -10,12 +12,24 @@ OUTPUT_FORMAT="ansi"
 QUIET="false"
 ELIXIR_VERSION=""
 COMMANDS="" # Use a string to store commands
+CUSTOM_PATHS=""
 
 # Define colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
+
+## todo: add logging
+LOG_FILE="/var/log/bsd_install.log"
+
+log_info() {
+    doas echo -e "$(date '+%Y-%m-%d %H:%M:%S') [INFO] $1" | tee -a "$LOG_FILE"
+}
+
+log_error() {
+    doas echo -e "$(date '+%Y-%m-%d %H:%M:%S') [ERROR] $1" | tee -a "$LOG_FILE" >&2
+}
 
 #
 # Parse command-line arguments
@@ -88,7 +102,13 @@ fi
 # Initialize JSON_MESSAGES
 JSON_MESSAGES=""
 
-# Function to output messages
+#
+# Function: output_message
+#
+# Description:
+#
+#   Outputs messages based on state: success, error, not_needed, info.
+#
 output_message() {
     STATUS="$1"
     MESSAGE="$2"
@@ -129,7 +149,14 @@ output_message() {
     esac
 }
 
-# Function to run commands with optional quiet mode
+#
+# Function: run_cmd
+#
+# Description:
+#
+#   Run commands with optional quiet mode
+#
+
 run_cmd() {
     if [ "$QUIET" = "true" ]; then
         "$@" >/dev/null 2>&1
@@ -209,22 +236,113 @@ install_elixir() {
     return 0
 }
 
+#
+# Function: configure_postgres
+#
+# Description:
+#
+#     Configures the Postgres database by updating /etc/login.conf and
+#
+configure_postgres() {
+    update_login_conf
+    if [ $? -ne 0 ]; then
+        output_message "error" "Failed to update /etc/login.conf with the postgres class."
+        exit $?
+    else
+        output_message "info" "[INFO] /etc/login.conf updated successfully."
+    fi
+}
+
+#
+# Function: update_login_conf
+#
+# Description:
+#
+#     Updates /etc/login.conf by adding the postgres class if it doesn't exist,
+#     and rebuilds the login.conf database.
+#
+update_login_conf() {
+    # Define local variables or ensure they are defined globally
+    LOGIN_CONF="/etc/login.conf"
+    LOGIN_CONF_BACKUP="/etc/login.conf.bak"
+    LOGIN_CLASS_NAME="postgres"
+    CLASS_DEFINITION=$(
+        cat <<'EOF'
+postgres:\\
+  :lang=en_US.UTF-8:\\
+  :setenv=LC_COLLATE=C:\\
+  :tc=default:
+EOF
+    )
+
+    # Step 1: Backup /etc/login.conf
+    if [ ! -f "$LOGIN_CONF_BACKUP" ]; then
+        output_message "info" "Creating backup of $LOGIN_CONF at $LOGIN_CONF_BACKUP."
+        doas cp "$LOGIN_CONF" "$LOGIN_CONF_BACKUP"
+        if [ $? -ne 0 ]; then
+            output_message "error" "Failed to create backup of $LOGIN_CONF."
+            return 1 # Return non-zero to indicate failure
+        fi
+    else
+        output_message "not_needed" "[INFO] Backup file $LOGIN_CONF_BACKUP already exists. Skipping backup step."
+    fi
+
+    # Step 2: Check if 'postgres' class already exists
+    if grep -q "^${LOGIN_CLASS_NAME}:" "$LOGIN_CONF"; then
+        output_message "warn" "[INFO] Class '${LOGIN_CLASS_NAME}' already exists in $LOGIN_CONF. No changes made."
+    else
+        output_message "info" "=> Adding class '${LOGIN_CLASS_NAME}' to $LOGIN_CONF."
+        # Use a subshell to handle quoting properly
+        doas sh -c "echo \"$CLASS_DEFINITION\" >>\"$LOGIN_CONF\""
+        if [ $? -ne 0 ]; then
+            output_message "error" "=> Failed to append class definition to $LOGIN_CONF. Attempting to restore backup."
+            doas cp "$LOGIN_CONF_BACKUP" "$LOGIN_CONF"
+            if [ $? -ne 0 ]; then
+                output_message "error" "=> Failed to restore $LOGIN_CONF from backup. Manual intervention required."
+                return 2
+            fi
+            return 1 # Return non-zero to indicate failure
+        fi
+    fi
+
+    # Step 3: Rebuild the login.conf database
+    output_message "info" "=> Rebuilding the login.conf database."
+    doas cap_mkdb "$LOGIN_CONF"
+    if [ $? -ne 0 ]; then
+        output_message "error" "=> Failed to rebuild the login.conf database. Attempting to restore backup."
+        doas cp "$LOGIN_CONF_BACKUP" "$LOGIN_CONF"
+        if [ $? -ne 0 ]; then
+            output_message "error" "=> Failed to restore $LOGIN_CONF from backup after cap_mkdb failure. Manual intervention required."
+            return 3
+        fi
+        doas cap_mkdb "$LOGIN_CONF"
+        if [ $? -ne 0 ]; then
+            output_message "error" "=> Failed to rebuild the login.conf database after restoring backup. Manual intervention required."
+            return 4
+        fi
+        return 2
+    fi
+
+    output_message "info" "=> Class '${LOGIN_CLASS_NAME}' added successfully and login.conf database updated."
+
+    return 0
+}
+
 echo "COMMANDS: $COMMANDS"
 # Process commands in the order they were provided
 for CMD in $COMMANDS; do
     case "$CMD" in
     pkg:*)
         APP="${CMD#pkg:}"
-        echo "APP: $APP"
         # Check if package is installed
         if pkg info "$APP" >/dev/null 2>&1; then
-            output_message "not_needed" "$APP is already installed."
+            output_message "not_needed" "[INFO] $APP is already installed."
         else
             # Try to install the package
             if run_cmd doas pkg install -y "$APP"; then
-                output_message "success" "$APP installed successfully."
+                output_message "success" "[INFO] $APP installed successfully."
             else
-                output_message "error" "Failed to install $APP."
+                output_message "error" "[ERROR] Failed to install $APP."
                 exit 1
             fi
         fi
@@ -233,9 +351,9 @@ for CMD in $COMMANDS; do
         SERVICE="${CMD#service:}"
         # Enable and start the service
         if run_cmd doas sysrc "${SERVICE}_enable=YES"; then
-            output_message "success" "$SERVICE service enabled."
+            output_message "success" "[INFO] $SERVICE service enabled."
         else
-            output_message "error" "Failed to enable $SERVICE service."
+            output_message "error" "[ERROR] Failed to enable $SERVICE service."
         fi
 
         # Check if the service is already running
@@ -243,13 +361,13 @@ for CMD in $COMMANDS; do
         SERVICE_STATUS=$?
 
         if [ $SERVICE_STATUS -eq 0 ]; then
-            output_message "not_needed" "$SERVICE service is already running."
+            output_message "not_needed" "[INFO] $SERVICE service is already running."
         else
             # Attempt to start the service
             if run_cmd doas service "$SERVICE" start; then
-                output_message "success" "$SERVICE service started."
+                output_message "success" "[INFO] $SERVICE service started."
             else
-                output_message "error" "Failed to start $SERVICE service."
+                output_message "error" "[ERROR] Failed to start $SERVICE service."
             fi
         fi
         ;;
@@ -260,19 +378,19 @@ for CMD in $COMMANDS; do
             exit 1
         fi
         if is_elixir_installed; then
-            output_message "not_needed" "Elixir v$ELIXIR_VERSION is already installed."
+            output_message "not_needed" "[INFO] Elixir v$ELIXIR_VERSION is already installed."
         else
             if install_elixir; then
-                output_message "success" "Elixir v$ELIXIR_VERSION installed successfully."
+                output_message "success" "[INFO] Elixir v$ELIXIR_VERSION installed successfully."
             else
-                output_message "error" "Failed to install Elixir v$ELIXIR_VERSION."
+                output_message "error" "[ERROR] Failed to install Elixir v$ELIXIR_VERSION."
                 exit 1
             fi
         fi
         ;;
     postgres)
         # Handle Postgres configuration
-        echo "Configuring Postgres..."
+        configure_postgres
         ;;
     *)
         output_message "error" "Unknown command: $CMD"
