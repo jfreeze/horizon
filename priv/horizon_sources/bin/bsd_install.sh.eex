@@ -18,6 +18,7 @@ usage() {
 # Initialize variables
 REMOTE_USER=$(whoami) # Default to current user
 OUTPUT_FORMAT=""
+QUIET=""
 
 # Parse options
 while [ $# -gt 0 ]; do
@@ -28,6 +29,9 @@ while [ $# -gt 0 ]; do
     ;;
   --json)
     OUTPUT_FORMAT="--output-format=json"
+    ;;
+  --quiet)
+    QUIET="--quiet"
     ;;
   --)
     shift
@@ -84,8 +88,10 @@ if [ -n "$OUTPUT_FORMAT" ]; then
   INSTALL_ARGS="$INSTALL_ARGS $OUTPUT_FORMAT"
 fi
 
-# Display the arguments for verification (optional)
-echo "Arguments to pass: $INSTALL_ARGS"
+# Add quiet mode if specified
+if [ -n "$QUIET" ]; then
+  INSTALL_ARGS="$INSTALL_ARGS $QUIET"
+fi
 
 # Execute the installation script on the remote machine
 # Using SSH with the specified user and machine
