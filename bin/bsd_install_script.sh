@@ -155,13 +155,30 @@ while [ $# -gt 0 ]; do
         # no arguments to shift
         COMMANDS="$COMMANDS postgres-init"
         ;;
-    --postgres)
+    --postgres-db-c_mixed_utf8)
         shift
         if [ -n "$1" ]; then
-            DB="$1"
-            COMMANDS="$COMMANDS postgres:$1"
+            COMMANDS="$COMMANDS postgres-db-c_mixed_utf8:$1"
         else
-            echo "${RED}[ERROR]${RESET} --postgres requires a database name argument"
+            echo "${RED}[ERROR]${RESET} --postgres-db-c_mixed_utf8 requires a database name argument"
+            exit 1
+        fi
+        ;;
+    --postgres-db-c_utf8_full)
+        shift
+        if [ -n "$1" ]; then
+            COMMANDS="$COMMANDS postgres-db-c_utf8_full:$1"
+        else
+            echo "${RED}[ERROR]${RESET} --postgres-db-c_utf8_full requires a database name argument"
+            exit 1
+        fi
+        ;;
+    --postgres-db-us_utf8_full)
+        shift
+        if [ -n "$1" ]; then
+            COMMANDS="$COMMANDS postgres-db-us_utf8_full:$1"
+        else
+            echo "${RED}[ERROR]${RESET} --postgres-db-us_utf8_full requires a database name argument"
             exit 1
         fi
         ;;
@@ -400,14 +417,11 @@ create_db() {
         exit 1
     fi
 
-    #              |  Collate     | Ctype
-    # ENCODING1    |  C.UTF-8     | C.UTF-8
-    # ENCODING2    |  en_US.UTF-8 | en_US.UTF-8
-    # ENCODING3    |  C           | C.UTF-8
+    #                                                |  Collate     | Ctype
+    #  c_mixed_utf8   |  C           | C.UTF-8
+    #  c_utf8_full    |  C.UTF-8     | C.UTF-8
+    #  us_utf8_full   |  en_US.UTF-8 | en_US.UTF-8
 
-    ENCODING="ENCODING 'UTF8' LC_COLLATE = 'C.UTF-8' LC_CTYPE = 'C.UTF-8' TEMPLATE template0"
-    # ENCODING="ENCODING 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' TEMPLATE template0"
-    # ENCODING=""
     create_db_sql="CREATE DATABASE \"${DB}\" OWNER \"${username}\" ${ENCODING};"
 
     if run_cmd doas -u postgres psql -c "$create_db_sql"; then
@@ -506,8 +520,19 @@ for CMD in $COMMANDS; do
         # Handle Postgres configuration
         init_postgres
         ;;
-    postgres:*)
-        DB="${CMD#postgres:}"
+    postgres-db-c_mixed_utf8:*)
+        DB="${CMD#postgres-db-c_mixed_utf8:}"
+        ENCODING=""
+        create_db
+        ;;
+    postgres-db-c_utf8_full:*)
+        DB="${CMD#postgres-db-c_utf8_full:}"
+        ENCODING="ENCODING 'UTF8' LC_COLLATE = 'C.UTF-8' LC_CTYPE = 'C.UTF-8' TEMPLATE template0"
+        create_db
+        ;;
+    postgres-db-us_utf8_full:*)
+        DB="${CMD#postgres-db-us_utf8_full:}"
+        ENCODING="ENCODING 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' TEMPLATE template0"
         create_db
         ;;
     *)

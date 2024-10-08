@@ -48,9 +48,27 @@ while IFS= read -r line; do
   postgres\.init)
     ARGS="$ARGS --postgres-init"
     ;;
-  postgres:*)
-    DB="${line#postgres:}"
-    ARGS="$ARGS --postgres $DB"
+  postgres\.db:*)
+    DB_INFO="${line#postgres.db:}"
+    ENCODING_TYPE="${DB_INFO%%:*}"
+    DB_NAME="${DB_INFO#*:}"
+
+    # Extract encoding options if provided
+    case "$ENCODING_TYPE" in
+    c_mixed_utf8)
+      ARGS="$ARGS --postgres-db-c_mixed_utf8 $DB_NAME"
+      ;;
+    c_utf8_full)
+      ARGS="$ARGS --postgres-db-c_utf8_full $DB_NAME"
+      ;;
+    us_utf8_full)
+      ARGS="$ARGS --postgres-db-us_utf8_full $DB_NAME"
+      ;;
+    *)
+      # No specific encoding abbreviation is provided, use default flag
+      ARGS="$ARGS --postgres-db $DB_NAME"
+      ;;
+    esac
     ;;
   *)
     echo "Unknown config line: $line"
@@ -59,6 +77,6 @@ while IFS= read -r line; do
   esac
 done <"$CONFIG_FILE"
 
-# Call the installer script with the parsed arguments
 echo $ARGS
+# Call the installer script with the parsed arguments
 #sh "$INSTALL_SCRIPT" $ARGS
