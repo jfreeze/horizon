@@ -2,10 +2,6 @@
 
 set -euo pipefail
 
-echo "========"
-echo $@
-echo "========"
-
 #
 # The script that does the actual install on the remote host.
 # This script is self contained and runs on the target host machine.
@@ -18,6 +14,9 @@ echo "========"
 #
 #    bsd_install_script.sh --postgres-init
 #
+
+# add this to usage docs
+# bsd_install_script --output-format=[ansi|json] --quiet --pkg git --path /usr/local/lib/erlang27/bin --service postgresql --postgres-init
 
 # Default output format and quiet mode
 OUTPUT_FORMAT="ansi"
@@ -393,8 +392,6 @@ create_db() {
     generate_credentials
     create_user_sql="CREATE USER \"${username}\" WITH PASSWORD '${password}';"
 
-    output_message "debug" "create_user_sql: $create_user_sql"
-
     if run_cmd doas -u postgres psql -c "$create_user_sql"; then
         output_message "success" "User ${username} created successfully."
     else
@@ -412,7 +409,7 @@ create_db() {
     # ENCODING="ENCODING 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' TEMPLATE template0"
     # ENCODING=""
     create_db_sql="CREATE DATABASE \"${DB}\" OWNER \"${username}\" ${ENCODING};"
-    output_message "debug" "create_db_sql: $create_db_sql"
+
     if run_cmd doas -u postgres psql -c "$create_db_sql"; then
         output_message "success" "Database $DB created successfully."
     else
@@ -423,7 +420,7 @@ create_db() {
 
     server_ip=$(ip_address)
     hba="host    ${DB}           ${username}           ${server_ip}/24        md5"
-    output_message "debug" "hba: $hba"
+
     if run_cmd doas -u postgres sh -c "echo \"$hba\" >> ${POSTGRES_DB_PATH}/data${pg_version}/pg_hba.conf"; then
         output_message "success" "Added user ${username}@${DB} to pg_hba.conf."
     else
@@ -511,7 +508,6 @@ for CMD in $COMMANDS; do
         ;;
     postgres:*)
         DB="${CMD#postgres:}"
-        echo "DB: $DB"
         create_db
         ;;
     *)
