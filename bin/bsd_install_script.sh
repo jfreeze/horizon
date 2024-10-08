@@ -2,9 +2,21 @@
 
 set -euo pipefail
 
+echo "========"
+echo $@
+echo "========"
+
 #
 # The script that does the actual install on the remote host.
 # This script is self contained and runs on the target host machine.
+#
+# This script is typically called by calling bsd_install.sh from the remote host.
+#
+# You can run this script directly on the target host:
+#
+# ## Example on target host
+#
+#    bsd_install_script.sh --postgres-init
 #
 
 # Default output format and quiet mode
@@ -18,7 +30,11 @@ CUSTOM_PATHS=""
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[0;33m'
-NC='\033[0m' # No Color
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
+WHITE='\033[0;37m'
+RESET='\033[0m' # No Color
 
 ## todo: add logging
 LOG_FILE="/var/log/bsd_install.log"
@@ -29,6 +45,74 @@ log_info() {
 
 log_error() {
     doas echo -e "$(date '+%Y-%m-%d %H:%M:%S') [ERROR] $1" | tee -a "$LOG_FILE" >&2
+}
+
+#
+# Function: output_message
+#
+# Description:
+#
+#   Outputs messages based on state: success, error, debug, info, warn.
+#
+output_message() {
+    STATUS="$1"
+    MESSAGE="$2"
+
+    case $STATUS in
+    success)
+        COLOR=$GREEN
+        LABEL="[SUCCESS]"
+        ;;
+    error)
+        COLOR=$RED
+        LABEL="[ERROR]"
+        ;;
+    debug)
+        COLOR=$YELLOW
+        LABEL="[DEBUG]"
+        ;;
+    info)
+        COLOR=$YELLOW
+        LABEL="[INFO]"
+        ;;
+    warn)
+        COLOR=$YELLOW
+        LABEL="[WARN]"
+        ;;
+    *)
+        COLOR=$WHITE
+        LABEL=""
+        ;;
+    esac
+
+    case "$OUTPUT_FORMAT" in
+    ansi)
+        echo -e "${COLOR}${LABEL} ${MESSAGE}${RESET}"
+        ;;
+    json)
+        echo "printing json!!!!"
+        # Escape quotes and backslashes in message
+        # ESCAPED_MESSAGE=$(printf '%s' "$MESSAGE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
+        ESCAPED_MESSAGE=$(echo "$MESSAGE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
+        # Append JSON object to JSON_MESSAGES
+        if [ -z "$JSON_MESSAGES" ]; then
+            JSON_MESSAGES="{\"status\":\"$STATUS\",\"message\":\"$ESCAPED_MESSAGE\"}"
+        else
+            JSON_MESSAGES="$JSON_MESSAGES,{\"status\":\"$STATUS\",\"message\":\"$ESCAPED_MESSAGE\"}"
+        fi
+        ;;
+    *)
+        echo -e "${RED}[ERROR]${RESET} Unknown output format: $OUTPUT_FORMAT"
+        exit 1
+        ;;
+    esac
+}
+
+exit_message() {
+    # Output JSON_MESSAGES if in JSON format
+    if [ "$OUTPUT_FORMAT" = "json" ]; then
+        echo "[${JSON_MESSAGES}]"
+    fi
 }
 
 #
@@ -47,7 +131,7 @@ while [ $# -gt 0 ]; do
         if [ -n "$1" ]; then
             COMMANDS="$COMMANDS pkg:$1"
         else
-            echo "${RED}[ERROR]${NC} --pkg requires an argument"
+            echo "${RED}[ERROR]${RESET} --pkg requires an argument"
             exit 1
         fi
         ;;
@@ -56,7 +140,7 @@ while [ $# -gt 0 ]; do
         if [ -n "$1" ]; then
             COMMANDS="$COMMANDS service:$1"
         else
-            echo "${RED}[ERROR]${NC} --service requires an argument$"
+            echo "${RED}[ERROR]${RESET} --service requires an argument$"
             exit 1
         fi
         ;;
@@ -66,21 +150,30 @@ while [ $# -gt 0 ]; do
             ELIXIR_VERSION="$1"
             COMMANDS="$COMMANDS elixir"
         else
-            echo "${RED}[ERROR]${NC} --elixir requires a version argument"
+            echo "${RED}[ERROR]${RESET} --elixir requires a version argument"
             exit 1
         fi
         ;;
+    --postgres-init)
+        # no arguments to shift
+        COMMANDS="$COMMANDS postgres-init"
+        ;;
     --postgres)
-        # shift - no arguments to shift
-        echo "Postgres - parsing script args"
-        COMMANDS="$COMMANDS postgres"
+        shift
+        if [ -n "$1" ]; then
+            DB="$1"
+            COMMANDS="$COMMANDS postgres:$1"
+        else
+            echo "${RED}[ERROR]${RESET} --postgres requires a database name argument"
+            exit 1
+        fi
         ;;
     --path)
         shift
         if [ -n "$1" ]; then
             CUSTOM_PATHS="$1:$CUSTOM_PATHS"
         else
-            echo "${RED}[ERROR]${NC} --path requires an argument"
+            echo "${RED}[ERROR]${RESET} --path requires an argument"
             exit 1
         fi
         ;;
@@ -101,53 +194,6 @@ fi
 
 # Initialize JSON_MESSAGES
 JSON_MESSAGES=""
-
-#
-# Function: output_message
-#
-# Description:
-#
-#   Outputs messages based on state: success, error, not_needed, info.
-#
-output_message() {
-    STATUS="$1"
-    MESSAGE="$2"
-    case "$OUTPUT_FORMAT" in
-    ansi)
-        case "$STATUS" in
-        success)
-            echo -e "${GREEN}${MESSAGE}${NC}"
-            ;;
-        error)
-            echo -e "${RED}${MESSAGE}${NC}"
-            ;;
-        not_needed)
-            echo -e "${YELLOW}${MESSAGE}${NC}"
-            ;;
-        info)
-            echo -e "$MESSAGE"
-            ;;
-        *)
-            echo -e "$MESSAGE"
-            ;;
-        esac
-        ;;
-    json)
-        # Escape quotes and backslashes in message
-        # ESCAPED_MESSAGE=$(printf '%s' "$MESSAGE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
-        ESCAPED_MESSAGE=$(echo "$MESSAGE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
-        # Append JSON object to JSON_MESSAGES
-        if [ -z "$JSON_MESSAGES" ]; then
-            JSON_MESSAGES="{\"status\":\"$STATUS\",\"message\":\"$ESCAPED_MESSAGE\"}"
-        else
-            JSON_MESSAGES="$JSON_MESSAGES,{\"status\":\"$STATUS\",\"message\":\"$ESCAPED_MESSAGE\"}"
-        fi
-        ;;
-    *)
-        echo "$MESSAGE"
-        ;;
-    esac
-}
 
 #
 # Function: run_cmd
@@ -180,7 +226,13 @@ is_elixir_installed() {
     fi
 }
 
+#
 # Function to install Elixir
+#
+# Description:
+#
+#     Install Elixir from source
+#
 install_elixir() {
     output_message "info" "Installing Elixir v$ELIXIR_VERSION..."
     WORKDIR=${WORKDIR:-$(mktemp -d -t elixir)}
@@ -237,98 +289,170 @@ install_elixir() {
 }
 
 #
-# Function: configure_postgres
+# Function: ip_address
 #
 # Description:
 #
-#     Configures the Postgres database by updating /etc/login.conf and
+#     Get the IP address of the current host.
 #
-configure_postgres() {
-    update_login_conf
-    if [ $? -ne 0 ]; then
-        output_message "error" "Failed to update /etc/login.conf with the postgres class."
-        exit $?
-    else
-        output_message "info" "[INFO] /etc/login.conf updated successfully."
-    fi
+ip_address() {
+    ifconfig | awk '/inet / && $2 != "127.0.0.1" {print $2}'
 }
 
 #
-# Function: update_login_conf
+# Function: generate_credentials
 #
 # Description:
 #
-#     Updates /etc/login.conf by adding the postgres class if it doesn't exist,
-#     and rebuilds the login.conf database.
+#     Generate username and password
 #
-update_login_conf() {
-    # Define local variables or ensure they are defined globally
-    LOGIN_CONF="/etc/login.conf"
-    LOGIN_CONF_BACKUP="/etc/login.conf.bak"
-    LOGIN_CLASS_NAME="postgres"
-    CLASS_DEFINITION=$(
-        cat <<'EOF'
-postgres:\\
-  :lang=en_US.UTF-8:\\
-  :setenv=LC_COLLATE=C:\\
-  :tc=default:
-EOF
-    )
-
-    # Step 1: Backup /etc/login.conf
-    if [ ! -f "$LOGIN_CONF_BACKUP" ]; then
-        output_message "info" "Creating backup of $LOGIN_CONF at $LOGIN_CONF_BACKUP."
-        doas cp "$LOGIN_CONF" "$LOGIN_CONF_BACKUP"
-        if [ $? -ne 0 ]; then
-            output_message "error" "Failed to create backup of $LOGIN_CONF."
-            return 1 # Return non-zero to indicate failure
-        fi
-    else
-        output_message "not_needed" "[INFO] Backup file $LOGIN_CONF_BACKUP already exists. Skipping backup step."
-    fi
-
-    # Step 2: Check if 'postgres' class already exists
-    if grep -q "^${LOGIN_CLASS_NAME}:" "$LOGIN_CONF"; then
-        output_message "warn" "[INFO] Class '${LOGIN_CLASS_NAME}' already exists in $LOGIN_CONF. No changes made."
-    else
-        output_message "info" "=> Adding class '${LOGIN_CLASS_NAME}' to $LOGIN_CONF."
-        # Use a subshell to handle quoting properly
-        doas sh -c "echo \"$CLASS_DEFINITION\" >>\"$LOGIN_CONF\""
-        if [ $? -ne 0 ]; then
-            output_message "error" "=> Failed to append class definition to $LOGIN_CONF. Attempting to restore backup."
-            doas cp "$LOGIN_CONF_BACKUP" "$LOGIN_CONF"
-            if [ $? -ne 0 ]; then
-                output_message "error" "=> Failed to restore $LOGIN_CONF from backup. Manual intervention required."
-                return 2
-            fi
-            return 1 # Return non-zero to indicate failure
-        fi
-    fi
-
-    # Step 3: Rebuild the login.conf database
-    output_message "info" "=> Rebuilding the login.conf database."
-    doas cap_mkdb "$LOGIN_CONF"
-    if [ $? -ne 0 ]; then
-        output_message "error" "=> Failed to rebuild the login.conf database. Attempting to restore backup."
-        doas cp "$LOGIN_CONF_BACKUP" "$LOGIN_CONF"
-        if [ $? -ne 0 ]; then
-            output_message "error" "=> Failed to restore $LOGIN_CONF from backup after cap_mkdb failure. Manual intervention required."
-            return 3
-        fi
-        doas cap_mkdb "$LOGIN_CONF"
-        if [ $? -ne 0 ]; then
-            output_message "error" "=> Failed to rebuild the login.conf database after restoring backup. Manual intervention required."
-            return 4
-        fi
-        return 2
-    fi
-
-    output_message "info" "=> Class '${LOGIN_CLASS_NAME}' added successfully and login.conf database updated."
-
-    return 0
+generate_credentials() {
+    username=$(uuidgen)
+    password=$(openssl rand -base64 32 | tr -d '=')
 }
 
+#
+# Function: echo_credentials
+#
+# Description:
+#
+#     Echo the username, password, and database name.
+#
+# Usage:
+#
+#     echo_credentials $database_name
+#
+echo_credentials() {
+    output_message "success" "Username: $username"
+    output_message "success" "Password: $password"
+    output_message "success" "Database: $DB"
+    output_message "warn" "Record these credentials in a secure location."
+    output_message "warn" "You will not be able to retrieve the password later."
+}
+
+#
+# Function: init_postgres
+#
+# Description:
+#
+#     Initializes Postgres server
+#
+init_postgres() {
+    POSTGRES_DB_PATH=/var/db/postgres
+
+    # Configure Sysrc
+    if run_cmd doas sysrc postgresql_enable="YES"; then
+        output_message "success" "[INFO] Enabled postgresql service."
+    else
+        output_message "error" "[ERROR] Failed to enable postgresql in /etc/rc.conf."
+        exit_message
+        exit 1
+    fi
+
+    # Run initdb if the data directory doesn't exist
+
+    # Get the current major version of the installed PostgreSQL
+    pg_version=$(pkg info postgresql* | grep -Eo 'postgresql[0-9]+-client' | sed -E 's/postgresql([0-9]+)-client/\1/')
+
+    # Check if ${POSTGRES_DB_PATH}/data$vsn directory exists
+    if [ ! -d "${POSTGRES_DB_PATH}/data${pg_version}" ]; then
+        output_message "info" "${POSTGRES_DB_PATH}/data${pg_version} not found, initializing database..."
+        doas service postgresql initdb
+    else
+        output_message "info" "${POSTGRES_DB_PATH}/data${pg_version} already exists."
+        return 0
+    fi
+
+    # Set the listen_address in postgresql.conf
+    server_ip=$(ip_address)
+    listen_addresses="listen_addresses = 'localhost, ${server_ip}'  # what IP address(es) to listen on;"
+    doas -u postgres sh -c "echo $listen_addresses >>\"$POSTGRES_DB_PATH/data${pg_version}/postgresql.conf\""
+
+    # Set the permissions
+    hba="""
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+local   all             postgres                                peer
+host    all             postgres        ${server_ip}/24         md5
+host    replication     replicator      ${server_ip}/24         md5
+
+### Database access rules
+"""
+    doas -u postgres sh -c "echo \"$hba\" > ${POSTGRES_DB_PATH}/data${pg_version}/pg_hba.conf"
+
+    # Reload the permissions
+    doas service postgresql reload
+}
+
+#
+# Function: create_db
+#
+# Description:
+#
+#    Create a new user, password and database. User supplied database name.
+#
+create_db() {
+    generate_credentials
+    create_user_sql="CREATE USER \"${username}\" WITH PASSWORD '${password}';"
+
+    output_message "debug" "create_user_sql: $create_user_sql"
+
+    if run_cmd doas -u postgres psql -c "$create_user_sql"; then
+        output_message "success" "User ${username} created successfully."
+    else
+        output_message "error" "Failed to create user '${username}'i."
+        exit_message
+        exit 1
+    fi
+
+    #              |  Collate     | Ctype
+    # ENCODING1    |  C.UTF-8     | C.UTF-8
+    # ENCODING2    |  en_US.UTF-8 | en_US.UTF-8
+    # ENCODING3    |  C           | C.UTF-8
+
+    ENCODING="ENCODING 'UTF8' LC_COLLATE = 'C.UTF-8' LC_CTYPE = 'C.UTF-8' TEMPLATE template0"
+    # ENCODING="ENCODING 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' TEMPLATE template0"
+    # ENCODING=""
+    create_db_sql="CREATE DATABASE \"${DB}\" OWNER \"${username}\" ${ENCODING};"
+    output_message "debug" "create_db_sql: $create_db_sql"
+    if run_cmd doas -u postgres psql -c "$create_db_sql"; then
+        output_message "success" "Database $DB created successfully."
+    else
+        output_message "error" "Failed to create database $DB."
+        exit_message
+        exit 1
+    fi
+
+    server_ip=$(ip_address)
+    hba="host    ${DB}           ${username}           ${server_ip}/24        md5"
+    output_message "debug" "hba: $hba"
+    if run_cmd doas -u postgres sh -c "echo \"$hba\" >> ${POSTGRES_DB_PATH}/data${pg_version}/pg_hba.conf"; then
+        output_message "success" "Added user ${username}@${DB} to pg_hba.conf."
+    else
+        output_message "error" "Failed to add host ${server_ip} to pg_hba.conf."
+        exit_message
+        exit 1
+    fi
+
+    if run_cmd doas service postgresql reload; then
+        output_message "success" "Postgres reloaded successfully."
+    else
+        output_message "error" "Failed to reload Postgres."
+        exit_message
+        exit 1
+    fi
+
+    echo_credentials
+    output_message "info" "exiting"
+    exit 0
+    output_message "info" " => Database: $DB"
+
+}
+
+# todo: remove
 echo "COMMANDS: $COMMANDS"
+exit_message
+
 # Process commands in the order they were provided
 for CMD in $COMMANDS; do
     case "$CMD" in
@@ -336,13 +460,14 @@ for CMD in $COMMANDS; do
         APP="${CMD#pkg:}"
         # Check if package is installed
         if pkg info "$APP" >/dev/null 2>&1; then
-            output_message "not_needed" "[INFO] $APP is already installed."
+            output_message "info" "$APP is already installed."
         else
             # Try to install the package
             if run_cmd doas pkg install -y "$APP"; then
                 output_message "success" "[INFO] $APP installed successfully."
             else
                 output_message "error" "[ERROR] Failed to install $APP."
+                exit_message
                 exit 1
             fi
         fi
@@ -351,9 +476,9 @@ for CMD in $COMMANDS; do
         SERVICE="${CMD#service:}"
         # Enable and start the service
         if run_cmd doas sysrc "${SERVICE}_enable=YES"; then
-            output_message "success" "[INFO] $SERVICE service enabled."
+            output_message "info" "$SERVICE service enabled."
         else
-            output_message "error" "[ERROR] Failed to enable $SERVICE service."
+            output_message "error" "Failed to enable $SERVICE service."
         fi
 
         # Check if the service is already running
@@ -361,7 +486,7 @@ for CMD in $COMMANDS; do
         SERVICE_STATUS=$?
 
         if [ $SERVICE_STATUS -eq 0 ]; then
-            output_message "not_needed" "[INFO] $SERVICE service is already running."
+            output_message "info" "$SERVICE service is already running."
         else
             # Attempt to start the service
             if run_cmd doas service "$SERVICE" start; then
@@ -375,22 +500,29 @@ for CMD in $COMMANDS; do
         # Handle Elixir installation
         if [ -z "$ELIXIR_VERSION" ]; then
             output_message "error" "--elixir option requires a version."
+            exit_message
             exit 1
         fi
         if is_elixir_installed; then
-            output_message "not_needed" "[INFO] Elixir v$ELIXIR_VERSION is already installed."
+            output_message "info" "Elixir v$ELIXIR_VERSION is already installed."
         else
             if install_elixir; then
-                output_message "success" "[INFO] Elixir v$ELIXIR_VERSION installed successfully."
+                output_message "info" "Elixir v$ELIXIR_VERSION installed successfully."
             else
-                output_message "error" "[ERROR] Failed to install Elixir v$ELIXIR_VERSION."
+                output_message "error" "Failed to install Elixir v$ELIXIR_VERSION."
+                exit_message
                 exit 1
             fi
         fi
         ;;
-    postgres)
+    postgres-init)
         # Handle Postgres configuration
-        configure_postgres
+        init_postgres
+        ;;
+    postgres:*)
+        DB="${CMD#postgres:}"
+        echo "DB: $DB"
+        create_db
         ;;
     *)
         output_message "error" "Unknown command: $CMD"
@@ -399,7 +531,4 @@ for CMD in $COMMANDS; do
     esac
 done
 
-# Output JSON_MESSAGES if in JSON format
-if [ "$OUTPUT_FORMAT" = "json" ]; then
-    echo "[${JSON_MESSAGES}]"
-fi
+exit_message
