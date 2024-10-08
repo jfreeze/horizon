@@ -6,8 +6,9 @@ export SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Function to display usage
 usage() {
   echo "\n"
-  echo "${GREEN}Usage: $0 [-u user] machine config_file${NC}"
+  echo "${GREEN}Usage: $0 [-u user] [--json] machine config_file${NC}"
   echo "  -u user      Specify the remote user (optional, defaults to current user)"
+  echo "  --json       Output in JSON format (optional)"
   echo "  host         Target host's IP address or hostname"
   echo "  config_file  Path to the configuration file"
   echo "\n"
@@ -16,21 +17,31 @@ usage() {
 
 # Initialize variables
 REMOTE_USER=$(whoami) # Default to current user
+OUTPUT_FORMAT=""
 
 # Parse options
-while getopts ":u:" opt; do
-  case "$opt" in
-  u)
-    REMOTE_USER="$OPTARG"
+while [ $# -gt 0 ]; do
+  case "$1" in
+  -u)
+    shift
+    REMOTE_USER="$1"
     ;;
-  *)
+  --json)
+    OUTPUT_FORMAT="--output-format=json"
+    ;;
+  --)
+    shift
+    break
+    ;;
+  -*)
     usage
     ;;
+  *)
+    break
+    ;;
   esac
+  shift
 done
-
-# Shift off the options and optional --
-shift $((OPTIND - 1))
 
 # Check for required positional arguments
 if [ $# -ne 2 ]; then
@@ -66,6 +77,11 @@ INSTALL_ARGS=$("${SCRIPT_DIR}/bsd_install_args.sh" "$CONFIG_FILE")
 if [ -z "$INSTALL_ARGS" ]; then
   echo_error "No installation arguments generated. Please check the configuration file."
   exit 1
+fi
+
+# Add output format if specified
+if [ -n "$OUTPUT_FORMAT" ]; then
+  INSTALL_ARGS="$INSTALL_ARGS $OUTPUT_FORMAT"
 fi
 
 # Display the arguments for verification (optional)
