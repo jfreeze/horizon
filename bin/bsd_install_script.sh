@@ -94,7 +94,7 @@ output_message() {
         ESCAPED_MESSAGE=$(echo "$MESSAGE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
         # Append JSON object to JSON_MESSAGES
         if [ -z "$JSON_MESSAGES" ]; then
-            JSON_MESSAGES="[{\"status\":\"$STATUS\",\"message\":\"$ESCAPED_MESSAGE\"}]"
+            JSON_MESSAGES="{\"status\":\"$STATUS\",\"message\":\"$ESCAPED_MESSAGE\"}"
         else
             JSON_MESSAGES="${JSON_MESSAGES}, {\"status\":\"$STATUS\",\"message\":\"$ESCAPED_MESSAGE\"}"
         fi
