@@ -45,8 +45,12 @@ while IFS= read -r line; do
     ELIXIR_VERSION="${line#elixir:}"
     ARGS="$ARGS --elixir $ELIXIR_VERSION"
     ;;
-  postgres)
-    ARGS="$ARGS --postgres"
+  postgres\.init)
+    ARGS="$ARGS --postgres-init"
+    ;;
+  postgres:*)
+    DB="${line#postgres:}"
+    ARGS="$ARGS --postgres $DB"
     ;;
   *)
     echo "Unknown config line: $line"
