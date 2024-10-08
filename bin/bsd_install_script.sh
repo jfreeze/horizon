@@ -90,15 +90,13 @@ output_message() {
         echo -e "${COLOR}${LABEL} ${MESSAGE}${RESET}"
         ;;
     json)
-        echo "printing json!!!!"
         # Escape quotes and backslashes in message
-        # ESCAPED_MESSAGE=$(printf '%s' "$MESSAGE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
         ESCAPED_MESSAGE=$(echo "$MESSAGE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
         # Append JSON object to JSON_MESSAGES
         if [ -z "$JSON_MESSAGES" ]; then
-            JSON_MESSAGES="{\"status\":\"$STATUS\",\"message\":\"$ESCAPED_MESSAGE\"}"
+            JSON_MESSAGES="[{\"status\":\"$STATUS\",\"message\":\"$ESCAPED_MESSAGE\"}]"
         else
-            JSON_MESSAGES="$JSON_MESSAGES,{\"status\":\"$STATUS\",\"message\":\"$ESCAPED_MESSAGE\"}"
+            JSON_MESSAGES="${JSON_MESSAGES}, {\"status\":\"$STATUS\",\"message\":\"$ESCAPED_MESSAGE\"}"
         fi
         ;;
     *)
@@ -443,15 +441,7 @@ create_db() {
     fi
 
     echo_credentials
-    output_message "info" "exiting"
-    exit 0
-    output_message "info" " => Database: $DB"
-
 }
-
-# todo: remove
-echo "COMMANDS: $COMMANDS"
-exit_message
 
 # Process commands in the order they were provided
 for CMD in $COMMANDS; do
