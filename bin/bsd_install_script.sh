@@ -394,8 +394,8 @@ host    replication     replicator      ${server_ip}/24         md5
 """
     doas -u postgres sh -c "echo \"$hba\" > ${POSTGRES_DB_PATH}/data${pg_version}/pg_hba.conf"
 
-    # Reload the permissions
-    doas service postgresql reload
+    # Start the server
+    doas service postgresql start
 }
 
 #
