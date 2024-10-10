@@ -1,12 +1,5 @@
 # Horizon
 
-Horizon provides scripts to build and deploy Elixir applications to FreeBSD.
-It's intent is simplify the deploy process. Part of the ground work
-to have a simple deployment process is to have a simple process
-to configure and build web and postgres hosts.
-
-Horizon is a suite of scripts that are used to build and deploy your Elixir
-application to a FreeBSD host.
 
 `Horizon` provides tools for host configuration (build, postgresql db, web) and tools to deploy any Elixir app that uses `mix release`. 
 
@@ -18,7 +11,46 @@ graph LR
 ```
 
 
-## Setup Steps
+## Host Configuration
+
+### Sample Postgres Host Configuration
+
+```
+pkg:postgresql16-server
+pkg:postgresql16-contrib
+postgres.init
+
+postgres.db:c_mixed_utf8:mydb
+```
+
+### Sample Build Host Configuration
+
+```
+pkg:ca_root_nss
+pkg:gcc
+pkg:rsync
+pkg:gmake
+pkg:erlang-runtime27
+
+path:/usr/local/lib/erlang27/bin
+elixir:1.17.3
+```
+
+### Sample Web Host Configuration
+
+```
+pkg:vips
+```
+
+
+With hosts configured, you can now build and deploy an Elixir app.
+
+- Staging copies the app source to the build machine.
+- Building creates a tarball that is ready to run on a deploy host.
+- Deploy copies the tarball to the build machine and starts the service. (JEDI can allow hot deploys to a running service.)
+
+
+## Deploying an Elixir App
 
 ```shell
 mix horizon.init
@@ -28,11 +60,6 @@ mix horizon.init
 ./bin/deploy-my_app.sh -h target_host -u target_user my_app-0.1.2.tar.gz
 ```
 
-```mermaid
-graph TD
-    A[mix horizon.init] --> B[./bin/stage-my_app.sh]
-    B --> C[./bin/build-my_app.sh]
-```
 
 
 ssj 176 "(cd /usr/local/opt/phx_only/build; . ~/.shrc; doas ./bin1/build-phx_only.sh)"
