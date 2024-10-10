@@ -10,6 +10,19 @@ graph LR
     C --> D[DEPLOY]
 ```
 
+## Installation
+
+If [available in Hex](https://hex.pm/docs/publish), the package can be installed
+by adding `horizon` to your list of dependencies in `mix.exs`:
+
+```elixir
+def deps do
+  [
+    {:horizon, "~> 0.1.0"}
+  ]
+end
+```
+
 
 ## Host Configuration
 
@@ -69,18 +82,6 @@ ssj 176 "(cd /usr/local/opt/phx_only/build; . ~/.shrc; doas ./bin1/build-phx_onl
 
 ssj 176 "(cd /usr/local/opt/phx_only/build; PATH=/usr/local/erlang27/bin:$PATH doas ./bin1/build-phx_only.sh)"
 
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `horizon` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:horizon, "~> 0.1.0"}
-  ]
-end
-```
 
 [![Elixir](d)](https://elixir-lang.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
