@@ -25,7 +25,8 @@ defmodule Horizon.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, "~> 0.34.2", runtime: false}
+      {:ex_doc, "~> 0.34.2", runtime: false},
+      {:dialyxir, "~> 1.4"}
     ]
   end
 end
