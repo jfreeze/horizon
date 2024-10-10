@@ -1,7 +1,13 @@
 defmodule Horizon.Step do
   @moduledoc """
   The Horizon.Step module contains steps that are used to
-  perform specific tasks during the release process.
+  perform tasks during the release process.
+
+  - `setup/1` - Run all the needed release steps.
+  - `echo/1` - Echo the release name and options to the console.
+  - `merge_defaults/1` - Merges the Horizon defaults into the release options.
+  - `setup_rcd/1` - Create the rc.d script for the release.
+
   """
 
   @doc """

@@ -142,7 +142,8 @@ defmodule Mix.Tasks.Horizon.Init do
 
     bin_targets = [
       {:stage_for_build, true},
-      {:release, true}
+      {:build, true},
+      {:release_on_build, true}
     ]
 
     for {app, opts} = _release <- releases do

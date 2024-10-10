@@ -57,11 +57,11 @@ HOST="$1"
 CONFIG_FILE="$2"
 
 # Display parsed values
-echo_info "Installing $CONFIG_FILE on $REMOTE_USER@$HOST"
+puts "info" "Installing $CONFIG_FILE on $REMOTE_USER@$HOST"
 
 # Check if configuration file exists
 if [ ! -f "$CONFIG_FILE" ]; then
-  echo_error "Configuration file '$CONFIG_FILE' does not exist."
+  puts "error" "Configuration file '$CONFIG_FILE' does not exist."
   exit 1
 fi
 
@@ -70,7 +70,7 @@ INSTALL_SCRIPT="${SCRIPT_DIR}/bsd_install_script.sh"
 
 # Check if installation script exists
 if [ ! -f "$INSTALL_SCRIPT" ]; then
-  echo_error "Installation script '$INSTALL_SCRIPT' does not exist."
+  puts "error" "Installation script '$INSTALL_SCRIPT' does not exist."
   exit 1
 fi
 
@@ -79,7 +79,7 @@ INSTALL_ARGS=$("${SCRIPT_DIR}/bsd_install_args.sh" "$CONFIG_FILE")
 
 # Check if arguments were generated
 if [ -z "$INSTALL_ARGS" ]; then
-  echo_error "No installation arguments generated. Please check the configuration file."
+  puts "error" "No installation arguments generated. Please check the configuration file."
   exit 1
 fi
 

@@ -1,0 +1,44 @@
+#!/bin/sh
+
+#
+# Release build on the build host
+#
+
+#set -euo pipefail
+set -e
+
+. ./<% @bin_path %>/horizon_helpers.sh
+
+sysrc <%= @app %>_enable="YES"
+
+add_user <%= @app %>
+
+# App is ready for deployment to another host or started on the build host.
+
+# Step 1: Restart the Server
+puts "info" "Restarting the server"
+
+rcd="/usr/local/etc/rc.d/<%= @app %>"
+if [ -e "$rcd" ]; then
+  puts "info" "Starting the service <%= @app %>"
+  PHX_SERVER=true service <%= @app %> restart
+  if [ $? -ne 0 ]; then
+    puts "error" "Error: unable to start <%= @app %>." >&2
+    puts "error" "Release Process Completed Unsuccessfully" >&2
+    echo ""
+    exit 1
+  else
+    puts "info" "+ Release Process Completed Successfully"
+    echo ""
+  fi
+
+else
+  echo -e "Starting <% @app %>"
+  <%= @app_path %>/bin/<%= @app %> start_iex
+fi
+
+## Debugging
+### Verify ipv4 is listening
+#
+# doas netstat -an | grep LISTEN
+#

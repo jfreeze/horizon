@@ -76,7 +76,9 @@ defmodule Horizon do
 
   - `:stage_for_build` => `bin/stage-my_app.sh`
   - `:bsd_install` => `bin/bsd_install.sh`
+  - `:build` => `bin/build.sh`
   - `:release` => `bin/release-my_app.sh`
+  - `:release_on_build` => `bin/release_on_build-my_app.sh`
   - `:helpers` => `bin/horizon_helpers.sh`
   - `:rc_d` => `rc_d/my_app`
 
@@ -96,8 +98,12 @@ defmodule Horizon do
     {get_src_path("bin", "bsd_install.sh.eex"), "bsd_install.sh"}
   end
 
-  def get_src_tgt(:release, app) do
-    {get_src_path("bin", "release.sh.eex"), "release-#{app}.sh"}
+  def get_src_tgt(:build, app) do
+    {get_src_path("bin", "build.sh.eex"), "build-#{app}.sh"}
+  end
+
+  def get_src_tgt(:release_on_build, app) do
+    {get_src_path("bin", "release_on_build.sh.eex"), "release_on_build-#{app}.sh"}
   end
 
   def get_src_tgt(:helpers, _app) do

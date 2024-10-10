@@ -6,16 +6,11 @@
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
-NC='\033[0m' # No Color
+RESET='\033[0m'
 
 # Variables
 LOGIN_CONF="/etc/login.conf"
 BACKUP_CONF="/etc/login.conf.bak"
-POSTGRES_CLASS_NAME="postgres"
-POSTGRES_CLASS_DEFINITION="postgres:\
-  :lang=en_US.UTF-8:\
-  :setenv=LC_COLLATE=C:\
-  :tc=default:"
 
 #
 # HELPER FUNCTIONS
@@ -36,22 +31,47 @@ exit_if_not_root() {
 }
 
 #
-# Functions: echo_info, echo_warn, echo_error
+# Function: puts state message
 #
 # Description:
 #
 #  Display messages with label and color
 #
-echo_info() {
+puts() {
   echo "${GREEN}[INFO]${NC} $1\n"
 }
+echo "${YELLOW}[WARN]${NC} $1\n"
+puts() {
+  STATUS="$1"
+  MESSAGE="$2"
 
-echo_warn() {
-  echo "${YELLOW}[WARN]${NC} $1\n"
-}
-
-echo_error() {
-  echo "${RED}[ERROR]${NC} $1\n" >&2
+  case $STATUS in
+  success)
+    COLOR=$GREEN
+    LABEL="[SUCCESS]"
+    ;;
+  error)
+    COLOR=$RED
+    LABEL="[ERROR]"
+    ;;
+  debug)
+    COLOR=$YELLOW
+    LABEL="[DEBUG]"
+    ;;
+  info)
+    COLOR=$YELLOW
+    LABEL="[INFO]"
+    ;;
+  warn)
+    COLOR=$YELLOW
+    LABEL="[WARN]"
+    ;;
+  *)
+    COLOR=$WHITE
+    LABEL=""
+    ;;
+  esac
+  echo -e "${COLOR}${LABEL} ${MESSAGE}${RESET}"
 }
 
 #
@@ -145,13 +165,13 @@ update_path() {
 
     if [ -n "$exact_match" ]; then
       selected_pkg="$exact_match"
-      echo "🔍  Found exact match: $selected_pkg"
+      puts "success" "Found exact match: $selected_pkg"
     else
       # If no exact match, treat input as partial and find matching packages
       matching_pkgs=$(pkg info | awk -v prefix="$input_pkg" '$1 ~ "^"prefix {print $1}')
 
       if [ -z "$matching_pkgs" ]; then
-        echo "⚠️  No installed packages match: $input_pkg"
+        puts "warn" "No installed packages match: $input_pkg"
         continue
       fi
 
@@ -169,7 +189,7 @@ update_path() {
             ' | sort -n | tail -n 1 | awk '{print $2}')
 
       if [ -z "$selected_pkg" ]; then
-        echo "⚠️  No valid numeric version found for partial package: $input_pkg"
+        puts "warn" "No valid numeric version found for partial package: $input_pkg"
         continue
       fi
 
@@ -206,7 +226,7 @@ update_path() {
       #     ;;
 
       *)
-        echo "⚠️  No extraction logic defined for package: $selected_pkg"
+        puts "warn" "No extraction logic defined for package: $selected_pkg"
         continue
         ;;
       esac
@@ -218,7 +238,7 @@ update_path() {
 
         # Verify that trimming was successful and path is not empty
         if [ -z "$trimmed_path" ]; then
-          echo "❌  Extracted path is empty after trimming for package: $selected_pkg"
+          puts "info" "❌  Extracted path is empty after trimming for package: $selected_pkg"
           continue
         fi
 
@@ -227,9 +247,9 @@ update_path() {
         if [ $? -ne 0 ]; then
           # Prepend the new path to PATH
           export PATH="$trimmed_path:$PATH"
-          echo "✅  Updated PATH with: $trimmed_path"
+          puts "success" "✅  Updated PATH with: $trimmed_path"
         else
-          echo "🔍  Path already exists in PATH: $trimmed_path"
+          puts "info" "🔍  Path already exists in PATH: $trimmed_path"
         fi
 
         # Prepare the export line for the RC file
@@ -240,15 +260,15 @@ update_path() {
         if [ $? -ne 0 ]; then
           # Append the export line to the RC file
           echo "$export_line" >>"$RC_FILE" &&
-            echo "📝  Added PATH update to $RC_FILE"
+            puts "info" "Added PATH update to $RC_FILE"
         else
-          echo "🔍  PATH update already exists in $RC_FILE"
+          puts "info" "PATH update already exists in $RC_FILE"
         fi
       else
-        echo "❌  Failed to extract path for package: $selected_pkg"
+        puts "error" "❌  Failed to extract path for package: $selected_pkg"
       fi
     else
-      echo "❌  No package selected for input: $input_pkg"
+      puts "error" "❌  No package selected for input: $input_pkg"
     fi
   done
 }
@@ -279,13 +299,13 @@ add_user() {
     echo "User '$username' already exists. Skipping..."
   else
     # Add the user with nologin shell
-    echo "Adding user..."
+    puts "info" "Adding user..."
     pw user add -n $username -c "Service user for $username" -s /usr/sbin/nologin
 
     if [ $? -eq 0 ]; then
-      echo "User '$username' added successfully."
+      puts "success" "User '$username' added successfully."
     else
-      echo "Failed to add user '$username'."
+      puts "error" "Failed to add user '$username'."
     fi
   fi
 }
