@@ -15,6 +15,7 @@ graph LR
 
 ### Sample Postgres Host Configuration
 
+`#postgres.conf`
 ```
 pkg:postgresql16-server
 pkg:postgresql16-contrib
@@ -25,6 +26,7 @@ postgres.db:c_mixed_utf8:mydb
 
 ### Sample Build Host Configuration
 
+`#build.conf`
 ```
 pkg:ca_root_nss
 pkg:gcc
@@ -38,6 +40,7 @@ elixir:1.17.3
 
 ### Sample Web Host Configuration
 
+`#web.conf`
 ```
 pkg:vips
 ```
