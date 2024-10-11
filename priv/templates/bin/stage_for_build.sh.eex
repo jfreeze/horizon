@@ -31,14 +31,6 @@
 # - build_host
 #
 
-# ==============================
-# Color Definitions
-# ==============================
-#GREEN='\033[0;32m'
-#YELLOW='\033[0;33m'
-#RED='\033[0;31m'
-#NC='\033[0m' # No Color
-
 
 # ==============================
 # Configuration
@@ -54,12 +46,13 @@ STAGING_METHOD="auto" # Options: auto, rsync, tar
 FORCE_STAGE=0         # 0 = do not force, 1 = force staging with uncommitted changes
 
 echo ""
-echo -e "${GREEN}== STAGING SUMMARY ==${NC}"
-puts "info" "${GREEN}Staging application: ${NC}$APP_NAME"
-echo -e "${GREEN}Source Repo path:    ${NC}$SRC_REPO_DIR"
-echo -e "${GREEN}Build path:          ${NC}$BUILD_PATH"
-echo -e "${YELLOW}Build user:          ${NC}$BUILD_USER"
-echo -e "${YELLOW}Build host:          ${NC}$BUILD_HOST"
+puts "info" "${GREEN}Staging application: ${RESET}$APP_NAME"
+echo ""
+echo -e "${GREEN}== STAGING SUMMARY ==${RESET}"
+echo -e "${GREEN}Source Repo path:    ${RESET}$SRC_REPO_DIR"
+echo -e "${GREEN}Build path:          ${RESET}$BUILD_PATH"
+echo -e "${YELLOW}Build user:          ${RESET}$BUILD_USER"
+echo -e "${YELLOW}Build host:          ${RESET}$BUILD_HOST"
 echo ""
 
 # ==============================
@@ -106,11 +99,11 @@ generate_exclude_options() {
 
 # Function to display usage
 usage() {
-  echo -e "${GREEN}Usage: $0 [--rsync | --tar] [--force]${NC}"
+  echo -e "${GREEN}Usage: $0 [--rsync | --tar] [--force]${RESET}"
   echo ""
   echo "To override user and host:"
   echo ""
-  echo -e "${GREEN}Usage: ${YELLOW}BUILD_USER=user BUILD_HOST=host${NC} $0 [--rsync | --tar] [--force]"
+  echo -e "${GREEN}Usage: ${YELLOW}BUILD_USER=user BUILD_HOST=host${RESET} $0 [--rsync | --tar] [--force]"
   echo ""
 
   exit 1
@@ -125,9 +118,9 @@ get_commit_hash() {
 check_uncommitted_changes() {
   if ! git -C "$SRC_REPO_DIR" diff-index --quiet HEAD --; then
     if [ "$FORCE_STAGE" -eq 1 ]; then
-        echo -e "${RED}Warning: You have uncommitted changes. Proceeding with staging.${NC}" >&2
+        echo -e "${RED}Warning: You have uncommitted changes. Proceeding with staging.${RESET}" >&2
     else
-        echo -e "${RED}Error: You have uncommitted changes. Please commit or stash them before staging.${NC}" >&2
+        echo -e "${RED}Error: You have uncommitted changes. Please commit or stash them before staging or use --force.${RESET}" >&2
         exit 1
     fi
   fi
@@ -135,11 +128,11 @@ check_uncommitted_changes() {
 
 # Function to compute a hash of the local directory
 compute_local_hash() {
-  echo -e "${GREEN}Computing local project hash...${NC}" >&2
+  echo -e "${GREEN}Computing local project hash...${RESET}" >&2
 
   # Change to the repository directory
   cd "$SRC_REPO_DIR" || {
-    echo -e "${RED}Error: Repository directory not found!${NC}" >&2
+    echo -e "${RED}Error: Repository directory not found!${RESET}" >&2
     exit 1
   }
 
@@ -154,7 +147,7 @@ compute_local_hash() {
 
 # Function to compute a hash of the remote directory
 compute_remote_hash() {
-  echo -e "${GREEN}Computing remote project hash...${NC}" >&2
+  echo -e "${GREEN}Computing remote project hash...${RESET}" >&2
 
   excludes=$(generate_find_excludes)
 
@@ -167,7 +160,7 @@ compute_remote_hash() {
 
 # Function to stage files using rsync with checksum verification
 deploy_rsync() {
-  echo -e "${GREEN}Staging using rsync...${NC}"
+  echo -e "${GREEN}Staging using rsync...${RESET}"
 
   # Create the target directory on the remote host if it doesn't exist
   ssh "$BUILD_USER@$BUILD_HOST" "doas mkdir -p '$BUILD_PATH'"
@@ -181,7 +174,7 @@ deploy_rsync() {
   rsync "$@"
 
   if [ $? -ne 0 ]; then
-    echo -e "${RED}Error: rsync failed.${NC}" >&2
+    echo -e "${RED}Error: rsync failed.${RESET}" >&2
     exit 1
   fi
 }
@@ -189,7 +182,7 @@ deploy_rsync() {
 
 
 deploy_tar_scp() {
-  echo -e "${GREEN}Staging using tar and ssh pipeline...${NC}"
+  echo -e "${GREEN}Staging using tar and ssh pipeline...${RESET}"
 
   # Create an empty target directory on the remote host
   ssh "$BUILD_USER@$BUILD_HOST" "doas rm -rf \"$BUILD_PATH\" && doas mkdir -p \"$BUILD_PATH\""
@@ -205,7 +198,7 @@ deploy_tar_scp() {
   | ssh "$BUILD_USER@$BUILD_HOST" "doas tar --no-xattrs --no-acls -xzvp -C '$BUILD_PATH'"
 
   if [ $? -ne 0 ]; then
-    echo -e "${RED}Error: tar and ssh pipeline failed.${NC}" >&2
+    echo -e "${RED}Error: tar and ssh pipeline failed.${RESET}" >&2
     exit 1
   fi
 }
@@ -224,19 +217,19 @@ verify() {
 
 # Function to verify deployment integrity by comparing hashes
 verify_deployment() {
-  echo -e "${GREEN}Verifying staging integrity...${NC}"
+  echo -e "${GREEN}Verifying staging integrity...${RESET}"
 
   LOCAL_HASH=$(compute_local_hash)
   REMOTE_HASH=$(compute_remote_hash)
 
   if [ "$LOCAL_HASH" == "$REMOTE_HASH" ]; then
-    echo -e "${GREEN}Local project hash: $LOCAL_HASH${NC}"
-    echo -e "${GREEN}Remote project hash: $REMOTE_HASH${NC}"
-    echo -e "${GREEN}Staging verified: Project hashes match.${NC}"
+    echo -e "${GREEN}Local project hash: $LOCAL_HASH${RESET}"
+    echo -e "${GREEN}Remote project hash: $REMOTE_HASH${RESET}"
+    echo -e "${GREEN}Staging verified: Project hashes match.${RESET}"
   else
-    echo -e "${RED}Local project hash: $LOCAL_HASH${NC}"
-    echo -e "${RED}Remote project hash: $REMOTE_HASH${NC}"
-    echo -e "${YELLOW}Warning: Project hashes do not match. Target may have pre-existing files or staging may be incomplete or corrupted.${NC}"
+    echo -e "${RED}Local project hash: $LOCAL_HASH${RESET}"
+    echo -e "${RED}Remote project hash: $REMOTE_HASH${RESET}"
+    echo -e "${YELLOW}Warning: Project hashes do not match. Target may have pre-existing files or staging may be incomplete or corrupted.${RESET}"
   fi
 }
 
@@ -254,13 +247,13 @@ deploy_files() {
       deploy_rsync
       STAGING_METHOD="rsync"
     else
-      echo -e "${RED}rsync not found. Falling back to tar and ssh pipeline.${NC}" >&2
+      echo -e "${RED}rsync not found. Falling back to tar and ssh pipeline.${RESET}" >&2
       deploy_tar_scp
       STAGING_METHOD="tar"
     fi
     ;;
   *)
-    echo -e "${RED}Invalid deployment method: $STAGING_METHOD${NC}" >&2
+    echo -e "${RED}Invalid deployment method: $STAGING_METHOD${RESET}" >&2
     exit 1
     ;;
   esac
@@ -287,7 +280,7 @@ while [[ $# -gt 0 ]]; do
     usage
     ;;
   *)
-    echo -e "${RED}Unknown option: $1${NC}" >&2
+    echo -e "${RED}Unknown option: $1${RESET}" >&2
     usage
     ;;
   esac
@@ -299,7 +292,7 @@ done
 LOCK_FILE="/tmp/<%= @app %>.deploy.lock"
 
 if [ -e "$LOCK_FILE" ]; then
-  echo -e "${RED}Another deployment is in progress. Exiting.${NC}" >&2
+  echo -e "${RED}Another deployment is in progress. Exiting.${RESET}" >&2
   exit 1
 fi
 
@@ -312,11 +305,11 @@ trap "rm -f $LOCK_FILE" EXIT
 # Main Deployment Steps
 # ==============================
 
-echo -e "${GREEN}Starting staging process...${NC}"
+echo -e "${GREEN}Starting staging process...${RESET}"
 
 # Navigate to the repository directory
 cd "$SRC_REPO_DIR" || {
-  echo -e "${RED}Error: Repository directory not found!${NC}" >&2
+  echo -e "${RED}Error: Repository directory not found!${RESET}" >&2
   exit 1
 }
 
@@ -325,7 +318,7 @@ check_uncommitted_changes
 
 # Get the current commit hash
 COMMIT_HASH=$(get_commit_hash)
-echo -e "${GREEN}Current commit hash: $COMMIT_HASH${NC}"
+echo -e "${GREEN}Current commit hash: $COMMIT_HASH${RESET}"
 
 # Deploy the files using the selected method
 deploy_files
@@ -333,4 +326,4 @@ deploy_files
 # Verify the deployment
 verify
 
-echo -e "${GREEN}Staging completed for <%= @app %>.${NC}"
+echo -e "${GREEN}Staging completed for <%= @app %>.${RESET}"
