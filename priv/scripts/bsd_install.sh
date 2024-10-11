@@ -8,7 +8,7 @@ export SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Function to display usage
 usage() {
   echo "\n"
-  echo "${GREEN}Usage: $0 [-u user] [--json] machine config_file${NC}"
+  echo "${GREEN}Usage: $0 [-u user] [--json] host config_file${NC}"
   echo "  -u user      Specify the remote user (optional, defaults to current user)"
   echo "  --json       Output in JSON format (optional)"
   echo "  host         Target host's IP address or hostname"
