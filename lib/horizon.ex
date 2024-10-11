@@ -51,17 +51,14 @@ defmodule Horizon do
         ) ::
           no_return()
   def create_file_from_template(template, app, overwrite, executable, opts, assigns_fn, target_fn) do
-    dbg(template)
-    dbg(app)
-
     {source, target} = Horizon.get_src_tgt(template, app)
-    dbg(source)
-    dbg(target)
 
     target = target_fn.(target, opts)
-    dbg(target)
+    target_dir = Path.dirname(target)
 
-    dbg(assigns_fn.(app, opts))
+    if not File.exists?(target_dir) do
+      File.mkdir_p(target_dir)
+    end
 
     {:ok, template_content} = File.read(source)
     eex_template = EEx.eval_string(template_content, assigns_fn.(app, opts))
@@ -74,8 +71,6 @@ defmodule Horizon do
   """
   @spec assigns(atom(), keyword()) :: keyword()
   def assigns(app, opts) do
-    dbg(app)
-
     [
       assigns: [
         app: app,
@@ -93,53 +88,56 @@ defmodule Horizon do
   Returns a tuple with the full source path and the target file name.
   Files are referenced with an atom.
 
-  - `:stage_for_build` => `bin/stage-my_app.sh`
-  - `:bsd_install` => `bin/bsd_install.sh`
-  - `:build` => `bin/build.sh`
-  - `:release` => `bin/release-my_app.sh`
-  - `:release_on_build` => `bin/release_on_build-my_app.sh`
-  - `:helpers` => `bin/horizon_helpers.sh`
-  - `:rc_d` => `rc_d/my_app`
-
+  Note that files in the `scripts` folder are expected to keep the same
+  name from source to target. These static scripts will only be copied
+  to the a `bin/` folder one time.
 
   ## Examples
 
         iex> get_src_tgt(:stage_for_build, "foo")
-        {"/path_to_horizon/priv/horizon_sources/bin/stage_for_build.sh.eex", "stage_foo.sh"}
+        {"/path_to_horizon/priv/templates/bin/stage_for_build.sh.eex", "stage-foo.sh"}
 
   """
   @spec get_src_tgt(atom(), String.t() | atom()) :: {String.t(), String.t()}
-  def get_src_tgt(:stage_for_build, app) do
-    {get_src_path("bin", "stage_for_build.sh.eex"), "stage-#{app}.sh"}
-  end
-
   def get_src_tgt(:bsd_install, _app) do
-    {get_src_path("bin", "bsd_install.sh.eex"), "bsd_install.sh"}
+    {get_src_path("scripts", "bsd_install.sh"), "bsd_install.sh"}
   end
 
-  def get_src_tgt(:build, app) do
-    {get_src_path("bin", "build.sh.eex"), "build-#{app}.sh"}
+  def get_src_tgt(:bsd_install_args, _app) do
+    {get_src_path("scripts", "bsd_install_args.sh"), "bsd_install_args.sh"}
   end
 
-  def get_src_tgt(:build_script, app) do
-    {get_src_path("bin", "build_script.sh.eex"), "build_script-#{app}.sh"}
-  end
-
-  def get_src_tgt(:release_on_build, app) do
-    {get_src_path("bin", "release_on_build.sh.eex"), "release_on_build-#{app}.sh"}
+  def get_src_tgt(:bsd_install_script, _app) do
+    {get_src_path("scripts", "bsd_install_script.sh"), "bsd_install_script.sh"}
   end
 
   def get_src_tgt(:helpers, _app) do
-    {get_src_path("bin", "horizon_helpers.sh"), "horizon_helpers.sh"}
+    {get_src_path("scripts", "horizon_helpers.sh"), "horizon_helpers.sh"}
+  end
+
+  def get_src_tgt(:stage_for_build, app) do
+    {get_src_path("templates/bin", "stage_for_build.sh.eex"), "stage-#{app}.sh"}
+  end
+
+  def get_src_tgt(:build, app) do
+    {get_src_path("templates/bin", "build.sh.eex"), "build-#{app}.sh"}
+  end
+
+  def get_src_tgt(:build_script, app) do
+    {get_src_path("templates/bin", "build_script.sh.eex"), "build_script-#{app}.sh"}
+  end
+
+  def get_src_tgt(:release_on_build, app) do
+    {get_src_path("templates/bin", "release_on_build.sh.eex"), "release_on_build-#{app}.sh"}
   end
 
   def get_src_tgt(:rc_d, app) do
-    {get_src_path("rc_d", "rc_d.eex"), "#{app}"}
+    {get_src_path("templates/rc_d", "rc_d.eex"), "#{app}"}
   end
 
   @spec get_src_path(String.t(), String.t()) :: String.t() | no_return()
   def get_src_path(dir, source) do
-    Application.app_dir(:horizon, "priv/horizon_sources/#{dir}/#{source}")
+    Application.app_dir(:horizon, "priv/#{dir}/#{source}")
   end
 
   # @doc """
@@ -264,7 +262,7 @@ defmodule Horizon do
         write_file(data, file, executable)
         Mix.shell().info("Overwrote #{file}")
 
-      Mix.shell().yes?("#{file} already exists. Overwrite? [y/N]xx") ->
+      Mix.shell().yes?("#{file} already exists. Overwrite? [y/N]") ->
         write_file(data, file, executable)
         Mix.shell().info("Overwrote #{file}")
 
