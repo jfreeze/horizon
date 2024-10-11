@@ -29,7 +29,12 @@ BUILD_PATH=<%= @build_path %>
 BUILD_USER="${BUILD_USER:-<%= @build_user %>}"
 BUILD_HOST="${BUILD_HOST:-<%= @build_host %>}"
 
-. ./<%= @bin_path %>/horizon_helpers.sh
+# . ./<%= @bin_path %>/horizon_helpers.sh
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+BUILD_SCRIPT="${SCRIPT_DIR}/install_script.sh"
+
+ssh "${BUILD_USER}@${BUILD_HOST}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"
 
 # Navigate to the project directory
 cd "<%= @build_path %>"

@@ -143,6 +143,7 @@ defmodule Mix.Tasks.Horizon.Init do
     bin_targets = [
       {:stage_for_build, true},
       {:build, true},
+      {:build_script, false},
       {:release_on_build, true}
     ]
 

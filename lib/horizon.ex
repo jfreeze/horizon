@@ -13,6 +13,15 @@ defmodule Horizon do
         iex> safe_copy_file(:helpers, app, overwrite, false, opts, &Path.join(&2[:bin_path], &1))
 
   """
+  @spec copy_static_file(
+          atom(),
+          String.t(),
+          boolean(),
+          boolean(),
+          keyword(),
+          function()
+        ) ::
+          no_return()
   def copy_static_file(template, app, overwrite, executable, opts, target_fn) do
     {source, target} = Horizon.get_src_tgt(template, app)
 
@@ -32,7 +41,7 @@ defmodule Horizon do
 
   """
   @spec create_file_from_template(
-          String.t(),
+          atom(),
           String.t(),
           boolean(),
           boolean(),
@@ -42,9 +51,17 @@ defmodule Horizon do
         ) ::
           no_return()
   def create_file_from_template(template, app, overwrite, executable, opts, assigns_fn, target_fn) do
+    dbg(template)
+    dbg(app)
+
     {source, target} = Horizon.get_src_tgt(template, app)
+    dbg(source)
+    dbg(target)
 
     target = target_fn.(target, opts)
+    dbg(target)
+
+    dbg(assigns_fn.(app, opts))
 
     {:ok, template_content} = File.read(source)
     eex_template = EEx.eval_string(template_content, assigns_fn.(app, opts))
@@ -55,8 +72,10 @@ defmodule Horizon do
   Assigns the application and options to a keyword list.
 
   """
-  @spec assigns(atom(), keyword()) :: [keyword()]
+  @spec assigns(atom(), keyword()) :: keyword()
   def assigns(app, opts) do
+    dbg(app)
+
     [
       assigns: [
         app: app,
@@ -102,6 +121,10 @@ defmodule Horizon do
     {get_src_path("bin", "build.sh.eex"), "build-#{app}.sh"}
   end
 
+  def get_src_tgt(:build_script, app) do
+    {get_src_path("bin", "build_script.sh.eex"), "build_script-#{app}.sh"}
+  end
+
   def get_src_tgt(:release_on_build, app) do
     {get_src_path("bin", "release_on_build.sh.eex"), "release_on_build-#{app}.sh"}
   end
@@ -114,15 +137,9 @@ defmodule Horizon do
     {get_src_path("rc_d", "rc_d.eex"), "#{app}"}
   end
 
-  @spec get_src_path(atom, String.t()) :: String.t() | no_return()
+  @spec get_src_path(String.t(), String.t()) :: String.t() | no_return()
   def get_src_path(dir, source) do
-    case Application.app_dir(:horizon, "priv/horizon_sources/#{dir}/#{source}") do
-      nil ->
-        raise "Source file '#{source}' not found."
-
-      path ->
-        path
-    end
+    Application.app_dir(:horizon, "priv/horizon_sources/#{dir}/#{source}")
   end
 
   # @doc """
@@ -275,7 +292,7 @@ defmodule Horizon do
     releases #=> ["phx_only -> build_user", "phx_only -> build_host"]
 
   """
-  @spec validate_releases(keyword()) :: [String.t()]
+  @spec validate_releases(keyword()) :: :ok | nil
   def validate_releases(releases) do
     results = validate_releases(releases, [])
 

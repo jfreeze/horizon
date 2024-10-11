@@ -38,22 +38,31 @@ RESET='\033[0m' # No Color
 ## todo: add logging
 LOG_FILE="/var/log/bsd_install.log"
 
-log_info() {
-	doas echo -e "$(date '+%Y-%m-%d %H:%M:%S') [INFO] $1" | tee -a "$LOG_FILE"
-}
+log() {
+	STATUS="$1"
+	MESSAGE="$2"
 
-log_error() {
-	doas echo -e "$(date '+%Y-%m-%d %H:%M:%S') [ERROR] $1" | tee -a "$LOG_FILE" >&2
+	case $STATUS in
+	success)
+		COLOR=$GREEN
+		LABEL="[SUCCESS]"
+		;;
+	error)
+		COLOR=$RED
+		LABEL="[ERROR]"
+		;;
+	esac
+	doas echo -e "$(date '+%Y-%m-%d %H:%M:%S') $LABEL $MESSAGE" | tee -a "$LOG_FILE"
 }
 
 #
-# Function: output_message
+# Function: puts status message
 #
 # Description:
 #
 #   Outputs messages based on state: success, error, debug, info, warn.
 #
-output_message() {
+puts() {
 	STATUS="$1"
 	MESSAGE="$2"
 
@@ -248,57 +257,57 @@ is_elixir_installed() {
 #     Install Elixir from source
 #
 install_elixir() {
-	output_message "info" "Installing Elixir v$ELIXIR_VERSION..."
+	puts "info" "Installing Elixir v$ELIXIR_VERSION..."
 	WORKDIR=${WORKDIR:-$(mktemp -d -t elixir)}
 	if [ ! -d "$WORKDIR" ]; then
 		if ! run_cmd doas mkdir -p "$WORKDIR"; then
-			output_message "error" "Failed to create directory $WORKDIR."
+			puts "error" "Failed to create directory $WORKDIR."
 			return 1
 		fi
 	fi
 	cd "$WORKDIR" || {
-		output_message "error" "Failed to enter directory $WORKDIR."
+		puts "error" "Failed to enter directory $WORKDIR."
 		return 1
 	}
 
 	# Clone the Elixir repository
 	if [ ! -d "elixir" ]; then
 		if ! run_cmd git clone https://github.com/elixir-lang/elixir.git; then
-			output_message "error" "Failed to clone Elixir repository."
+			puts "error" "Failed to clone Elixir repository."
 			return 1
 		fi
 	else
-		output_message "info" "Elixir repository already cloned."
+		puts "info" "Elixir repository already cloned."
 	fi
 
 	cd elixir || {
-		output_message "error" "Failed to enter elixir directory."
+		puts "error" "Failed to enter elixir directory."
 		return 1
 	}
 
 	# Fetch tags and checkout the desired version
 	if ! run_cmd git fetch --tags && run_cmd git checkout "v$ELIXIR_VERSION"; then
-		output_message "error" "Failed to checkout Elixir version v$ELIXIR_VERSION."
+		puts "error" "Failed to checkout Elixir version v$ELIXIR_VERSION."
 		cd ..
 		return 1
 	fi
 
 	# Compile Elixir
 	if ! run_cmd gmake; then
-		output_message "error" "Failed to build Elixir."
+		puts "error" "Failed to build Elixir."
 		cd ..
 		return 1
 	fi
 
 	# Install Elixir
 	if ! run_cmd doas gmake install; then
-		output_message "error" "Failed to install Elixir."
+		puts "error" "Failed to install Elixir."
 		cd ..
 		return 1
 	fi
 
 	cd ..
-	output_message "success" "Elixir v$ELIXIR_VERSION installed successfully."
+	puts "success" "Elixir v$ELIXIR_VERSION installed successfully."
 	return 0
 }
 
@@ -337,11 +346,11 @@ generate_credentials() {
 #     echo_credentials $database_name
 #
 echo_credentials() {
-	output_message "success" "Username: $username"
-	output_message "success" "Password: $password"
-	output_message "success" "Database: $DB"
-	output_message "warn" "Record these credentials in a secure location."
-	output_message "warn" "You will not be able to retrieve the password later."
+	puts "success" "Username: $username"
+	puts "success" "Password: $password"
+	puts "success" "Database: $DB"
+	puts "warn" "Record these credentials in a secure location."
+	puts "warn" "You will not be able to retrieve the password later."
 }
 
 #
@@ -359,9 +368,9 @@ init_postgres() {
 
 	# Configure Sysrc
 	if run_cmd doas sysrc postgresql_enable="YES"; then
-		output_message "success" "[INFO] Enabled postgresql service."
+		puts "success" "[INFO] Enabled postgresql service."
 	else
-		output_message "error" "[ERROR] Failed to enable postgresql in /etc/rc.conf."
+		puts "error" "[ERROR] Failed to enable postgresql in /etc/rc.conf."
 		exit_message
 		exit 1
 	fi
@@ -370,10 +379,10 @@ init_postgres() {
 
 	# Check if ${POSTGRES_DB_PATH}/data$vsn directory exists
 	if [ ! -d "${POSTGRES_DB_PATH}/data${PG_VERSION}" ]; then
-		output_message "info" "${POSTGRES_DB_PATH}/data${PG_VERSION} not found, initializing database..."
+		puts "info" "${POSTGRES_DB_PATH}/data${PG_VERSION} not found, initializing database..."
 		doas service postgresql initdb
 	else
-		output_message "info" "${POSTGRES_DB_PATH}/data${PG_VERSION} already exists."
+		puts "info" "${POSTGRES_DB_PATH}/data${PG_VERSION} already exists."
 		return 0
 	fi
 
@@ -407,7 +416,7 @@ EOL
 
 	# Uncomment the log_timezone line if it exists
 	doas -u postgres sed -i '' 's/^#\(log_timezone =.*\)/\1/' "$POSTGRES_CONF_FILE"
-	output_message "info" "Updated $POSTGRES_CONF_FILE with PostgreSQL logging settings."
+	puts "info" "Updated $POSTGRES_CONF_FILE with PostgreSQL logging settings."
 
 	doas -u postgres sh -c "echo \"$hba\" > ${POSTGRES_DB_PATH}/data${PG_VERSION}/pg_hba.conf"
 
@@ -429,7 +438,7 @@ configure_postgres_logging() {
 
 	# Return if /var/log/postgresql.log exists
 	if [ -d $postgres_log_file ]; then
-		output_message "info" "$postgres_log_file already exists."
+		puts "info" "$postgres_log_file already exists."
 		return 0
 	else
 		doas touch $postgres_log_file
@@ -443,7 +452,7 @@ configure_postgres_logging() {
 	fi
 
 	echo "*.*    /var/log/postgresql.log" | doas tee /etc/syslog.d/postgres.conf >/dev/null
-	output_message "info" "Created /etc/syslog.d/postgres.conf with PostgreSQL logging configuration."
+	puts "info" "Created /etc/syslog.d/postgres.conf with PostgreSQL logging configuration."
 
 	# Step 2: Modify Syslog Configuration
 	if grep -q "postgresql\.log" "$syslog_conf_file"; then
@@ -458,7 +467,7 @@ configure_postgres_logging() {
 			echo "local0.*			/var/log/postgresql.log" | doas tee -a "$syslog_conf_file" >/dev/null
 			echo "[INFO] Updated $syslog_conf_file with PostgreSQL logging configuration."
 		else
-			output_message "error" "$syslog_conf_file does not exist."
+			puts "error" "$syslog_conf_file does not exist."
 			return 1
 		fi
 
@@ -466,9 +475,9 @@ configure_postgres_logging() {
 
 	# Step 4: Restart Services
 	doas service postgresql reload
-	output_message "info" "Reloaded PostgreSQL service."
+	puts "info" "Reloaded PostgreSQL service."
 	doas service syslogd restart
-	output_message "info" "Restarted syslogd service."
+	puts "info" "Restarted syslogd service."
 }
 
 #
@@ -491,9 +500,9 @@ create_db() {
 	create_user_sql="CREATE USER \"${username}\" WITH PASSWORD '${password}';"
 
 	if run_cmd doas -u postgres psql -c "$create_user_sql"; then
-		output_message "success" "User ${username} created successfully."
+		puts "success" "User ${username} created successfully."
 	else
-		output_message "error" "Failed to create user '${username}'i."
+		puts "error" "Failed to create user '${username}'i."
 		exit_message
 		exit 1
 	fi
@@ -506,9 +515,9 @@ create_db() {
 	create_db_sql="CREATE DATABASE \"${DB}\" OWNER \"${username}\" ${ENCODING};"
 
 	if run_cmd doas -u postgres psql -c "$create_db_sql"; then
-		output_message "success" "Database $DB created successfully."
+		puts "success" "Database $DB created successfully."
 	else
-		output_message "error" "Failed to create database $DB. See /var/log/postgresql.log for more information."
+		puts "error" "Failed to create database $DB. See /var/log/postgresql.log for more information."
 		doas tail -n 5 /var/log/postgresql.log >&2
 		exit_message
 		exit 1
@@ -518,17 +527,17 @@ create_db() {
 	hba="host    ${DB}           ${username}           ${server_ip}/24        md5"
 
 	if run_cmd doas -u postgres sh -c "echo \"$hba\" >> ${POSTGRES_HBA_FILE}"; then
-		output_message "success" "Added user ${username}@${DB} to pg_hba.conf."
+		puts "success" "Added user ${username}@${DB} to pg_hba.conf."
 	else
-		output_message "error" "Failed to add host ${server_ip} to pg_hba.conf."
+		puts "error" "Failed to add host ${server_ip} to pg_hba.conf."
 		exit_message
 		exit 1
 	fi
 
 	if run_cmd doas service postgresql reload; then
-		output_message "success" "Postgres reloaded successfully."
+		puts "success" "Postgres reloaded successfully."
 	else
-		output_message "error" "Failed to reload Postgres."
+		puts "error" "Failed to reload Postgres."
 		exit_message
 		exit 1
 	fi
@@ -543,13 +552,13 @@ for CMD in $COMMANDS; do
 		APP="${CMD#pkg:}"
 		# Check if package is installed
 		if pkg info "$APP" >/dev/null 2>&1; then
-			output_message "info" "$APP is already installed."
+			puts "info" "$APP is already installed."
 		else
 			# Try to install the package
 			if run_cmd doas pkg install -y "$APP"; then
-				output_message "success" "[INFO] $APP installed successfully."
+				puts "success" "[INFO] $APP installed successfully."
 			else
-				output_message "error" "[ERROR] Failed to install $APP."
+				puts "error" "[ERROR] Failed to install $APP."
 				exit_message
 				exit 1
 			fi
@@ -559,9 +568,9 @@ for CMD in $COMMANDS; do
 		SERVICE="${CMD#service:}"
 		# Enable and start the service
 		if run_cmd doas sysrc "${SERVICE}_enable=YES"; then
-			output_message "info" "$SERVICE service enabled."
+			puts "info" "$SERVICE service enabled."
 		else
-			output_message "error" "Failed to enable $SERVICE service."
+			puts "error" "Failed to enable $SERVICE service."
 		fi
 
 		# Check if the service is already running
@@ -569,30 +578,30 @@ for CMD in $COMMANDS; do
 		SERVICE_STATUS=$?
 
 		if [ $SERVICE_STATUS -eq 0 ]; then
-			output_message "info" "$SERVICE service is already running."
+			puts "info" "$SERVICE service is already running."
 		else
 			# Attempt to start the service
 			if run_cmd doas service "$SERVICE" start; then
-				output_message "success" "[INFO] $SERVICE service started."
+				puts "success" "[INFO] $SERVICE service started."
 			else
-				output_message "error" "[ERROR] Failed to start $SERVICE service."
+				puts "error" "[ERROR] Failed to start $SERVICE service."
 			fi
 		fi
 		;;
 	elixir)
 		# Handle Elixir installation
 		if [ -z "$ELIXIR_VERSION" ]; then
-			output_message "error" "--elixir option requires a version."
+			puts "error" "--elixir option requires a version."
 			exit_message
 			exit 1
 		fi
 		if is_elixir_installed; then
-			output_message "info" "Elixir v$ELIXIR_VERSION is already installed."
+			puts "info" "Elixir v$ELIXIR_VERSION is already installed."
 		else
 			if install_elixir; then
-				output_message "info" "Elixir v$ELIXIR_VERSION installed successfully."
+				puts "info" "Elixir v$ELIXIR_VERSION installed successfully."
 			else
-				output_message "error" "Failed to install Elixir v$ELIXIR_VERSION."
+				puts "error" "Failed to install Elixir v$ELIXIR_VERSION."
 				exit_message
 				exit 1
 			fi
@@ -618,7 +627,7 @@ for CMD in $COMMANDS; do
 		create_db
 		;;
 	*)
-		output_message "error" "Unknown command: $CMD"
+		puts "error" "Unknown command: $CMD"
 		exit 1
 		;;
 	esac

@@ -39,6 +39,8 @@ defmodule Horizon.Step do
 
   @doc """
   Create the rc.d script for the release.
+  This script is created on the build host and not part of `mix horizon.init`.
+
   """
   @spec setup_rcd(Mix.Release.t()) :: Mix.Release.t()
   def setup_rcd(%Mix.Release{name: name, options: options} = release) do
