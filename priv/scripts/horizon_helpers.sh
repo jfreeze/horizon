@@ -40,10 +40,6 @@ exit_if_not_root() {
 #  Display messages with label and color
 #
 puts() {
-  echo "${GREEN}[INFO]${NC} $1\n"
-}
-echo "${YELLOW}[WARN]${NC} $1\n"
-puts() {
   STATUS="$1"
   MESSAGE="$2"
 
@@ -73,7 +69,7 @@ puts() {
     LABEL=""
     ;;
   esac
-  echo -e "${COLOR}${LABEL} ${MESSAGE}${RESET}"
+  echo "${COLOR}${LABEL} ${MESSAGE}${RESET}"
 }
 
 #
