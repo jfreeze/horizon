@@ -23,7 +23,6 @@ def deps do
 end
 ```
 
-
 ## Host Configuration
 
 ### Sample Postgres Host Configuration
@@ -75,6 +74,18 @@ mix horizon.init
 ./bin/deploy-my_app.sh [deploys to build host by default]
 ./bin/deploy-my_app.sh -h target_host -u target_user my_app-0.1.2.tar.gz
 ```
+
+### Deploy Stages
+
+#### Stage
+copies app source to the build host.
+
+#### Build
+builds the deploy artifacts. If you have added `Horizon.Step.setup` 
+to your release steps, then the `rc_d` script will be generated and put in `rel/overlay`.
+
+#### Deploy
+copies the tarball to the target host and starts the service.
 
 
 
