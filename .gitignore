@@ -24,3 +24,6 @@ horizon-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Working scripts for development
+/devbin/
