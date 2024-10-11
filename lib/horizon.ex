@@ -10,12 +10,12 @@ defmodule Horizon do
 
   ## Example
 
-        iex> safe_copy_file(:helpers, app, overwrite, false, opts, &Path.join(&2[:bin_path], &1))
+        iex> safe_copy_file(:horizon_helpers, app, overwrite, false, opts, &Path.join(&2[:bin_path], &1))
 
   """
   @spec copy_static_file(
-          atom(),
-          String.t(),
+          Horizon.Target.key(),
+          String.t() | atom(),
           boolean(),
           boolean(),
           keyword(),
@@ -41,8 +41,8 @@ defmodule Horizon do
 
   """
   @spec create_file_from_template(
-          atom(),
-          String.t(),
+          Horizon.Target.key(),
+          String.t() | atom(),
           boolean(),
           boolean(),
           keyword(),
@@ -84,6 +84,13 @@ defmodule Horizon do
     ]
   end
 
+  @static_files [
+    :bsd_install,
+    :bsd_install_args,
+    :bsd_install_script,
+    :horizon_helpers
+  ]
+
   @doc """
   Returns a tuple with the full source path and the target file name.
   Files are referenced with an atom.
@@ -99,20 +106,8 @@ defmodule Horizon do
 
   """
   @spec get_src_tgt(atom(), String.t() | atom()) :: {String.t(), String.t()}
-  def get_src_tgt(:bsd_install, _app) do
-    {get_src_path("scripts", "bsd_install.sh"), "bsd_install.sh"}
-  end
-
-  def get_src_tgt(:bsd_install_args, _app) do
-    {get_src_path("scripts", "bsd_install_args.sh"), "bsd_install_args.sh"}
-  end
-
-  def get_src_tgt(:bsd_install_script, _app) do
-    {get_src_path("scripts", "bsd_install_script.sh"), "bsd_install_script.sh"}
-  end
-
-  def get_src_tgt(:helpers, _app) do
-    {get_src_path("scripts", "horizon_helpers.sh"), "horizon_helpers.sh"}
+  def get_src_tgt(key, _app) when key in @static_files do
+    {get_src_path("scripts", "#{key}.sh"), "#{key}.sh"}
   end
 
   def get_src_tgt(:stage_for_build, app) do
