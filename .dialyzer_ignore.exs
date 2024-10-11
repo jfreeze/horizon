@@ -1,3 +1,3 @@
 [
-  {"lib/horizon.ex", :unknown_function, 59}
+  {"lib/horizon.ex", :unknown_function, 64}
 ]

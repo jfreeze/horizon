@@ -100,6 +100,23 @@ defmodule Mix.Tasks.Horizon.Init do
   - release...
 
   """
+  alias Horizon.Target
+
+  @targets [
+    # Install scripts
+    %Target{executable?: true, type: :template, key: :bsd_install},
+    %Target{executable?: false, type: :static, key: :bsd_install_args},
+    %Target{executable?: false, type: :static, key: :bsd_install_script},
+    # Subroutines
+    %Target{executable?: false, type: :static, key: :helpers},
+    # Release scripts
+    %Target{executable?: true, type: :template, key: :stage_for_build},
+    %Target{executable?: true, type: :template, key: :build},
+    %Target{executable?: false, type: :template, key: :build_script},
+    %Target{executable?: true, type: :template, key: :release_on_build}
+    # RC scripts
+    # {:executable, :template, :rc_d}
+  ]
 
   @impl true
   def run(args) do
@@ -109,11 +126,7 @@ defmodule Mix.Tasks.Horizon.Init do
     Horizon.warn_is_missing_freebsd_alias(Mix.Project.config())
     releases = Horizon.get_config_releases()
 
-    # Static files and their executable status
-    static_targets = [
-      {:helpers, false},
-      {:bsd_install, true}
-    ]
+    static_targets = Enum.filter(@targets, &Target.is_static?/1)
 
     # Only copy static files once per bin_path
     {_, unique_releases} =
@@ -128,9 +141,9 @@ defmodule Mix.Tasks.Horizon.Init do
       end)
 
     for {app, opts} = _release <- unique_releases do
-      for {template, executable} <- static_targets do
+      for %{executable?: executable, key: key} <- static_targets do
         Horizon.copy_static_file(
-          template,
+          key,
           app,
           overwrite,
           executable,
@@ -140,17 +153,12 @@ defmodule Mix.Tasks.Horizon.Init do
       end
     end
 
-    bin_targets = [
-      {:stage_for_build, true},
-      {:build, true},
-      {:build_script, false},
-      {:release_on_build, true}
-    ]
+    bin_template_targets = Enum.filter(@targets, &Target.is_template?/1)
 
     for {app, opts} = _release <- releases do
-      for {template, executable} <- bin_targets do
+      for %{executable?: executable, key: key} <- bin_template_targets do
         Horizon.create_file_from_template(
-          template,
+          key,
           app,
           overwrite,
           executable,
