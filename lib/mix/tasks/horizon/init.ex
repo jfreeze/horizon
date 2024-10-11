@@ -108,7 +108,7 @@ defmodule Mix.Tasks.Horizon.Init do
     %Target{executable?: false, type: :static, key: :bsd_install_args},
     %Target{executable?: false, type: :static, key: :bsd_install_script},
     # Subroutines
-    %Target{executable?: false, type: :static, key: :helpers},
+    %Target{executable?: false, type: :static, key: :horizon_helpers},
     # Release scripts
     %Target{executable?: true, type: :template, key: :stage_for_build},
     %Target{executable?: true, type: :template, key: :build},
