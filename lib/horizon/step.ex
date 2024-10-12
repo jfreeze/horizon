@@ -11,7 +11,7 @@ defmodule Horizon.Step do
   """
 
   @doc """
-  Run all the needed release steps.
+  Run the merge and rcd release steps.
   """
   @spec setup(Mix.Release.t()) :: Mix.Release.t()
   def setup(%Mix.Release{} = release) do
@@ -24,17 +24,23 @@ defmodule Horizon.Step do
   Echo the release name and options to the console.
   """
   @spec echo(Mix.Release.t()) :: Mix.Release.t()
-  def echo(%Mix.Release{name: name, options: options} = release) do
-    IO.inspect(name: name, options: options)
+  def echo(%Mix.Release{name: name} = release) do
+    pr = release |> Map.delete(:applications) |> Map.delete(:boot_scripts)
+    IO.puts("\u001b[32;1m == Horizon.Step.echo/1 ==\u001b[0m")
+    IO.inspect(pr, label: "Truncated release for #{name}")
     release
   end
 
   @doc """
   Merges the Horizon defaults into the release options.
+
+  Calling this step will override Elixir's default value for `release.path`.
+  We check
   """
   @spec merge_defaults(Mix.Release.t()) :: Mix.Release.t()
   def merge_defaults(%Mix.Release{name: name} = release) do
-    Map.update(release, :options, [], &Horizon.Config.merge_defaults(&1, name))
+    release = Map.update(release, :options, [], &Horizon.Config.merge_defaults(&1, name))
+    Map.put(release, :path, Keyword.get(release.options, :path))
   end
 
   @doc """
