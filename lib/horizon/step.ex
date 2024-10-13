@@ -50,36 +50,31 @@ defmodule Horizon.Step do
   """
   @spec setup_rcd(Mix.Release.t()) :: Mix.Release.t()
   def setup_rcd(%Mix.Release{name: name, options: options} = release) do
-    file = "/usr/local/etc/rc.d/#{name}"
+    # file = "/usr/local/etc/rc.d/#{name}"
+    rel_template_path = get_rel_template_path(release)
+    dir = Path.join(rel_template_path, "rc_d")
+    File.mkdir_p(dir)
+    file = Path.join(dir, "#{name}")
 
-    # We don't overwrite the rc.d script.
-    # The admin must delete it then run release.sh.
-    if File.exists?(file) do
-      IO.puts([
-        IO.ANSI.yellow(),
-        IO.ANSI.bright(),
-        "  => #{file} exists",
-        IO.ANSI.reset()
-      ])
-    else
-      IO.puts([
-        IO.ANSI.yellow(),
-        IO.ANSI.bright(),
-        "  => Creating #{file}",
-        IO.ANSI.reset()
-      ])
-
-      Horizon.create_file_from_template(
-        :rc_d,
-        name,
-        false,
-        true,
-        options,
-        &Horizon.assigns/2,
-        fn _app, _opts -> file end
-      )
-    end
+    Horizon.create_file_from_template(
+      :rc_d,
+      name,
+      false,
+      true,
+      options,
+      &Horizon.assigns/2,
+      fn _app, _opts -> file end
+    )
 
     release
   end
+
+  defp get_rel_template_path(release) do
+    release.options
+    |> Keyword.get(:rel_templates_path, "rel/overlays")
+    |> get_path()
+  end
+
+  defp get_path([rel_template_path | _]), do: rel_template_path
+  defp get_path(rel_template_path), do: rel_template_path
 end
