@@ -45,7 +45,8 @@ defmodule Horizon.Step do
 
   @doc """
   Create the rc.d script for the release.
-  This script is created on the build host and not part of `mix horizon.init`.
+  This script is created `overlays/rc_d` and copied to `/usr/local/etc/rc.d/<app>`
+  during deploy.
 
   """
   @spec setup_rcd(Mix.Release.t()) :: Mix.Release.t()
