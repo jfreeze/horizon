@@ -34,13 +34,19 @@ defmodule Horizon.Step do
   @doc """
   Merges the Horizon defaults into the release options.
 
-  Calling this step will override Elixir's default value for `release.path`.
+  Calling this step will override Elixir's default value for
+  `release.path` and `release.version_path`.
 
   """
   @spec merge_defaults(Mix.Release.t()) :: Mix.Release.t()
   def merge_defaults(%Mix.Release{name: name} = release) do
     release = Map.update(release, :options, [], &Horizon.Config.merge_defaults(&1, name))
-    Map.put(release, :path, Keyword.get(release.options, :path))
+    path = Keyword.get(release.options, :path)
+    version_path = Path.join([path, "releases", release.version])
+
+    release
+    |> Map.put(:path, path)
+    |> Map.put(:version_path, version_path)
   end
 
   @doc """
