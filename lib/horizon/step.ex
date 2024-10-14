@@ -44,9 +44,13 @@ defmodule Horizon.Step do
     path = Keyword.get(release.options, :path)
     version_path = Path.join([path, "releases", release.version])
 
+    release =
+      release
+      |> Map.put(:path, path)
+      |> Map.put(:version_path, version_path)
+
+    File.write("release.exs", "#{inspect(release)}\n")
     release
-    |> Map.put(:path, path)
-    |> Map.put(:version_path, version_path)
   end
 
   @doc """
