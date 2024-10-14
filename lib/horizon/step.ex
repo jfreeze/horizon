@@ -61,7 +61,8 @@ defmodule Horizon.Step do
   """
   @spec setup_rcd(Mix.Release.t()) :: Mix.Release.t()
   def setup_rcd(%Mix.Release{name: name, options: options} = release) do
-    # file = "/usr/local/etc/rc.d/#{name}"
+    overwrite = Keyword.get(options, :overwrite, false)
+
     rel_template_path = get_rel_template_path(release)
     dir = Path.join(rel_template_path, "rc_d")
     File.mkdir_p(dir)
@@ -70,7 +71,7 @@ defmodule Horizon.Step do
     Horizon.create_file_from_template(
       :rc_d,
       name,
-      false,
+      overwrite,
       true,
       options,
       &Horizon.assigns/2,
