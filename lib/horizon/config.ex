@@ -35,9 +35,9 @@ defmodule Horizon.Config do
 
   """
   @spec merge_defaults(keyword()) :: keyword()
-  def merge_defaults(releases) do
-    Enum.map(releases, fn {app, release} ->
-      {app, merge_release(release)}
+  def merge_defaults(releases) when is_list(releases) do
+    Enum.map(releases, fn {app, options} ->
+      {app, merge_default_options(options, app)}
     end)
   end
 
