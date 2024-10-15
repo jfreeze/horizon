@@ -14,6 +14,7 @@ defmodule Horizon.Config do
         my_app: [
           bin_path: "bin",
           build_path: "/usr/local/opt/my_app/build",
+          releases_path: ".releases",
           build_host: "HOSTUNKNOWN",
           build_user: "$(whoami)",
           path: "/usr/my_app"
@@ -25,6 +26,7 @@ defmodule Horizon.Config do
           path: "/usr/local/my_app",
           bin_path: "bin",
           build_path: "/usr/local/opt/my_app/build",
+          releases_path: ".releases",
           build_host: "HOSTUNKNOWN",
           build_user: "$(whoami)"
         ]
@@ -48,6 +50,7 @@ defmodule Horizon.Config do
           path: "/usr/local/foo",
           bin_path: "bin",
           build_path: "/usr/local/opt/foo/build",
+          releases_path: ".releases",
           build_host: "HOSTUNKNOWN",
           build_user: "$(whoami)"
         ]
@@ -59,6 +62,7 @@ defmodule Horizon.Config do
       path: "/usr/local/#{name}",
       bin_path: "bin",
       build_path: "/usr/local/opt/#{name}/build",
+      releases_path: ".releases",
       build_host: "HOSTUNKNOWN",
       build_user: "$(whoami)"
     ]
