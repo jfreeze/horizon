@@ -78,7 +78,6 @@ defmodule Horizon.ConfigTest do
         }
       ]
 
-      # Call the function
       updated_release = Horizon.Config.merge_defaults(my_app: release)
 
       assert updated_release == expected_releases
