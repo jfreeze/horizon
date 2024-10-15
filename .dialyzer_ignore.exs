@@ -10,6 +10,7 @@
 
   # Ignore unknown type Mix.Release.t/0 warnings
   ~r"lib/horizon/step.ex:\d+:\d+:unknown_type Unknown type: Mix.Release.t/0",
+  ~r"lib/horizon/config.ex:\d+:\d+:unknown_type Unknown type: Mix.Release.t/0",
 
   # Ignore callback info missing for Mix.Task behavior
   ~r"lib/mix/tasks/horizon/init.ex:\d+:callback_info_missing"
