@@ -196,8 +196,13 @@ defmodule Horizon do
   end
 
   @doc """
-  Returns the configuration for the releases.
+  Returns the options, with defaults inserted, for each release.
   If no releases are defined in the mix.exs file, a default release returned.
+
+  This is the configured options for releases that you set for
+  each release in `mix.exs` and can be inspected with `Mix.Project.config()[:releases]`.
+  Not to be confused with the `%Mix.Release{}` struct that is passed to each `Step`.
+  The options here are stored in the `Mix.Release.options` field.
 
   """
   def get_config_releases do
@@ -209,10 +214,7 @@ defmodule Horizon do
         nil ->
           Horizon.Config.merge_defaults([{app_name, [is_default?: true]}])
 
-        # configure_default_paths([{app_name, [is_default?: true]}])
-
         releases ->
-          # configure_default_paths(releases)
           Horizon.Config.merge_defaults(releases)
       end
 
