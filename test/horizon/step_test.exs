@@ -4,7 +4,6 @@ defmodule Horizon.StepTest do
 
   describe "merge_defaults/1" do
     test "merges default values into the release" do
-      # Initial release struct with some values
       release = %Mix.Release{
         name: :my_app,
         version: "1.0.0",
@@ -12,7 +11,6 @@ defmodule Horizon.StepTest do
         version_path: "/full/path/to/project/_build/prod/rel/my_app/releases/1.0.0"
       }
 
-      # Expected result after applying defaults (update as per actual defaults)
       expected_release = %Mix.Release{
         name: :my_app,
         version: "1.0.0",
@@ -28,10 +26,8 @@ defmodule Horizon.StepTest do
         ]
       }
 
-      # Call the function
       updated_release = Step.merge_defaults(release)
 
-      # Assert the expected defaults are merged
       assert updated_release == expected_release
     end
 
