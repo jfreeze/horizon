@@ -122,6 +122,14 @@ defmodule Horizon do
     {get_src_path("templates/bin", "build_script.sh.eex"), "build_script-#{app}.sh"}
   end
 
+  def get_src_tgt(:deploy, app) do
+    {get_src_path("templates/bin", "deploy.sh.eex"), "deploy-#{app}.sh"}
+  end
+
+  def get_src_tgt(:deploy_script, app) do
+    {get_src_path("templates/bin", "deploy_script.sh.eex"), "deploy_script-#{app}.sh"}
+  end
+
   def get_src_tgt(:release_on_build, app) do
     {get_src_path("templates/bin", "release_on_build.sh.eex"), "release_on_build-#{app}.sh"}
   end

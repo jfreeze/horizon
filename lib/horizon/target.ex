@@ -17,6 +17,8 @@ defmodule Horizon.Target do
           | :stage_for_build
           | :build
           | :build_script
+          | :deploy
+          | :deploy_script
           | :release_on_build
           | :rc_d
 
