@@ -32,5 +32,5 @@ else
   mkdir -p <%= @releases_path %>
   # Copy the release tarball to the releases directory
   scp ${BUILD_USER}@${BUILD_HOST}:"<%= @app_path %>/<%= @app %>-${version}.tar.gz" <%= @releases_path %>
-  cat $version > "<%= @app %>-${version}.tar.gz"
+  cat $version > "<%= @releases_path %>/<%= @app %>-${version}.tar.gz"
 fi
