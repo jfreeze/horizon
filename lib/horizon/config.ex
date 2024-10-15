@@ -4,7 +4,8 @@ defmodule Horizon.Config do
   """
 
   @doc """
-  Merge default options with release options.
+  Merge default options into release.options and
+  set release.path and release.version_path.
 
   ## Examples
 
@@ -35,9 +36,28 @@ defmodule Horizon.Config do
   """
   @spec merge_defaults(keyword()) :: keyword()
   def merge_defaults(releases) do
-    Enum.map(releases, fn {app, opts} ->
-      {app, merge_defaults(opts, app)}
+    Enum.map(releases, fn {app, release} ->
+      {app, merge_release(release)}
     end)
+  end
+
+  @doc """
+  Merge default options into release.options and
+  set release.path and release.version_path.
+
+  """
+  @spec merge_release(Mix.Release.t()) :: Mix.Release.t()
+  def merge_release(%Mix.Release{} = release) do
+    options = Map.get(release, :options) || []
+    updated_options = merge_default_options(options, release.name)
+    path = Keyword.get(options, :path, default_options(release.name)[:path])
+
+    version_path = Path.join([path, "releases", release.version])
+
+    release
+    |> Map.put(:path, path)
+    |> Map.put(:version_path, version_path)
+    |> Map.put(:options, updated_options)
   end
 
   @doc """
@@ -56,9 +76,13 @@ defmodule Horizon.Config do
         ]
 
   """
-  @spec merge_defaults(keyword(), String.t() | atom()) :: keyword()
-  def merge_defaults(opts, name) do
-    defaults = [
+  @spec merge_default_options(keyword(), String.t() | atom()) :: keyword()
+  def merge_default_options(opts, name) do
+    Keyword.merge(default_options(name), opts)
+  end
+
+  defp default_options(name) do
+    [
       path: "/usr/local/#{name}",
       bin_path: "bin",
       build_path: "/usr/local/opt/#{name}/build",
@@ -66,7 +90,5 @@ defmodule Horizon.Config do
       build_host: "HOSTUNKNOWN",
       build_user: "$(whoami)"
     ]
-
-    Keyword.merge(defaults, opts)
   end
 end
