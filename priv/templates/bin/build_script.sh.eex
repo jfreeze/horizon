@@ -81,8 +81,7 @@ mix_assets_deploy() {
 mix_release() {
   target="<%= if not @is_default?, do: @app %>"
   puts "info" "running: mix release $target"
-  doas sh -c "MIX_ENV=prod mix release <%= if not @is_default?, do: @app %> --overwrite"
-  #sh -c "MIX_ENV=prod mix release --overwrite"
+  sh -c "MIX_ENV=prod mix release <%= if not @is_default?, do: @app %> --overwrite"
 }
 
 puts "info" "Creating/Updating the release"
