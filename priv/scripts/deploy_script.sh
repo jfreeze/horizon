@@ -28,10 +28,14 @@ fi
 
 # Extract the tarball to the app directory
 doas sh -c "tar -xzf \"/tmp/$APP.tar.gz\" -C \"$APP_PATH\""
-doas rm \"/tmp/$APP.tar.gz\"
+doas rm /tmp/$APP.tar.gz
 
 # Ensure ownership of the app directory
-doas chown -R "$APP" "$APP_PATH"
+doas chown -R $APP $APP_PATH
+
+if [ ! -f "/usr/local/etc/rc.d/$APP" ]; then
+  doas cp "$APP_PATH/rc_d/$APP" "/usr/local/etc/rc.d/$APP"
+fi
 
 # Restart the app service
-doas service "$APP" restart
+doas service $APP restart
