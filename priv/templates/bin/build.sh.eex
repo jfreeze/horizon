@@ -29,7 +29,7 @@ if [ -z "$version" ]; then
   exit 1
 else
   version=$(echo "$version" | cut -d ' ' -f 2)
-  mkdir -p <%= @releaeses_path %>
+  mkdir -p <%= @releases_path %>
   # Copy the release tarball to the releases directory
   scp ${BUILD_USER}@${BUILD_HOST}:"<%= @app_path %>/<%= @app %>-${version}.tar.gz" <%= @releases_path %>
   cat $version > "<%= @app %>-${version}.tar.gz"
