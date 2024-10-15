@@ -21,7 +21,6 @@ BUILD_HOST="${BUILD_HOST:-<%= @build_host %>}"
 BUILD_SCRIPT="${SCRIPT_DIR}/build_script-<%= @app %>.sh"
 
 ssh ${BUILD_USER}@${BUILD_HOST} '(cd <%= @build_path %>; MIX_ENV=prod ./<%= @bin_path %>/build_script-<%= @app %>.sh)'
-
 version=$(ssh ${BUILD_USER}@${BUILD_HOST} "cat <%= @app_path %>/releases/start_erl.data")
 
 if [ -z "$version" ]; then
@@ -30,7 +29,8 @@ if [ -z "$version" ]; then
 else
   version=$(echo "$version" | cut -d ' ' -f 2)
   mkdir -p <%= @releases_path %>
+
   # Copy the release tarball to the releases directory
-  scp ${BUILD_USER}@${BUILD_HOST}:"<%= @app_path %>/<%= @app %>-${version}.tar.gz" <%= @releases_path %>
-  cat $version > "<%= @releases_path %>/<%= @app %>-${version}.tar.gz"
+  scp -q ${BUILD_USER}@${BUILD_HOST}:"<%= @app_path %>/<%= @app %>-${version}.tar.gz" <%= @releases_path %>
+  echo "<%= @app %>-${version}.tar.gz" > "<%= @releases_path %>/<%= @app %>.data"
 fi
