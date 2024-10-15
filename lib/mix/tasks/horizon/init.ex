@@ -63,6 +63,8 @@ defmodule Mix.Tasks.Horizon.Init do
   - `release-my_app.sh`
   - `build-my_app.sh`
   - `stage-my_app.sh`
+  - `deploy-my_app.sh`
+  - `deploy_script-my_app.sh`
 
   #### `stage-my_app.sh`
 
@@ -113,7 +115,9 @@ defmodule Mix.Tasks.Horizon.Init do
     %Target{executable?: true, type: :template, key: :stage_for_build},
     %Target{executable?: true, type: :template, key: :build},
     %Target{executable?: true, type: :template, key: :build_script},
-    %Target{executable?: true, type: :template, key: :release_on_build}
+    %Target{executable?: true, type: :template, key: :release_on_build},
+    %Target{executable?: true, type: :template, key: :deploy},
+    %Target{executable?: false, type: :static, key: :deploy_script}
     # RC scripts
     # {:executable, :template, :rc_d}
   ]
