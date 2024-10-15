@@ -79,6 +79,7 @@ defmodule Horizon do
         build_path: opts[:build_path],
         build_host: opts[:build_host],
         build_user: opts[:build_user] || "$(whoami)",
+        releases_path: opts[:releases_path],
         is_default?: opts[:is_default?] || false
       ]
     ]
