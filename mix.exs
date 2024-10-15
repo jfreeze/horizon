@@ -26,7 +26,7 @@ defmodule Horizon.MixProject do
   defp deps do
     [
       {:ex_doc, "~> 0.34.2", runtime: false},
-      {:dialyxir, "~> 1.4"}
+      {:dialyxir, "~> 1.4", runtime: false}
     ]
   end
 end
