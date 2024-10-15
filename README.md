@@ -85,6 +85,7 @@ builds the deploy artifacts. If you have added `Horizon.Step.setup`
 to your release steps, then the `rc_d` script will be generated and put in `rel/overlay`.
 
 #### Deploy
+copies the `rc_d` script to the host, creates user.
 copies the tarball to the target host and starts the service.
 
 
