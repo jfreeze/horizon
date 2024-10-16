@@ -310,6 +310,8 @@ defmodule Horizon do
   end
 
   defp validate_releases(data, path) when is_list(data) do
+    dbg(data)
+
     data
     |> Enum.flat_map(fn
       {key, value} when is_list(value) or is_map(value) ->
