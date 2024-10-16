@@ -36,8 +36,7 @@
 # Configuration
 # ==============================
 APP_NAME="<%= @app %>"
-SRC_REPO_DIR="<%= @build_path %>"
-
+SRC_REPO_DIR=$(cd . && pwd)
 BUILD_PATH=<%= @build_path %>
 BUILD_USER="${BUILD_USER:-<%= @build_user %>}"
 BUILD_HOST="${BUILD_HOST:-<%= @build_host %>}"
