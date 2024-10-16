@@ -304,7 +304,8 @@ defmodule Horizon do
     results = validate_releases(releases, [])
 
     if Enum.any?(results) do
-      Mix.shell().error("The following releases configuration are missing values:")
+      Mix.shell().error("Some releases are have missing or nil configuration values.")
+      Mix.shell().error("Check for missing config values or unset environment variables.")
       Enum.each(results, &Mix.shell().error(&1))
     end
   end
