@@ -42,7 +42,7 @@ release=$(cat "<%= @releases_path %>/$APP.data")
 scp "<%= @releases_path %>/$release" "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/$APP.tar.gz"
 
 # Define the installation script and arguments
-INSTALL_SCRIPT="bin/deploy_script.sh"
+INSTALL_SCRIPT="<%= @bin_path %>/deploy_script.sh"
 INSTALL_ARGS="$APP $APP_PATH"
 
 # Run the deploy script on the remote host
