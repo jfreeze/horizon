@@ -16,7 +16,15 @@ set -euo pipefail
 #
 
 # add this to usage docs
-# bsd_install_script --output-format=[ansi|json] --quiet --pkg git --path /usr/local/lib/erlang27/bin --service postgresql --postgres-init
+# bsd_install_script \
+#   --output-format=[ansi|json] \
+#   --quiet \
+#   --pkg git \
+#   --path /usr/local/lib/erlang27/bin \
+#   --service postgresql \
+#   --postgres-init \
+#	  --postgres-db-us_utf8_full mydb1 \
+#	  --postgres-db-c_mixed_utf8 mydb2 \
 
 # Default output format and quiet mode
 OUTPUT_FORMAT="ansi"
@@ -331,7 +339,7 @@ ip_address() {
 #
 generate_credentials() {
 	username=$(uuidgen)
-	password=$(openssl rand -base64 32 | tr -d '=')
+	password=$(openssl rand -hex 24)
 }
 
 #
