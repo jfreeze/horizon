@@ -46,10 +46,17 @@ fi
 # Restart the app service
 doas service $APP restart
 
-echo "App '$APP' deployed successfully."
-echo "Release:  $RELEASE"
-echo "App path: $APP_PATH"
-echo "App user: $APP"
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RESET='\033[0m'
+
 echo ""
-echo "Use the following to control the application service:"
-echo "doas service $APP start|restart|stop|status"
+echo "${GREEN}App '$APP' deployed successfully.${RESET}"
+echo "${GREEN}    RELEASE:  $RELEASE${RESET}"
+echo "${GREEN}    PATH:     $APP_PATH/bin/${APP}${RESET}"
+#echo "${GREEN}    App user: $APP${RESET}"
+echo ""
+echo "${YELLOW}Use the following to control the application service:"
+echo ""
+echo "    doas service $APP start|restart|stop|status${RESET}"
+echo ""
