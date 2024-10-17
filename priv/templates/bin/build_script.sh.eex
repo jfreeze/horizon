@@ -35,7 +35,8 @@ cd $BUILD_PATH
 . ./<%= @bin_path %>/horizon_helpers.sh
 
 # fix this
-export PATH="/usr/local/lib/erlang27/bin:$PATH"
+# Should not need this since path is added to ~/.shrc.
+# export PATH="/usr/local/lib/erlang27/bin:$PATH"
 
 echo -e "${GREEN}=== Starting Build Process ===${RESET}"
 puts "info" "Setting up assets"
@@ -43,9 +44,6 @@ puts "info" "Setting up assets"
 puts "info" "Install local.hex"
 MIX_ENV=prod mix local.hex --force
 MIX_ENV=prod mix deps.get --only prod
-MIX_ENV=prod mix deps.get
-
-# exit_if_not_root
 
 # Will need to manually check if tailwind for freebsd is installed as currently the --if-missing flag is not supported when passing in an argument
 ## install tailwind if it is not installed
