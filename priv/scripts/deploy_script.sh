@@ -51,12 +51,11 @@ YELLOW='\033[0;33m'
 RESET='\033[0m'
 
 echo ""
-echo "${GREEN}App '$APP' deployed successfully.${RESET}"
-echo "${GREEN}    RELEASE:  $RELEASE${RESET}"
-echo "${GREEN}    PATH:     $APP_PATH/bin/${APP}${RESET}"
-#echo "${GREEN}    App user: $APP${RESET}"
+echo -e "${GREEN}App '$APP' deployed successfully.${RESET}"
+echo -e "${GREEN}    RELEASE:  $RELEASE${RESET}"
+echo -e "${GREEN}    PATH:     $APP_PATH/bin/${APP}${RESET}"
 echo ""
-echo "${YELLOW}Use the following to control the application service:"
+echo -e "${YELLOW}Use the following to control the application service:"
 echo ""
-echo "    doas service $APP start|restart|stop|status${RESET}"
+echo -e "    doas service $APP start|restart|stop|status${RESET}"
 echo ""
