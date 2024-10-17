@@ -43,6 +43,13 @@ if [ ! -f "/usr/local/etc/rc.d/$APP" ]; then
   doas cp "$APP_PATH/rc_d/$APP" "/usr/local/etc/rc.d/$APP"
 fi
 
+<%= if Enum.any?(@release_commands) do %>
+# Run release commands
+<%= for command <- @release_commands do %>
+doas -u <%= @app %> <%= @app_path %>/bin/<%= command %>
+<% end %>
+
+<% end %>
 # Restart the app service
 doas service $APP restart
 

@@ -81,6 +81,7 @@ defmodule Horizon do
         build_user: opts[:build_user] || "$(whoami)",
         deploy_host: opts[:deploy_host],
         deploy_user: opts[:deploy_user] || "$(whoami)",
+        release_commands: opts[:release_commands] || [],
         releases_path: opts[:releases_path],
         is_default?: opts[:is_default?] || false
       ]
@@ -91,8 +92,7 @@ defmodule Horizon do
     :bsd_install,
     :bsd_install_args,
     :bsd_install_script,
-    :horizon_helpers,
-    :deploy_script
+    :horizon_helpers
   ]
 
   @doc """
