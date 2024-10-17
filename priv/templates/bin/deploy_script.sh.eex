@@ -49,12 +49,14 @@ fi
 
 # Run release commands
 <%= if Enum.any?(@release_commands) do %>
+echo ""
 <%= for command <- @release_commands do %>
-echo -e "${YELLOW}Running command: <%= command %>${RESET}"
+echo -e "${YELLOW}[INFO] Running command: <%= command %>${RESET}"
 doas -u <%= @app %> <%= @app_path %>/bin/<%= command %>
 <% end %>
-
+echo ""
 <% end %>
+
 # Restart the app service
 doas service $APP restart
 
