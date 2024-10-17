@@ -14,7 +14,7 @@ defmodule Horizon.Target do
           | :bsd_install_args
           | :bsd_install_script
           | :horizon_helpers
-          | :stage_for_build
+          | :stage
           | :build
           | :build_script
           | :deploy

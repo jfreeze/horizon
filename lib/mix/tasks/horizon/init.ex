@@ -112,7 +112,7 @@ defmodule Mix.Tasks.Horizon.Init do
     # Subroutines
     %Target{executable?: false, type: :static, key: :horizon_helpers},
     # Release scripts
-    %Target{executable?: true, type: :template, key: :stage_for_build},
+    %Target{executable?: true, type: :template, key: :stage},
     %Target{executable?: true, type: :template, key: :build},
     %Target{executable?: true, type: :template, key: :build_script},
     %Target{executable?: true, type: :template, key: :release_on_build},

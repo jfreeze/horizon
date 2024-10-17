@@ -105,8 +105,8 @@ defmodule Horizon do
 
   ## Examples
 
-        iex> get_src_tgt(:stage_for_build, "foo")
-        {"/path_to_horizon/priv/templates/bin/stage_for_build.sh.eex", "stage-foo.sh"}
+        iex> get_src_tgt(:stage, "foo")
+        {"/path_to_horizon/priv/templates/bin/stage.sh.eex", "stage-foo.sh"}
 
   """
   @spec get_src_tgt(atom(), String.t() | atom()) :: {String.t(), String.t()}
@@ -114,8 +114,8 @@ defmodule Horizon do
     {get_src_path("scripts", "#{key}.sh"), "#{key}.sh"}
   end
 
-  def get_src_tgt(:stage_for_build, app) do
-    {get_src_path("templates/bin", "stage_for_build.sh.eex"), "stage-#{app}.sh"}
+  def get_src_tgt(:stage, app) do
+    {get_src_path("templates/bin", "stage.sh.eex"), "stage-#{app}.sh"}
   end
 
   def get_src_tgt(:build, app) do
