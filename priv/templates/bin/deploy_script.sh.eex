@@ -8,6 +8,10 @@ APP=$1
 APP_PATH=$2
 RELEASE=$3
 
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RESET='\033[0m'
+
 # Create the app user if it does not exist
 if ! id -u "$APP" >/dev/null 2>&1; then
   doas pw user add -n "$APP" -c "Service user for $APP" -s /usr/sbin/nologin
@@ -43,8 +47,8 @@ if [ ! -f "/usr/local/etc/rc.d/$APP" ]; then
   doas cp "$APP_PATH/rc_d/$APP" "/usr/local/etc/rc.d/$APP"
 fi
 
-<%= if Enum.any?(@release_commands) do %>
 # Run release commands
+<%= if Enum.any?(@release_commands) do %>
 <%= for command <- @release_commands do %>
 echo -e "${YELLOW}Running command: <%= command %>${RESET}"
 doas -u <%= @app %> <%= @app_path %>/bin/<%= command %>
@@ -53,10 +57,6 @@ doas -u <%= @app %> <%= @app_path %>/bin/<%= command %>
 <% end %>
 # Restart the app service
 doas service $APP restart
-
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-RESET='\033[0m'
 
 echo ""
 echo -e "${GREEN}App '$APP' deployed successfully.${RESET}"
