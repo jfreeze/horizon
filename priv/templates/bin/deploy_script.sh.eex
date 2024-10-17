@@ -46,6 +46,7 @@ fi
 <%= if Enum.any?(@release_commands) do %>
 # Run release commands
 <%= for command <- @release_commands do %>
+echo -e "${YELLOW}Running command: <%= command %>${RESET}"
 doas -u <%= @app %> <%= @app_path %>/bin/<%= command %>
 <% end %>
 
