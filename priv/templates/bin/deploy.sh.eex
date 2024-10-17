@@ -43,7 +43,7 @@ scp "<%= @releases_path %>/$release" "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/$APP.ta
 
 # Define the installation script and arguments
 INSTALL_SCRIPT="<%= @bin_path %>/deploy_script.sh"
-INSTALL_ARGS="$APP $APP_PATH"
+INSTALL_ARGS="$APP $APP_PATH $release"
 
 # Run the deploy script on the remote host
 ssh "${DEPLOY_USER}@${DEPLOY_HOST}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"

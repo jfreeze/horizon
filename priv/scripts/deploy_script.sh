@@ -6,6 +6,7 @@ set -ex
 
 APP=$1
 APP_PATH=$2
+RELEASE=$3
 
 # Create the app user if it does not exist
 if ! id -u "$APP" >/dev/null 2>&1; then
@@ -33,9 +34,22 @@ doas rm /tmp/$APP.tar.gz
 # Ensure ownership of the app directory
 doas chown -R $APP $APP_PATH
 
+# Change env.sh to 0400
+VERSION=$(echo $RELEASE | sed -E 's/^.*-([^-]+)\.tar\.gz$/\1/')
+RELEASE_PATH="${APP_PATH}/releases/${VERSION}"
+doas chown 400 ${RELEASE_PATH}/env.sh
+
 if [ ! -f "/usr/local/etc/rc.d/$APP" ]; then
   doas cp "$APP_PATH/rc_d/$APP" "/usr/local/etc/rc.d/$APP"
 fi
 
 # Restart the app service
 doas service $APP restart
+
+echo "App '$APP' deployed successfully."
+echo "Release:  $RELEASE"
+echo "App path: $APP_PATH"
+echo "App user: $APP"
+echo ""
+echo "Use the following to control the application service:"
+echo "doas service $APP start|restart|stop|status"
