@@ -69,7 +69,7 @@ puts() {
     LABEL=""
     ;;
   esac
-  echo -e "${COLOR}${LABEL} ${MESSAGE}${RESET}"
+  echo "${COLOR}${LABEL} ${MESSAGE}${RESET}"
 }
 
 #
