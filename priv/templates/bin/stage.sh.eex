@@ -60,7 +60,9 @@ echo ""
 # Exclude Patterns with type prefixes
 # ==============================
 EXCLUDE_PATTERNS="d:.git d:deps d:.elixir_ls d:_build f:*.tmp f:._* f:.DS_Store"
-
+<%= if @releases_path not in [nil, ""] do %>
+EXCLUDE_PATTERNS="$EXCLUDE_PATTERNS d:<%= @releases_path %>"
+<% end %>
 
 # ==============================
 # Functions
