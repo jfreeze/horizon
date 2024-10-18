@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -eux
+set -eu
 
 #
 # The script that does the actual install on the remote host.
