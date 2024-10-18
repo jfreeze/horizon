@@ -67,14 +67,14 @@ mix_phx_digest_clean() {
 }
 
 mix_assets_deploy() {
-  puts "info" "running: mix assets.deploy"
+  puts "info" "Running: mix assets.deploy"
   MIX_ENV=prod mix assets.deploy
   echo ""
 }
 
 mix_release() {
   target="<%= if not @is_default?, do: @app %>"
-  puts "info" "running: mix release $target"
+  puts "info" "Running: mix release $target"
   sh -c "MIX_ENV=prod mix release <%= if not @is_default?, do: @app %> --overwrite"
 }
 
