@@ -61,7 +61,7 @@ log() {
 		LABEL="[ERROR]"
 		;;
 	esac
-	doas echo -e "$(date '+%Y-%m-%d %H:%M:%S') $LABEL $MESSAGE" | tee -a "$LOG_FILE"
+	doas printf "$(date '+%Y-%m-%d %H:%M:%S') $LABEL $MESSAGE\n" | tee -a "$LOG_FILE"
 }
 
 #
@@ -104,7 +104,7 @@ puts() {
 
 	case "$OUTPUT_FORMAT" in
 	ansi)
-		echo -e "${COLOR}${LABEL} ${MESSAGE}${RESET}"
+		printf "${COLOR}${LABEL} ${MESSAGE}${RESET}\n"
 		;;
 	json)
 		# Escape quotes and backslashes in message
@@ -117,7 +117,7 @@ puts() {
 		fi
 		;;
 	*)
-		echo -e "${RED}[ERROR]${RESET} Unknown output format: $OUTPUT_FORMAT"
+		printf "${RED}[ERROR]${RESET} Unknown output format: ${OUTPUT_FORMAT}\n"
 		exit 1
 		;;
 	esac

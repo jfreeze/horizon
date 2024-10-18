@@ -34,7 +34,7 @@ cd $BUILD_PATH
 
 . ./<%= @bin_path %>/horizon_helpers.sh
 
-echo -e "${GREEN}=== Starting Build Process ===${RESET}"
+printf "${GREEN}=== Starting Build Process ===${RESET}\n"
 puts "info" "Setting up assets"
 
 puts "info" "Install local.hex"

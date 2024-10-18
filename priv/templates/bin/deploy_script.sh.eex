@@ -51,7 +51,7 @@ fi
 <%= if Enum.any?(@release_commands) do %>
 echo ""
 <%= for command <- @release_commands do %>
-echo -e "${YELLOW}[INFO] Running command: <%= command %>${RESET}"
+printf "${YELLOW}[INFO] Running command: <%= command %>${RESET}\n"
 doas -u <%= @app %> <%= @app_path %>/bin/<%= command %>
 <% end %>
 echo ""
@@ -61,11 +61,11 @@ echo ""
 doas service $APP restart
 
 echo ""
-echo -e "${GREEN}App '$APP' deployed successfully.${RESET}"
-echo -e "${GREEN}    RELEASE:  $RELEASE${RESET}"
-echo -e "${GREEN}    PATH:     $APP_PATH/bin/${APP}${RESET}"
+printf "${GREEN}App '$APP' deployed successfully.${RESET}\n"
+printf "${GREEN}    RELEASE:  $RELEASE${RESET}\n"
+printf "${GREEN}    PATH:     $APP_PATH/bin/${APP}${RESET}\n"
 echo ""
-echo -e "${YELLOW}Use the following to control the application service:"
+printf "${YELLOW}Use the following to control the application service:\n"
 echo ""
-echo -e "    doas service $APP start|restart|stop|status${RESET}"
+printf "    doas service $APP start|restart|stop|status${RESET}\n"
 echo ""
