@@ -115,7 +115,6 @@ defmodule Mix.Tasks.Horizon.Init do
     %Target{executable?: true, type: :template, key: :stage},
     %Target{executable?: true, type: :template, key: :build},
     %Target{executable?: true, type: :template, key: :build_script},
-    %Target{executable?: true, type: :template, key: :release_on_build},
     %Target{executable?: true, type: :template, key: :deploy},
     %Target{executable?: false, type: :template, key: :deploy_script}
     # RC scripts

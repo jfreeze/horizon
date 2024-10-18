@@ -19,7 +19,6 @@ defmodule Horizon.Target do
           | :build_script
           | :deploy
           | :deploy_script
-          | :release_on_build
           | :rc_d
 
   @type t :: %Horizon.Target{
