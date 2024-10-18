@@ -53,7 +53,7 @@ defmodule Horizon.Step do
   def setup_rcd(%Mix.Release{name: name, options: options} = release) do
     overwrite = Keyword.get(options, :overwrite, false)
 
-    IO.puts("\u001b[32;1m[INFO] "Creating rc.d script for #{name}\u001b[0m")
+    IO.puts("\u001b[32;1m[INFO] Creating rc.d script for #{name}\u001b[0m")
 
     rel_template_path = get_rel_template_path(release)
     dir = Path.join(rel_template_path, "rc_d")
