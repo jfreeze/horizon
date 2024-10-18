@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -euo pipefail
+set -eux
 
 #
 # The script that does the actual install on the remote host.
@@ -21,6 +21,7 @@ set -euo pipefail
 #   --quiet \
 #   --pkg git \
 #   --path /usr/local/lib/erlang27/bin \
+#   --dot-path some/additional/path \
 #   --service postgresql \
 #   --postgres-init \
 #	  --postgres-db-us_utf8_full mydb1 \
@@ -205,6 +206,15 @@ while [ $# -gt 0 ]; do
 			CUSTOM_PATHS="$1:$CUSTOM_PATHS"
 		else
 			echo "${RED}[ERROR]${RESET} --path requires an argument"
+			exit 1
+		fi
+		;;
+	--dot-path)
+		shift
+		if [ -n "$1" ]; then
+			echo "$1" >".path"
+		else
+			echo "${RED}[ERROR]${RESET} --dot-path requires an argument"
 			exit 1
 		fi
 		;;

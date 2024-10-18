@@ -20,7 +20,7 @@ BUILD_USER="${BUILD_USER:-<%= @build_user %>}"
 BUILD_HOST="${BUILD_HOST:-<%= @build_host %>}"
 BUILD_SCRIPT="${SCRIPT_DIR}/build_script-<%= @app %>.sh"
 
-ssh ${BUILD_USER}@${BUILD_HOST} '(cd <%= @build_path %>; MIX_ENV=prod ./<%= @bin_path %>/build_script-<%= @app %>.sh)'
+ssh ${BUILD_USER}@${BUILD_HOST} 'export PATH=$(cat .path):$PATH; (cd <%= @build_path %>; MIX_ENV=prod ./<%= @bin_path %>/build_script-<%= @app %>.sh)'
 version=$(ssh ${BUILD_USER}@${BUILD_HOST} "cat <%= @app_path %>/releases/start_erl.data")
 
 if [ -z "$version" ]; then

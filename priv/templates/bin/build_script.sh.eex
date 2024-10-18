@@ -20,7 +20,7 @@
 
 
 # Exit immediately if a command exits with a non-zero status
-set -e
+set -eu
 
 # Set ELIXIR_ERL_OPTIONS to force UTF-8 encoding
 export ELIXIR_ERL_OPTIONS="+fnu +pc unicode"
@@ -33,10 +33,6 @@ BUILD_PATH=<%= @build_path %>
 cd $BUILD_PATH
 
 . ./<%= @bin_path %>/horizon_helpers.sh
-
-# fix this
-# Should not need this since path is added to ~/.shrc.
-# export PATH="/usr/local/lib/erlang27/bin:$PATH"
 
 echo -e "${GREEN}=== Starting Build Process ===${RESET}"
 puts "info" "Setting up assets"

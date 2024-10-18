@@ -6,7 +6,6 @@
 # Release build on the build host
 #
 
-#set -euo pipefail
 set -e
 
 . ./<%= @bin_path %>/horizon_helpers.sh

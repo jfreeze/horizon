@@ -33,6 +33,10 @@ while IFS= read -r line; do
     PATH_VAL="${line#path:}"
     ARGS="$ARGS --path $PATH_VAL"
     ;;
+  dot-path:*)
+    DPATH_VAL="${line#dot-path:}"
+    ARGS="$ARGS --dot-path $DPATH_VAL"
+    ;;
   pkg:*)
     APP="${line#pkg:}"
     ARGS="$ARGS --pkg $APP"
