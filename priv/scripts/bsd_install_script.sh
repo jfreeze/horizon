@@ -574,7 +574,7 @@ for CMD in $COMMANDS; do
 		else
 			# Try to install the package
 			if run_cmd doas pkg install -y "$APP"; then
-				puts "success" "[INFO] $APP installed successfully."
+				puts "info" "$APP installed successfully."
 			else
 				puts "error" "[ERROR] Failed to install $APP."
 				exit_message
