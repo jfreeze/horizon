@@ -5,7 +5,7 @@ Welcome to **Horizon.Ops**, an Elixir project that is a toolbox for managing Pho
 It provides tools for host configuration and creating and deploying Elixir/Phoenix releases.
 Currently only FreeBSD is supported, but Linux support is planned.
 
-No special tools are required for host configuration or release management other than SSH access to the host. (Release management is done through `/bin/sh` scripts but may require modification to work with Linux systems. PRs are welcome.)
+No special tools are required for host configuration or release management other than SSH access to the host. (Release management is done through `/bin/sh` scripts.
 
 The BSD host configuration includes a `bsd_install.sh` script that facilitates installing FreeBSD packages, building Elixir from source, enabling and starting services, installing and configuring PostgreSQL, and creating databases.
 
@@ -27,7 +27,8 @@ In addition to easy host management and rapid deployments, Horizon.Ops was motiv
 ```elixir
 def deps do
   [
-    {:horizon_ops, "~> 0.1.0", runtime: false}
+    {:horizon_ops, github: "jfreeze/horizon", runtime: false}
+    #{:horizon_ops, "~> 0.1.0", runtime: false} # when released
   ]
 end
 ```
