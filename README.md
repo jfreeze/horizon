@@ -29,7 +29,7 @@ def deps do
 end
 ```
 
-## Add a Release to mix.exs
+### Add a Release to mix.exs
 
 Horizon requires a `release` to be defined in `mix.exs`. 
 ```elixir
@@ -49,7 +49,8 @@ Horizon requires a `release` to be defined in `mix.exs`.
           &Horizon.Step.setup/1,
           :assemble,
           :tar
-        ]
+        ],
+        # cookie: System.fetch_env("RELEASE_COOKIE")
       ],
 ```
 
@@ -57,17 +58,65 @@ Running `mix horizon.init` creates scripts for each `release`. FreeBSD customary
 
 Note: `assemble` is required to create your release target. `tar` is required to build a tarball for deployment.
 
-## Env vars
+### Tailwind
 
-Running `mix release.init` creates a `rel/` directory that contains the file `env.sh.eex`. You can add env vars there directly or, if you are using a `.env` file for environment variables, you can reference that file from within your `env.sh.eex` file.
+A typical `assets.setup` looks like:
+
+```
+      "assets.setup": [
+        "tailwind.install --if-missing",
+        "esbuild.install --if-missing"
+      ],
+```
+
+But since a tailwind download for FreeBSD is not currently provided by the Tailwind project, the `tailwind.install` supports passing a URL from which to download the app. 
+
+Add the following to your `mix.exs` file.
+
+```
+@tailwindcss_freebsd_x64 "https://people.freebsd.org/~dch/pub/tailwind/v$version/tailwindcss-$target"
+
+...
+
+defp aliases do
+  [
+    ...
+    "assets.setup.freebsd": [
+        "tailwind.install #{@tailwindcss_freebsd_x64}",
+        "esbuild.install --if-missing"
+    ],
+    ...
+  ]
+end
+```
+### Env vars
+
+Running `mix release.init` creates a `rel/` directory that contains the file `env.sh.eex`. The simplest way to manage env vars is to add them directly to `env.sh.eex`:
+
+```
+...
+export SECRET_KEY_BASE=5HPxy5qOJ...
+export PHX_SERVER=true
+...
+```
+
+If you are using a `.env` file for environment variables, one method is to just add it to your `env.sh.eex` file:
+
+```
+cat .env >> rel/env.sh.eex
+```
+
+Or, you can reference the `.env` file from within your `env.sh.eex` file.
 
 ```shell
-dir="$(cd "$(dirname "$0")" && pwd)"
-env_file=$(cd "$dir/../../my_app/" && pwd)/.env
+env_file=/usr/local/my_app/.env
 chmod 600 $env_file
+. $env_file
 ```
 
 You will need to add `.env` to your deploy artifacts. One solution is to copy the .env file to your `overlays` folder in `rel/overlays/.env`.
+
+But this method may be insufficient since it would be the same `.env` file for all deploys. Writing a `Step` or a more sophisticated overlay that is version dependent may be required if not using `env.sh.eex`.
 
 ## Deploying with Horizon
 
@@ -96,6 +145,12 @@ Assuming you have used the default `bin` folder for your project, the release st
 ```
 
 That's it.
+
+If you need to deploy to multiple hosts, you can specify the user and host with the `-u` and `-h` options:
+
+```
+./bin/deploy-my_app.sh -u me -h example.com
+```
 
 Note: Due to your beam application being a script and not a binary executable, stopping an app that was started using the default Elixir release code will timeout. `Horizon` fixes this by creating a run command file in `/usr/local/etc/rc.d/my_app`. On FreeBSD, the default script for running **`remote`** or **`eval`** is fine, but for starting/stopping the service, you should use:
 
@@ -134,6 +189,7 @@ doas echo "permit nopass setenv { -ENV PATH=$PATH LANG=$LANG LC_CTYPE=$LC_CTYPE 
 ```
 
 ### Sample Build Host Configuration
+
 This is a sample configuration file for a build host.  The only expectation for this host is that it needs to build a release, but not run the application.
 
 `#build.conf`
@@ -164,6 +220,7 @@ To install this script run:
 ./bin/bsd_install.sh -u me target_host build.conf
 ```
 ### Sample Web Host Configuration
+
 A web host has minimal configuration because we ship the erlang runtime in the deployments. This allows you to update the Elixir version on deployments.
 
 This example assumes the app needs `vips` for use with `vix`. (not tested.)
@@ -179,6 +236,7 @@ Install with:
 ./bin/bsd_install.sh -u me target_host web.conf
 ```
 ### Sample Postgres Host Configuration
+
 It's a good idea to keep your Postgres server on a separate server. This allows it to have its own upgrade process and simplifies mirroring and migration. Although, you could install Postgres on the same host as the web host, and even on the build host.
 
 There are three steps to getting Postgres up and running:
@@ -195,7 +253,11 @@ pkg:postgresql16-server
 pkg:postgresql16-contrib
 postgres.init
 
-postgres.db:c_mixed_utf8:mydb
+postgres.db:us_utf8_full:mydb
+
+# Other postgresql options
+#postgres.db:c_mixed_utf8:mydb
+#postgres.db:c_utf8_full:mydb
 ```
 
 Install with:
@@ -210,14 +272,31 @@ With hosts configured, you can now build and deploy an Elixir app.
 - Building creates a tarball that is ready to run on a deploy host.
 - Deploy copies the tarball to the build machine and starts the service. (Future: JEDI can allows hot deploys to a running service.)
 
-## Deploying an Elixir App
+## Horizon Release Step in Detail
 
+Here is a summary of the actions taken in each release step.
 
+### Stage
+- Uses `rsync` or `tar/scp` to copy the current project state to the build host
+### Build
+- checks if tailwind is available and downloads it if needed.
+- installs `mix local.hex`
+- runs `mix deps.get`
+- runs `mix assets.setup.freebsd`
+- runs `mix phx.digest.clean --all`
+- runs `mix assets.deploy`
+- runs `mix release`
+	- Calls `Horizon.Step.setup/1` that creates the rcd script
+- stores the tarball in .releases
+- stores the tarball name in `.releases/my_app.data`
+### Deploy
 
-#### Deploy
-put this above. note that app runs as app user.
-copies the `rc_d` script to the host, creates user.
-copies the tarball to the target host and starts the service.
+- adds `my_app_enable="YES"` to `/etc/rc.conf`
+- expands the tarball
+- sets `env.sh` to mode 0400.
+- moves rcd script to `/usr/local/etc/rc.d/my_app`
+- runs any optional release commands
+- runs `doas service my_app restart`
 
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
