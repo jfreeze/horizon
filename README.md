@@ -297,8 +297,13 @@ Here is a summary of the actions taken in each release step.
 - creates user 'my_app' if it doesn't exist
 - moves rcd script to `/usr/local/etc/rc.d/my_app`
 - runs any optional release commands
-- runs `doas service my_app restart` which starts the service with my_app as the process owner.
+- runs `doas service my_app restart`
 
+Apps are started with the user that has the same name as the app.
+For example, the release `my_app` will be run as the user `my_app`.
+This allows multiple Elixir/Phoenix apps to reside on the same
+server, each isolated from the other and individually controlled
+with the `service` command.
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
