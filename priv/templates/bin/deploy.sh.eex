@@ -12,7 +12,7 @@
 #
 #
 
-set -e
+set -eu
 
 # Default deployment user and host
 DEPLOY_USER="<%= @deploy_user %>"
