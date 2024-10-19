@@ -272,7 +272,7 @@ With hosts configured, you can now build and deploy an Elixir app.
 - Building creates a tarball that is ready to run on a deploy host.
 - Deploy copies the tarball to the build machine and starts the service. (Future: JEDI can allows hot deploys to a running service.)
 
-## Horizon Release Step in Detail
+## Horizon Release Steps in Detail
 
 Here is a summary of the actions taken in each release step.
 
