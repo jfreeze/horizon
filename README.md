@@ -294,9 +294,10 @@ Here is a summary of the actions taken in each release step.
 - adds `my_app_enable="YES"` to `/etc/rc.conf`
 - expands the tarball
 - sets `env.sh` to mode 0400.
+- creates user 'my_app' if it doesn't exist
 - moves rcd script to `/usr/local/etc/rc.d/my_app`
 - runs any optional release commands
-- runs `doas service my_app restart`
+- runs `doas service my_app restart` which starts the service with my_app as the process owner.
 
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
