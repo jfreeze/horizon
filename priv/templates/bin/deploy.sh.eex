@@ -47,3 +47,14 @@ INSTALL_ARGS="$APP $APP_PATH $release"
 
 # Run the deploy script on the remote host
 ssh "${DEPLOY_USER}@${DEPLOY_HOST}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"
+
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+RESET='\033[0m'
+
+if [ $? -eq 0 ]; then
+  printf "${GREEN}Deployment to ${DEPLOY_HOST} successful.${RESET}\n"
+else
+  printf "${RED}Deployment failed.${RESET}\n"
+  exit 1
+fi
