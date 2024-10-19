@@ -1,10 +1,8 @@
-defmodule HorizonTest do
+defmodule Horizon.Ops.Utils.Test do
   use ExUnit.Case
 
   import Bitwise
   import ExUnit.CaptureIO
-
-  alias Horizon
 
   setup do
     {tmp_dir, _} = System.cmd("mktemp", ["-d"])
@@ -19,7 +17,7 @@ defmodule HorizonTest do
 
       output =
         capture_io(fn ->
-          assert :ok = Horizon.safe_write(data, file, true)
+          assert :ok = Horizon.Ops.Utils.safe_write(data, file, true)
         end)
 
       assert File.exists?(file)
@@ -32,7 +30,7 @@ defmodule HorizonTest do
 
       output =
         capture_io(fn ->
-          assert :ok = Horizon.safe_write(data, tmp_file, true)
+          assert :ok = Horizon.Ops.Utils.safe_write(data, tmp_file, true)
         end)
 
       assert File.exists?(tmp_file)
@@ -48,7 +46,7 @@ defmodule HorizonTest do
 
       output =
         capture_io([input: "y\n"], fn ->
-          Horizon.safe_write(new_data, tmp_file, false)
+          Horizon.Ops.Utils.safe_write(new_data, tmp_file, false)
         end)
 
       assert output =~ "#{tmp_file} already exists. Overwrite? [y/N]"
@@ -64,7 +62,7 @@ defmodule HorizonTest do
 
       output =
         capture_io([input: "n\n"], fn ->
-          Horizon.safe_write(new_data, tmp_file, false)
+          Horizon.Ops.Utils.safe_write(new_data, tmp_file, false)
         end)
 
       assert output =~ "#{tmp_file} already exists. Overwrite? [y/N]"
@@ -78,7 +76,7 @@ defmodule HorizonTest do
 
       output =
         capture_io(fn ->
-          Horizon.safe_write(data, file, false, true)
+          Horizon.Ops.Utils.safe_write(data, file, false, true)
         end)
 
       assert File.exists?(file)
@@ -97,7 +95,7 @@ defmodule HorizonTest do
 
       output =
         capture_io(:stderr, fn ->
-          Horizon.safe_write(data, file, true)
+          Horizon.Ops.Utils.safe_write(data, file, true)
         end)
 
       assert output =~ "Failed to write to #{file}"
@@ -113,7 +111,7 @@ defmodule HorizonTest do
 
       output =
         capture_io(fn ->
-          Horizon.safe_copy_file(source, target, false)
+          Horizon.Ops.Utils.safe_copy_file(source, target, false)
         end)
 
       assert File.exists?(target)
@@ -129,7 +127,7 @@ defmodule HorizonTest do
 
       output =
         capture_io(fn ->
-          Horizon.safe_copy_file(source, target, true)
+          Horizon.Ops.Utils.safe_copy_file(source, target, true)
         end)
 
       assert File.read!(target) == "New data"
@@ -146,7 +144,7 @@ defmodule HorizonTest do
       Mix.shell(Mix.Shell.Process)
       send(self(), {:mix_shell_input, :yes?, true})
 
-      Horizon.safe_copy_file(source, target, false)
+      Horizon.Ops.Utils.safe_copy_file(source, target, false)
 
       # Assert that the prompt was sent
       assert_received {:mix_shell, :yes?, [message]}
@@ -173,7 +171,7 @@ defmodule HorizonTest do
       Mix.shell(Mix.Shell.Process)
       send(self(), {:mix_shell_input, :yes?, false})
 
-      Horizon.safe_copy_file(source, target, false)
+      Horizon.Ops.Utils.safe_copy_file(source, target, false)
 
       # Assert that the prompt was sent
       assert_received {:mix_shell, :yes?, [message]}
@@ -196,7 +194,7 @@ defmodule HorizonTest do
 
       output =
         capture_io(:stderr, fn ->
-          Horizon.safe_copy_file(source, target, false)
+          Horizon.Ops.Utils.safe_copy_file(source, target, false)
         end)
 
       assert output =~ "Failed to copy #{target}"
@@ -210,7 +208,7 @@ defmodule HorizonTest do
 
       output =
         capture_io(fn ->
-          Horizon.safe_copy_file(source, target, false, true)
+          Horizon.Ops.Utils.safe_copy_file(source, target, false, true)
         end)
 
       assert File.exists?(target)

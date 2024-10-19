@@ -1,6 +1,6 @@
-defmodule Horizon.ConfigTest do
+defmodule Horizon.Ops.BSD.ConfigTest do
   use ExUnit.Case
-  alias Horizon.Config
+  alias Horizon.Ops.BSD.Config
 
   describe "merge_defaults/1" do
     test "merges default values into the release options" do

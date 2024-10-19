@@ -1,14 +1,14 @@
-defmodule Mix.Tasks.Horizon.Init do
-  @shortdoc "Creates Horizon deployment scripts"
+defmodule Mix.Tasks.Horizon.Bsd.Init do
+  @shortdoc "Creates Horizon.Ops deployment scripts for FreeBSD hosts."
 
   use Mix.Task
 
   @moduledoc """
-  Creates Horizon deploy scripts in `bin/` and `rel/` directories.
+  Creates Horizon.Ops deploy scripts in `bin/` and `rel/` directories.
 
   ## Usage
 
-      mix horizon.init [-y]
+      mix horizon.bsd.init [-y]
 
   ### Options
 
@@ -16,19 +16,22 @@ defmodule Mix.Tasks.Horizon.Init do
 
   ## Description
 
-  Horizon.init creates several scripts for deploying an Elixir application to a host.
-  Horizon is customized for FreeBSD hosts, but several scripts are platform independent,
-  meaning they can be used on a Linux host.
+  Horizon.Ops.Bsd.init creates several scripts for deploying an Elixir application to a host.
+  Horizon.Ops.Bsd is customized for FreeBSD hosts. Use Horizon.Oos.Linux for Linux hosts.
 
   ### Customization
 
-  Horizon.init uses the `releases` configuration in `mix.exs` to customize the deployment scripts.
+  Horizon.Ops.Bsd.init uses the `releases` configuration in `mix.exs` to customize the deployment scripts.
   The available options are:
 
   - `bin_path`: default :`bin`
   - `path`: default: `/usr/local/<app_name>`
   - `build_user`: default: `whoami`
   - `build_host`: default: `HOSTUNKNOWN`
+  - `deploy_user`: default: `whoami`
+  - `deploy_host`: default: `HOSTUNKNOWN`
+  - `release_commands`: default: `[]`
+  - `releases_path`: default: `.releases`
 
   #### `bin_path`
 
@@ -51,6 +54,25 @@ defmodule Mix.Tasks.Horizon.Init do
   This is used by the `stage` script to copy the release to the build machine, but may be overridden
   on the commandline.
 
+  #### `deploy_user`
+
+  The username on the deploy machine. This is used to copy the release to the deploy machine.
+
+  #### `deploy_host`
+
+  The hostname of the deploy machine. This is used to copy the release to the deploy machine.
+
+  #### `release_commands`
+
+  A list of commands to run after the release is copied to the deploy machine.
+  These commands should be `0` arity functions in Release.ex.
+
+  #### `releases_path`
+
+  The directory where releases are stored on the local host.
+  The build script places the release tarball in this directory and the deploy
+  script copies the release from this directory.
+
   ### Files Created
 
   Running `mix horizon.init` creates several files in the `bin_path` directory.
@@ -66,43 +88,22 @@ defmodule Mix.Tasks.Horizon.Init do
   - `deploy-my_app.sh`
   - `deploy_script-my_app.sh`
 
-  #### `stage-my_app.sh`
-
-  Copies the project to the build machine.
-  This script uses `build_path` for the project and `path` for the target of `mix release`.
-  A stage script is created for each release.
-
-  #### `bsd_install_args.sh`
-
-  If you have multiple releases, a `stage` script is created for each release.
+  If you have multiple releases, a `stage`, and `build` and `deploy` script
+  is created for each release.
   For example, imagine you have releases `app_web` and `app_worker`.
-  Horizon.init will create
+  Horizon.Ops.BSD.init will create
 
-  - `bin/stage_app_web.sh`
-  - `bin/stage_app_worker.sh`
+  - `bin/stage-app_web.sh`
+  - `bin/stage-app_worker.sh`
+  - `bin/build-0app_web.sh`
+  - `bin/build-0app_worker.sh`
+  - `bin/deploy-app_web.sh`
+  - `bin/deploy-app_worker.sh`
 
-  A rc.d script is created in `??/` for each release.
-  A `release` script is created in `bin/` for each release.
-
-
-  Release options used by Horizon.MixProject
-
-  - `path` - The path to the release directory on the build host. This same directory will be used on the deploy host.
-  - `build_path` - The path to the project source code on the build host.
-  - `build_host` - The hostname of the build machine.
-  - `build_user` - The username on the build machine.
-
-  If `releases` are not specified in `mix.exs`, the default release
-  parameters using FreeBSD conventional paths are used.
-
-  ### Files created
-  - `bin/stage_my_app.sh` - copies project to build machine
-  - `bin/horizon_helpers.sh` - functions for Horizon scripts
-  - rc.d???
-  - release...
+  An rc.d script is created in `rel/overlays/rc_d/` for each release.
 
   """
-  alias Horizon.Target
+  alias Horizon.Ops.Target
 
   @targets [
     # Install scripts
@@ -126,8 +127,8 @@ defmodule Mix.Tasks.Horizon.Init do
     {opts, _, _} = OptionParser.parse(args, switches: [yes: :boolean], aliases: [y: :yes])
     overwrite = Keyword.get(opts, :yes, false)
 
-    Horizon.warn_is_missing_freebsd_alias(Mix.Project.config())
-    releases = Horizon.get_config_releases()
+    Horizon.Ops.BSD.Utils.warn_is_missing_freebsd_alias(Mix.Project.config())
+    releases = Horizon.Ops.BSD.Utils.get_config_releases()
 
     static_targets = Enum.filter(@targets, &Target.is_static?/1)
 
@@ -145,9 +146,8 @@ defmodule Mix.Tasks.Horizon.Init do
 
     for {app, opts} = _release <- unique_releases do
       for %{executable?: executable, key: key} <- static_targets do
-        Horizon.copy_static_file(
-          key,
-          app,
+        Horizon.Ops.Utils.copy_static_file(
+          Horizon.Ops.BSD.Utils.get_src_tgt(key, app),
           overwrite,
           executable,
           opts,
@@ -160,13 +160,13 @@ defmodule Mix.Tasks.Horizon.Init do
 
     for {app, opts} = _release <- releases do
       for %{executable?: executable, key: key} <- bin_template_targets do
-        Horizon.create_file_from_template(
-          key,
+        Horizon.Ops.Utils.create_file_from_template(
+          Horizon.Ops.BSD.Utils.get_src_tgt(key, app),
           app,
           overwrite,
           executable,
           opts,
-          &Horizon.assigns/2,
+          &Horizon.Ops.BSD.Utils.assigns/2,
           &Path.join(&2[:bin_path], &1)
         )
       end

@@ -1,6 +1,6 @@
-defmodule Horizon.StepTest do
+defmodule Horizon.Ops.BSD.StepTest do
   use ExUnit.Case
-  alias Horizon.Step
+  alias Horizon.Ops.BSD.Step
 
   describe "merge_defaults/1" do
     test "merges default values into the release" do

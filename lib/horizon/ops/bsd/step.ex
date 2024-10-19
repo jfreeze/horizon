@@ -60,13 +60,13 @@ defmodule Horizon.Ops.BSD.Step do
     File.mkdir_p(dir)
     file = Path.join(dir, "#{name}")
 
-    Horizon.Ops.create_file_from_template(
-      :rc_d,
+    Horizon.Ops.Utils.create_file_from_template(
+      Horizon.Ops.BSD.Utils.get_src_tgt(:rc_d, name),
       name,
       overwrite,
       true,
       options,
-      &Horizon.Ops.assigns/2,
+      &Horizon.Ops.BSD.Utils.assigns/2,
       fn _app, _opts -> file end
     )
 

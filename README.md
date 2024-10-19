@@ -289,7 +289,7 @@ Here is a summary of the actions taken in each release step.
 - runs `mix phx.digest.clean --all`
 - runs `mix assets.deploy`
 - runs `mix release`
-	- Calls `Horizon.Ops.Step.setup/1` that creates the rcd script
+	- Calls `Horizon.Ops.BSD.Step.setup/1` that creates the rcd script
 - stores the tarball in .releases
 - stores the tarball name in `.releases/my_app.data`
 ### Deploy
