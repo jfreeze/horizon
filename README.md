@@ -1,22 +1,25 @@
-# Horizon
+# Horizon.Ops
 
 
-Welcome to **Horizon**, an Elixir project that is a toolbox for managing Phoenix deployments. It provides tools for FreeBSD host configuration and creating and deploying Elixir/Phoenix releases. 
+Welcome to **Horizon.Ops**, an Elixir project that is a toolbox for managing Phoenix deployments. 
+It provides tools for host configuration and creating and deploying Elixir/Phoenix releases.
+Currently only FreeBSD is supported, but Linux support is planned.
 
 No special tools are required for host configuration or release management other than SSH access to the host. (Release management is done through `/bin/sh` scripts but may require modification to work with Linux systems. PRs are welcome.)
 
-The host configuration includes a `bsd_install.sh` script that facilitates installing FreeBSD packages, building Elixir from source, enabling and starting services, installing and configuring PostgreSQL, and creating databases.
+The BSD host configuration includes a `bsd_install.sh` script that facilitates installing FreeBSD packages, building Elixir from source, enabling and starting services, installing and configuring PostgreSQL, and creating databases.
 
 Release management involves **three steps**: 1) **staging** of the source code to the build server, 2) **building** the release tarball on the build server, and 3) **deploying** a tarball to the deploy server and starting the application service.
 
 ```mermaid
 graph LR
-    A[Horizon.init] --> B[STAGE]
+    A[Horizon.Ops.init] --> B[STAGE]
     B --> C[BUILD]
     C --> D[DEPLOY]
 ```
 
-In addition to easy host management and rapid deployments, Horizon was motivated to help facilitate Phoenix deployments for platforms other than your development platform, e.g., MacOS -> FreeBSD.
+In addition to easy host management and rapid deployments, Horizon.Ops was motivated to help facilitate Phoenix deployments for platforms other than your development platform, e.g., MacOS -> FreeBSD or MacOS -> Linux.
+
 ## Installation
 
 (TBD) Add `horizon` to your list of dependencies in `mix.exs`:
@@ -24,14 +27,14 @@ In addition to easy host management and rapid deployments, Horizon was motivated
 ```elixir
 def deps do
   [
-    {:horizon, "~> 0.1.0", runtime: false}
+    {:horizon_ops, "~> 0.1.0", runtime: false}
   ]
 end
 ```
 
 ### Add a Release to mix.exs
 
-Horizon requires a `release` to be defined in `mix.exs`. 
+Horizon.Ops requires a `release` to be defined in `mix.exs`. 
 ```elixir
       my_app: [
         applications: [runtime_tools: :permanent],
@@ -46,7 +49,7 @@ Horizon requires a `release` to be defined in `mix.exs`.
         # app_path: "/usr/local/my_app",
         # release_commands: [],
         steps: [
-          &Horizon.Step.setup/1,
+          &Horizon.Ops.BSD.Step.setup/1,
           :assemble,
           :tar
         ],
@@ -54,7 +57,7 @@ Horizon requires a `release` to be defined in `mix.exs`.
       ],
 ```
 
-Running `mix horizon.init` creates scripts for each `release`. FreeBSD customary defaults are used for installation paths and are added when you include `&Horizon.Step.setup/1` as the first step of each release.
+Running `mix horizon.bsd.init` creates scripts for each `release`. FreeBSD customary defaults are used for installation paths and are added when you include `&Horizon.Ops.BSD.Step.setup/1` as the first step of each release.
 
 Note: `assemble` is required to create your release target. `tar` is required to build a tarball for deployment.
 
@@ -118,15 +121,15 @@ You will need to add `.env` to your deploy artifacts. One solution is to copy th
 
 But this method may be insufficient since it would be the same `.env` file for all deploys. Writing a `Step` or a more sophisticated overlay that is version dependent may be required if not using `env.sh.eex`.
 
-## Deploying with Horizon
+## Deploying with Horizon.Ops
 
-To deploy your Elixir/Phoenix app, create your `Horizon` helper scripts with
+To deploy your Elixir/Phoenix app, create your `Horizon.Ops` helper scripts with
 
 ```shell
-mix horizon.init
+mix horizon.bsd.init
 ```
 
-**Note, you will need to run `horizon.init` to update your scripts every time you make a change to a `release` in `mix.exs`.**
+**Note, you will need to run `horizon.bsd.init` to update your scripts every time you make a change to a `release` in `mix.exs`.**
 
 Note, that you can have a different `bin` folder for each release. 
 
@@ -152,7 +155,7 @@ If you need to deploy to multiple hosts, you can specify the user and host with 
 ./bin/deploy-my_app.sh -u me -h example.com
 ```
 
-Note: Due to your beam application being a script and not a binary executable, stopping an app that was started using the default Elixir release code will timeout. `Horizon` fixes this by creating a run command file in `/usr/local/etc/rc.d/my_app`. On FreeBSD, the default script for running **`remote`** or **`eval`** is fine, but for starting/stopping the service, you should use:
+Note: Due to your beam application being a script and not a binary executable, stopping an app that was started using the default Elixir release code will timeout. `Horizon.Ops` fixes this by creating a run command file in `/usr/local/etc/rc.d/my_app`. On FreeBSD, the default script for running **`remote`** or **`eval`** is fine, but for starting/stopping the service, you should use:
 
 ```shell
 # service my_app start|stop|restart|status
@@ -179,9 +182,9 @@ The known commands are:
 
 ## Host Configuration
 
-The above deployment example assumes you have a running build host, deployment host, and database host. If you don't, never fear. `Horizon` can help you build these in a matter of minutes.
+The above deployment example assumes you have a running build host, deployment host, and database host. If you don't, never fear. `Horizon.Ops` can help you build these in a matter of minutes.
 
-The sample configuration files were used on a FreeBSD 14.1 base install. The only requirements for the base install by `Horizon` are that they have `doas` installed and configured.
+The sample configuration files were used on a FreeBSD 14.1 base install. The only requirements for the base install by `Horizon.Ops` are that they have `doas` installed and configured.
 
 ```shell
 # pkg install -y doas
@@ -272,7 +275,7 @@ With hosts configured, you can now build and deploy an Elixir app.
 - Building creates a tarball that is ready to run on a deploy host.
 - Deploy copies the tarball to the build machine and starts the service. (Future: JEDI can allows hot deploys to a running service.)
 
-## Horizon Release Steps in Detail
+## Horizon.Ops.BSD Release Steps in Detail
 
 Here is a summary of the actions taken in each release step.
 
@@ -286,7 +289,7 @@ Here is a summary of the actions taken in each release step.
 - runs `mix phx.digest.clean --all`
 - runs `mix assets.deploy`
 - runs `mix release`
-	- Calls `Horizon.Step.setup/1` that creates the rcd script
+	- Calls `Horizon.Ops.Step.setup/1` that creates the rcd script
 - stores the tarball in .releases
 - stores the tarball name in `.releases/my_app.data`
 ### Deploy

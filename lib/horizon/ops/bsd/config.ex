@@ -1,6 +1,6 @@
-defmodule Horizon.Config do
+defmodule Horizon.Ops.BSD.Config do
   @moduledoc """
-  Horizon configuration.
+  Horizon.Ops configuration.
   """
 
   @doc """

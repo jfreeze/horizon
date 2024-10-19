@@ -1,11 +1,11 @@
-defmodule Horizon.Step do
+defmodule Horizon.Ops.BSD.Step do
   @moduledoc """
-  The Horizon.Step module contains steps that are used to
+  The Horizon.Ops..BSD.Step module contains steps that are used to
   perform tasks during the release process.
 
   - `setup/1` - Run all the needed release steps.
   - `echo/1` - Echo the release name and options to the console.
-  - `merge_defaults/1` - Merges the Horizon defaults into the release options.
+  - `merge_defaults/1` - Merges the Horizon.Ops defaults into the release options.
   - `setup_rcd/1` - Create the rc.d script for the release.
 
   """
@@ -26,13 +26,13 @@ defmodule Horizon.Step do
   @spec echo(Mix.Release.t()) :: Mix.Release.t()
   def echo(%Mix.Release{name: name} = release) do
     pr = release |> Map.delete(:applications) |> Map.delete(:boot_scripts)
-    IO.puts("\u001b[32;1m == Horizon.Step.echo/1 ==\u001b[0m")
+    IO.puts("\u001b[32;1m == Horizon.Ops.BSD.Step.echo/1 ==\u001b[0m")
     IO.inspect(pr, label: "Truncated release for #{name}")
     release
   end
 
   @doc """
-  Merges the Horizon defaults into the release options.
+  Merges the Horizon.Ops.BSD defaults into the release options.
 
   Calling this step will override Elixir's default value for
   `release.path` and `release.version_path`.
@@ -40,7 +40,7 @@ defmodule Horizon.Step do
   """
   @spec merge_defaults(Mix.Release.t()) :: Mix.Release.t()
   def merge_defaults(%Mix.Release{} = release) do
-    Horizon.Config.merge_release(release)
+    Horizon.Ops.BSD.Config.merge_release(release)
   end
 
   @doc """
@@ -60,13 +60,13 @@ defmodule Horizon.Step do
     File.mkdir_p(dir)
     file = Path.join(dir, "#{name}")
 
-    Horizon.create_file_from_template(
+    Horizon.Ops.create_file_from_template(
       :rc_d,
       name,
       overwrite,
       true,
       options,
-      &Horizon.assigns/2,
+      &Horizon.Ops.assigns/2,
       fn _app, _opts -> file end
     )
 

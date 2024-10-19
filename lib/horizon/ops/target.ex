@@ -1,6 +1,6 @@
-defmodule Horizon.Target do
+defmodule Horizon.Ops.Target do
   @moduledoc """
-  ADT for Horizon deployment targets
+  ADT for Horizon.Ops deployment targets
 
   """
   @enforce_keys [:executable?, :type, :key]
@@ -21,17 +21,17 @@ defmodule Horizon.Target do
           | :deploy_script
           | :rc_d
 
-  @type t :: %Horizon.Target{
+  @type t :: %Horizon.Ops.Target{
           executable?: boolean(),
           type: content_type(),
           key: key()
         }
 
   @spec is_static?(t) :: boolean()
-  def is_static?(%Horizon.Target{type: :static}), do: true
+  def is_static?(%Horizon.Ops.Target{type: :static}), do: true
   def is_static?(_), do: false
 
   @spec is_template?(t) :: boolean()
-  def is_template?(%Horizon.Target{type: :template}), do: true
+  def is_template?(%Horizon.Ops.Target{type: :template}), do: true
   def is_template?(_), do: false
 end
