@@ -44,6 +44,7 @@ RELEASE_PATH="${APP_PATH}/releases/${VERSION}"
 doas chmod 400 ${RELEASE_PATH}/env.sh
 
 if [ ! -f "/usr/local/etc/rc.d/$APP" ]; then
+  doas mkdir -p /usr/local/etc/rc.d
   doas cp "$APP_PATH/rc_d/$APP" "/usr/local/etc/rc.d/$APP"
 fi
 
