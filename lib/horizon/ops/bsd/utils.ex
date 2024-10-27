@@ -157,5 +157,4 @@ defmodule Horizon.Ops.BSD.Utils do
     Horizon.Ops.Utils.validate_releases(releases)
     releases
   end
-
 end

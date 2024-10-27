@@ -47,7 +47,15 @@ defmodule Horizon.Ops.Utils do
           function()
         ) ::
           no_return()
-  def create_file_from_template({source, target}, app, overwrite, executable, opts, assigns_fn, target_fn) do
+  def create_file_from_template(
+        {source, target},
+        app,
+        overwrite,
+        executable,
+        opts,
+        assigns_fn,
+        target_fn
+      ) do
     target = target_fn.(target, opts)
     target_dir = Path.dirname(target)
 
