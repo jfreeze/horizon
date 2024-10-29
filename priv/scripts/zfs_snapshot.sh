@@ -51,6 +51,7 @@ send_snapshot_to_host() {
   if [ -z "$previous_snapshot" ]; then
     echo "Sending full ${prefix} snapshot $snapshot_name to controlling host..."
     ssh "${USER}@${HOST}" "doas zfs send -vcR ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
+    chown -R postgres:postgres /var/db/postgres
   else
     echo "Sending incremental ${prefix} snapshot from $previous_snapshot to $snapshot_name..."
     ssh "${USER}@${HOST}" "doas zfs send -vcRI ${previous_snapshot} ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
