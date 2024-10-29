@@ -21,7 +21,7 @@ Release management involves **three steps**:
 
 ```mermaid
 graph LR
- A[Horizon.Ops.BSD.init] --> B[STAGE]
+ A[Horizon.Ops.Bsd.Init] --> B[STAGE]
  B --> C[BUILD]
  C --> D[DEPLOY]
 ```
@@ -35,7 +35,7 @@ In addition to easy host management and rapid deployments, Horizon.Ops was motiv
 ```elixir
 def deps do
  [
-    {:horizon, "~> 0.1.2", runtime: false}
+    {:horizon, "~> 0.1.3", runtime: false}
  ]
 end
 ```

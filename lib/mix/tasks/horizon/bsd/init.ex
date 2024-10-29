@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Horizon.BSD.Init do
+defmodule Mix.Tasks.Horizon.Bsd.Init do
   @shortdoc "Creates Horizon.Ops deployment scripts for FreeBSD hosts."
 
   use Mix.Task
@@ -16,12 +16,12 @@ defmodule Mix.Tasks.Horizon.BSD.Init do
 
   ## Description
 
-  Horizon.Ops.BSD.init creates several scripts for deploying an Elixir application to a host.
+  Horizon.Ops.Bsd.Init creates several scripts for deploying an Elixir application to a host.
   Horizon.Ops.BSD is customized for FreeBSD hosts. Use Horizon.Oos.Linux for Linux hosts.
 
   ### Customization
 
-  Horizon.Ops.BSD.init uses the `releases` configuration in `mix.exs` to customize the deployment scripts.
+  Horizon.Ops.Bsd.Init uses the `releases` configuration in `mix.exs` to customize the deployment scripts.
   The available options are:
 
   - `bin_path`: default :`bin`
@@ -91,7 +91,7 @@ defmodule Mix.Tasks.Horizon.BSD.Init do
   If you have multiple releases, a `stage`, and `build` and `deploy` script
   is created for each release.
   For example, imagine you have releases `app_web` and `app_worker`.
-  Horizon.Ops.BSD.init will create
+  Horizon.Ops.Bsd.Init will create
 
   - `bin/stage-app_web.sh`
   - `bin/stage-app_worker.sh`

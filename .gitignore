@@ -27,3 +27,6 @@ horizon-*.tar
 
 # Working scripts for development
 /devbin/
+
+# Ignore LS files
+/.elixir_ls/

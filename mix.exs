@@ -4,13 +4,13 @@ defmodule Horizon.MixProject do
   def project do
     [
       app: :horizon,
-      version: "0.1.2",
+      version: "0.1.3",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: [
         main: "readme",
-        extras: ["README.md"],
+        extras: ["README.md", "CHANGELOG.md", "LICENSE.md"],
         before_closing_body_tag: fn
           :html ->
             """
@@ -39,6 +39,16 @@ defmodule Horizon.MixProject do
     [
       name: "horizon",
       licenses: ["BSD-3-Clause"],
+      files: [
+        "lib",
+        "priv",
+        "samples",
+        ".formatter.exs",
+        "mix.exs",
+        "README.md",
+        "LICENSE.md",
+        "CHANGELOG.md"
+      ],
       links: %{"GitHub" => "https://github.com/jfreeze/horizon"}
     ]
   end
