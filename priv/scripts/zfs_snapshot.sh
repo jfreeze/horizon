@@ -32,28 +32,27 @@ fi
 SSH_CMD="ssh -T ${USER}@${HOST} sh -s"
 ZFS_CMD="doas zfs"
 
-# Get the latest snapshot on the remote host
+# Get the latest snapshot on the remote host, ensuring correct sorting
 get_latest_remote_snapshot() {
-  ssh "${USER}@${HOST}" "${ZFS_CMD} list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@$ROLLING_PREFIX | tail -1"
+  ssh "${USER}@${HOST}" "${ZFS_CMD} list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@$ROLLING_PREFIX | sort -V | tail -1"
 }
 
 # Get the latest snapshot on the local (controlling) host
 get_latest_local_snapshot() {
-  doas zfs list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@$ROLLING_PREFIX | tail -1
+  doas zfs list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@$ROLLING_PREFIX | sort -V | tail -1
 }
 
 # Send the snapshot to the controlling host
 send_snapshot_to_host() {
   local snapshot_name=$1
   local previous_snapshot=$2
+  local prefix=$3
 
   if [ -z "$previous_snapshot" ]; then
-    echo "Sending full snapshot $snapshot_name to controlling host..."
-    echo "ssh ${USER}@${HOST} doas zfs send -vcR ${snapshot_name} | doas zfs receive -F ${SNAPSHOT_PREFIX}"
+    echo "Sending full ${prefix} snapshot $snapshot_name to controlling host..."
     ssh "${USER}@${HOST}" "doas zfs send -vcR ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
   else
-    echo "Sending incremental snapshot from $previous_snapshot to $snapshot_name..."
-    echo "ssh ${USER}@${HOST} doas zfs send -vcRI ${previous_snapshot} ${snapshot_name} | doas zfs receive -F ${SNAPSHOT_PREFIX}"
+    echo "Sending incremental ${prefix} snapshot from $previous_snapshot to $snapshot_name..."
     ssh "${USER}@${HOST}" "doas zfs send -vcRI ${previous_snapshot} ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
   fi
 }
@@ -78,16 +77,32 @@ snapshot_name="${SNAPSHOT_PREFIX}@$ROLLING_PREFIX-$NOW"
 # Logging to debug
 echo "Latest remote snapshot: $latest_rolling_snapshot_remote"
 echo "Latest local snapshot: $latest_rolling_snapshot_local"
+echo "New snapshot: $snapshot_name"
 
 # Determine whether to send full or incremental snapshot
-if [ "$latest_rolling_snapshot_remote" = "$latest_rolling_snapshot_local" ] && [ -n "$latest_rolling_snapshot_local" ]; then
+#if [ "$latest_rolling_snapshot_remote" = "$latest_rolling_snapshot_local" ] && [ -n "$latest_rolling_snapshot_local" ]; then
+if [ -n "$latest_rolling_snapshot_local" ]; then
   # Send incremental snapshot if the latest snapshots match and there is a snapshot
-  send_snapshot_to_host "$snapshot_name" "$latest_rolling_snapshot_local"
+  send_snapshot_to_host "$snapshot_name" "$latest_rolling_snapshot_local" "$ROLLING_PREFIX"
 else
   # Send full snapshot if no matching snapshot is found or if no previous snapshots exist
   echo "No common snapshot found, or no previous snapshots. Sending full snapshot."
-  send_snapshot_to_host "$snapshot_name" ""
+  send_snapshot_to_host "$snapshot_name" "" "$ROLLING_PREFIX"
 fi
+
+# Take a daily snapshot
+take_daily_snapshot() {
+  echo "Taking daily snapshot..."
+  ${SSH_CMD} <<EOF
+    ${ZFS_CMD} snapshot ${SNAPSHOT_PREFIX}@$DAILY_PREFIX-$NOW
+EOF
+}
+
+# Clean up old daily snapshots (older than RETENTION_DAYS)
+cleanup_old_daily_snapshots() {
+  echo "Cleaning up old daily snapshots older than ${RETENTION_DAYS} days..."
+  ssh "${USER}@${HOST}" "${ZFS_CMD} list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@$DAILY_PREFIX | head -n -$RETENTION_DAYS | xargs -I {} doas zfs destroy {}"
+}
 
 # Cleanup old rolling snapshots if more than 24 exist
 cleanup_old_rolling_snapshots() {
@@ -107,8 +122,28 @@ cleanup_old_rolling_snapshots
 
 # Handle Daily Snapshots (at midnight only)
 if [ "$(date +%H%M)" = "0000" ]; then
-  # It's midnight, take a daily snapshot and clean up old daily snapshots
+  echo "It's midnight! Taking daily snapshot..."
   take_daily_snapshot
+
+  # Get the latest daily snapshot from both the remote and local hosts
+  latest_daily_snapshot_remote=$(get_latest_remote_snapshot "$DAILY_PREFIX")
+  latest_daily_snapshot_local=$(get_latest_local_snapshot "$DAILY_PREFIX")
+
+  # Logging for daily snapshots
+  echo "Latest remote daily snapshot: $latest_daily_snapshot_remote"
+  echo "Latest local daily snapshot: $latest_daily_snapshot_local"
+
+  # Determine whether to send full or incremental daily snapshot
+  if [ -n "$latest_daily_snapshot_local" ]; then
+    # Send incremental daily snapshot if the latest snapshot exists on the local host
+    send_snapshot_to_host "${SNAPSHOT_PREFIX}@$DAILY_PREFIX-$NOW" "$latest_daily_snapshot_local" "$DAILY_PREFIX"
+  else
+    # Send full daily snapshot if no matching snapshot is found
+    echo "No previous daily snapshot found. Sending full daily snapshot."
+    send_snapshot_to_host "${SNAPSHOT_PREFIX}@$DAILY_PREFIX-$NOW" "" "$DAILY_PREFIX"
+  fi
+
+  # Clean up old daily snapshots
   cleanup_old_daily_snapshots
 fi
 
