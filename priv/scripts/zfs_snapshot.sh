@@ -29,7 +29,7 @@ if [ -z "$HOST" ]; then
 fi
 
 # SSH and ZFS commands with additional SSH options to suppress MOTD
-SSH_CMD="ssh -T ${USER}@${HOST} 'sh -s'"
+SSH_CMD="ssh -T ${USER}@${HOST} sh -s"
 ZFS_CMD="doas zfs"
 
 # Get the list of existing rolling snapshots
@@ -46,14 +46,11 @@ send_snapshot_to_host() {
 
   if [ -z "$previous_snapshot" ]; then
     echo "Sending full snapshot $snapshot_name to controlling host..."
-    ${SSH_CMD} <<EOF
-          doas zfs send -vcR $snapshot_name | ssh ${USER}@$(hostname) "doas zfs receive -F $SNAPSHOT_PREFIX"
-EOF
+    ssh "${USER}@${HOST}" "doas zfs send -vcR ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
   else
     echo "Sending incremental snapshot from $previous_snapshot to $snapshot_name..."
-    ${SSH_CMD} <<EOF
-          doas zfs send -vcRI $previous_snapshot $snapshot_name | ssh ${USER}@$(hostname) "doas zfs receive -F $SNAPSHOT_PREFIX"
-EOF
+    ssh "${USER}@${HOST}" "doas zfs send -vcRI ${latest_rolling_snapshot} ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
+
   fi
 }
 
@@ -62,11 +59,15 @@ latest_rolling_snapshot=$(get_latest_snapshot "$ROLLING_PREFIX")
 
 # Single SSH call for PostgreSQL backup and ZFS snapshot creation
 echo "Running PostgreSQL backup and creating ZFS snapshot..."
+
+#ssh "jimfreeze@192.168.100.126" "sh -s" <<EOF
+#ssh "${USER}@${HOST}" "sh -s" <<EOF
 ${SSH_CMD} <<EOF
-  doas -u postgres psql -c "SELECT pg_backup_start('$NOW');" >/dev/null 2>&1
-  doas zfs snapshot ${SNAPSHOT_PREFIX}@$ROLLING_PREFIX-$NOW >/dev/null 2>&1
-  doas -u postgres psql -q -c "SELECT pg_backup_stop();" >/dev/null 2>&1
+  doas -u postgres psql -c "SELECT pg_backup_start('$NOW');" 2>&1
+  doas zfs snapshot ${SNAPSHOT_PREFIX}@$ROLLING_PREFIX-$NOW 2>&1
+  doas -u postgres psql -q -c "SELECT pg_backup_stop();" 2>&1
 EOF
+echo "!!!!!!!!!!!!!!!!"
 
 snapshot_name="${SNAPSHOT_PREFIX}@$ROLLING_PREFIX-$NOW"
 if [ -z "$latest_rolling_snapshot" ]; then
