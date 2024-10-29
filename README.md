@@ -21,7 +21,7 @@ Release management involves **three steps**:
 
 ```mermaid
 graph LR
- A[Horizon.Ops.init] --> B[STAGE]
+ A[Horizon.Ops.BSD.init] --> B[STAGE]
  B --> C[BUILD]
  C --> D[DEPLOY]
 ```
@@ -36,12 +36,11 @@ In addition to easy host management and rapid deployments, Horizon.Ops was motiv
 def deps do
  [
     {:horizon, "~> 0.1.2", runtime: false}
- # {:horizon, github: "jfreeze/horizon", runtime: false}
  ]
 end
 ```
 
-### Add a Release to mix.exs
+### Add a Release to your mix.exs
 
 Horizon.Ops requires a `release` to be defined in `mix.exs`. 
 ```elixir
@@ -326,7 +325,7 @@ This allows multiple Elixir/Phoenix apps to reside on the same
 server, each isolated from the other and individually controlled
 with the `service` command.
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+Source code is licensed under the [BSD 3-Clause License](LICENSE.md).
 
 ---
 
