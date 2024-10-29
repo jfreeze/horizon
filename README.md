@@ -1,11 +1,16 @@
-# Horizon.Ops
+# Horizon
 
+Welcome to **Horizon**, an Ops library for deploying Elixir/Phoenix
+projects. Horizon lets you stage, build, and deploy your Elixir/Phoenix
+app in minutes. Horizon also has tools for standing up a Postgres server
+with continual backups and drive replication via `zfs` snapshots. 
 
-Welcome to **Horizon.Ops**, an Elixir project that is a toolbox for managing Phoenix deployments. 
-It provides tools for host configuration and creating and deploying Elixir/Phoenix releases.
-Currently, only FreeBSD is supported, but Linux support is planned.
+Full control of your ops environment is at your fingertips. 
 
-No special tools are required for host configuration or release management other than SSH access to the host. (Release management is done through `/bin/sh` scripts.
+With the Power to Serve, Horizon's first ops platform is FreeBSD.
+
+No special tools are required for host configuration or release management
+other than SSH access to the host. (Release management is done through `/bin/sh` scripts.
 
 The BSD host configuration includes a `bsd_install.sh` script that facilitates installing FreeBSD packages, building Elixir from source, enabling and starting services, installing and configuring PostgreSQL, and creating databases.
 
@@ -30,8 +35,8 @@ In addition to easy host management and rapid deployments, Horizon.Ops was motiv
 ```elixir
 def deps do
  [
- {:horizon_ops, github: "jfreeze/horizon", runtime: false}
-    #{:horizon_ops, "~> 0.1.0", runtime: false} # when released
+    {:horizon, "~> 0.1.2", runtime: false}
+ # {:horizon, github: "jfreeze/horizon", runtime: false}
  ]
 end
 ```
