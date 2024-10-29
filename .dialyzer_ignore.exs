@@ -1,5 +1,5 @@
 [
-  {"lib/horizon/ops/utils.ex", :unknown_function, 59},
+  {"lib/horizon/ops/utils.ex", :unknown_function, 67},
   # Ignore all unknown functions related to Mix.shell/0 and Mix.Project.config/0
   ~r"lib/horizon/ops/utils.ex:\d+:unknown_function Function Mix.shell/0 does not exist",
   ~r"lib/horizon/ops/bsd/utils.ex:\d+:unknown_function Function Mix.shell/0 does not exist",
@@ -17,3 +17,5 @@
   # Ignore callback info missing for Mix.Task behavior
   ~r"lib/mix/tasks/horizon/bsd/init.ex:\d+:callback_info_missing"
 ]
+#lib/horizon/ops/utils.ex:67:unknown_function
+#EEx.eval_string/2
