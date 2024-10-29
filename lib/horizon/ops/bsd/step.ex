@@ -1,6 +1,6 @@
 defmodule Horizon.Ops.BSD.Step do
   @moduledoc """
-  The Horizon.Ops..BSD.Step module contains steps that are used to
+  The Horizon.Ops.BSD.Step module contains steps that are used to
   perform tasks during the release process.
 
   - `setup/1` - Run all the needed release steps.
