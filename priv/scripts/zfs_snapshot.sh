@@ -34,7 +34,7 @@ ZFS_CMD="doas zfs"
 
 # Get the list of existing rolling snapshots
 get_latest_snapshot() {
-  $(ssh "${USER}@${HOST}" "${ZFS_CMD} list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@$1 | tail -1")
+  ssh "${USER}@${HOST}" "${ZFS_CMD} list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@$1 | tail -1"
 }
 
 # Send the snapshot to the controlling host
@@ -44,33 +44,36 @@ send_snapshot_to_host() {
 
   if [ -z "$previous_snapshot" ]; then
     echo "Sending full snapshot $snapshot_name to controlling host..."
+    #debug
     echo "ssh ${USER}@${HOST} doas zfs send -vcR ${snapshot_name} | doas zfs receive -F ${SNAPSHOT_PREFIX}"
 
     ssh "${USER}@${HOST}" "doas zfs send -vcR ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
   else
     echo "Sending incremental snapshot from $previous_snapshot to $snapshot_name..."
+    #debug
+    echo "ssh ${USER}@${HOST} doas zfs send -vcRI ${previous_snapshot} ${snapshot_name} | doas zfs receive -F ${SNAPSHOT_PREFIX}"
 
-    echo "ssh ${USER}@${HOST} doas zfs send -vcRI ${latest_rolling_snapshot} ${snapshot_name} | doas zfs receive -F ${SNAPSHOT_PREFIX}"
-
-    ssh "${USER}@${HOST}" "doas zfs send -vcRI ${latest_rolling_snapshot} ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
-
+    ssh "${USER}@${HOST}" "doas zfs send -vcRI ${previous_snapshot} ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
   fi
 }
 
 # Main script execution
-latest_rolling_snapshot=$(get_latest_snapshot "$ROLLING_PREFIX")
 
-# Roll back to the last common snapshot to ensure we can receive the stream
-if [ -n "$latest_rolling_snapshot" ]; then
-  echo "Rolling back to $latest_rolling_snapshot on the controlling host..."
-  doas zfs rollback -r ${latest_rolling_snapshot}
+# Get the latest rolling snapshot from the remote host and controlling host
+latest_rolling_snapshot_remote=$(get_latest_snapshot "$ROLLING_PREFIX")
+latest_rolling_snapshot_local=$(doas zfs list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@${ROLLING_PREFIX} | tail -1)
+#debug
+echo "latest_rolling_snapshot_remote: $latest_rolling_snapshot_remote"
+echo "latest_rolling_snapshot_local: $latest_rolling_snapshot_local"
+
+# Roll back to the last common snapshot on the controlling host to ensure we can receive the stream
+if [ -n "$latest_rolling_snapshot_local" ]; then
+  echo "Rolling back to $latest_rolling_snapshot_local on the controlling host..."
+  doas zfs rollback -r ${latest_rolling_snapshot_local}
 fi
 
 # Single SSH call for PostgreSQL backup and ZFS snapshot creation
 echo "Running PostgreSQL backup and creating ZFS snapshot..."
-
-#ssh "jimfreeze@192.168.100.126" "sh -s" <<EOF
-#ssh "${USER}@${HOST}" "sh -s" <<EOF
 ${SSH_CMD} <<EOF
   doas -u postgres psql -c "SELECT pg_backup_start('$NOW');" 2>&1
   doas zfs snapshot ${SNAPSHOT_PREFIX}@$ROLLING_PREFIX-$NOW 2>&1
@@ -79,10 +82,12 @@ EOF
 echo "!!!!!!!!!!!!!!!!"
 
 snapshot_name="${SNAPSHOT_PREFIX}@$ROLLING_PREFIX-$NOW"
-if [ -z "$latest_rolling_snapshot" ]; then
-  send_snapshot_to_host "$snapshot_name" ""
+
+# Determine whether to send full or incremental snapshot
+if [ "$latest_rolling_snapshot_remote" = "$latest_rolling_snapshot_local" ]; then
+  send_snapshot_to_host "$snapshot_name" "$latest_rolling_snapshot_local"
 else
-  send_snapshot_to_host "$snapshot_name" "$latest_rolling_snapshot"
+  send_snapshot_to_host "$snapshot_name" ""
 fi
 
 # Remove old rolling snapshots to maintain a 24-hour window (24 snapshots)
@@ -96,10 +101,6 @@ cleanup_old_rolling_snapshots() {
   else
     echo "Not enough snapshots for cleanup. Current count: $snapshot_count, required: $ROLLING_COUNT"
   fi
-
-  # ${SSH_CMD} <<EOF
-  #     ${ZFS_CMD} list -t snapshot -o name -s creation | grep $SNAPSHOT_PREFIX@$ROLLING_PREFIX | head -n -$ROLLING_COUNT | xargs -I {} doas zfs destroy {}
-  #EOF
 }
 
 # Clean up old rolling snapshots
