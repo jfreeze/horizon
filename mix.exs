@@ -10,7 +10,17 @@ defmodule Horizon.MixProject do
       deps: deps(),
       docs: [
         main: "readme",
-        extras: ["README.md"]
+        extras: ["README.md"],
+        before_closing_body_tag: fn
+          :html ->
+            """
+            <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+            <script>mermaid.initialize({startOnLoad: true})</script>
+            """
+
+          _ ->
+            ""
+        end
       ],
       description: "Library for managing Elixir/Phoenix deployments",
       package: package(),
@@ -37,8 +47,9 @@ defmodule Horizon.MixProject do
   defp deps do
     [
       {:dialyxir, "~> 1.4", runtime: false},
-      {:ex_check, "~> 0.16.0"},
-      {:ex_doc, "~> 0.34", runtime: false}
+      {:ex_check, "~> 0.16.0", runtime: false, only: :dev},
+      # {:ex_doc, [ {with_mermaid, true} ]}, "~> 0.34", runtime: false}
+      {:ex_doc, "~> 0.34", only: [:dev], runtime: false}
     ]
   end
 end
