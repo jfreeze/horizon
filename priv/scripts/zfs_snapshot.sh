@@ -34,9 +34,7 @@ ZFS_CMD="doas zfs"
 
 # Get the list of existing rolling snapshots
 get_latest_snapshot() {
-  ${SSH_CMD} <<EOF
-    ${ZFS_CMD} list -t snapshot -o name -s creation | grep $SNAPSHOT_PREFIX@$1
-EOF
+  $(ssh "${USER}@${HOST}" "${ZFS_CMD} list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@$1 | tail -1")
 }
 
 # Send the snapshot to the controlling host
