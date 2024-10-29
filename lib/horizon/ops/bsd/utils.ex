@@ -80,29 +80,8 @@ defmodule Horizon.Ops.BSD.Utils do
 
   @spec get_src_path(String.t(), String.t()) :: String.t() | no_return()
   def get_src_path(dir, source) do
-    Application.app_dir(:horizon_ops, "priv/#{dir}/#{source}")
+    Application.app_dir(:horizon, "priv/#{dir}/#{source}")
   end
-
-  # @doc """
-  # Returns the target platform for the current system.
-  # """
-  # def target do
-  #   arch_str = :erlang.system_info(:system_architecture)
-  #   [arch | _] = arch_str |> List.to_string() |> String.split("-")
-
-  #   case {:os.type(), arch, :erlang.system_info(:wordsize) * 8} do
-  #     {{:win32, _}, _arch, 64} -> "windows-x64.exe"
-  #     {{:unix, :darwin}, arch, 64} when arch in ~w(arm aarch64) -> "macos-arm64"
-  #     {{:unix, :darwin}, "x86_64", 64} -> "macos-x64"
-  #     {{:unix, :freebsd}, "aarch64", 64} -> "freebsd-arm64"
-  #     {{:unix, :freebsd}, "amd64", 64} -> "freebsd-x64"
-  #     {{:unix, :linux}, "aarch64", 64} -> "linux-arm64"
-  #     {{:unix, :linux}, "arm", 32} -> "linux-armv7"
-  #     {{:unix, :linux}, "armv7" <> _, 32} -> "linux-armv7"
-  #     {{:unix, _osname}, arch, 64} when arch in ~w(x86_64 amd64) -> "linux-x64"
-  #     {_os, _arch, _wordsize} -> raise "tailwind is not available for architecture: #{arch_str}"
-  #   end
-  # end
 
   @doc """
   Validate that the `assets.setup.freebsd` alias exists in the mix.exs file.
