@@ -44,9 +44,14 @@ send_snapshot_to_host() {
 
   if [ -z "$previous_snapshot" ]; then
     echo "Sending full snapshot $snapshot_name to controlling host..."
+    echo "ssh ${USER}@${HOST} doas zfs send -vcR ${snapshot_name} | doas zfs receive -F ${SNAPSHOT_PREFIX}"
+
     ssh "${USER}@${HOST}" "doas zfs send -vcR ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
   else
     echo "Sending incremental snapshot from $previous_snapshot to $snapshot_name..."
+
+    echo "ssh ${USER}@${HOST} doas zfs send -vcRI ${latest_rolling_snapshot} ${snapshot_name} | doas zfs receive -F ${SNAPSHOT_PREFIX}"
+
     ssh "${USER}@${HOST}" "doas zfs send -vcRI ${latest_rolling_snapshot} ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
 
   fi
@@ -54,6 +59,12 @@ send_snapshot_to_host() {
 
 # Main script execution
 latest_rolling_snapshot=$(get_latest_snapshot "$ROLLING_PREFIX")
+
+# Roll back to the last common snapshot to ensure we can receive the stream
+if [ -n "$latest_rolling_snapshot" ]; then
+  echo "Rolling back to $latest_rolling_snapshot on the controlling host..."
+  doas zfs rollback -r ${latest_rolling_snapshot}
+fi
 
 # Single SSH call for PostgreSQL backup and ZFS snapshot creation
 echo "Running PostgreSQL backup and creating ZFS snapshot..."
@@ -77,9 +88,18 @@ fi
 # Remove old rolling snapshots to maintain a 24-hour window (24 snapshots)
 cleanup_old_rolling_snapshots() {
   echo "Cleaning up old rolling snapshots..."
-  ${SSH_CMD} <<EOF
-      ${ZFS_CMD} list -t snapshot -o name -s creation | grep $SNAPSHOT_PREFIX@$ROLLING_PREFIX | head -n -$ROLLING_COUNT | xargs -I {} doas zfs destroy {}
-EOF
+  snapshot_count=$(ssh "${USER}@${HOST}" "doas zfs list -t snapshot -o name | grep ${SNAPSHOT_PREFIX}@${ROLLING_PREFIX} | wc -l")
+
+  if [ "$snapshot_count" -gt "$ROLLING_COUNT" ]; then
+    echo "Cleaning up old rolling snapshots..."
+    ssh "${USER}@${HOST}" "${ZFS_CMD} list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@${ROLLING_PREFIX} | head -n -$ROLLING_COUNT | xargs -I {} doas zfs destroy {}"
+  else
+    echo "Not enough snapshots for cleanup. Current count: $snapshot_count, required: $ROLLING_COUNT"
+  fi
+
+  # ${SSH_CMD} <<EOF
+  #     ${ZFS_CMD} list -t snapshot -o name -s creation | grep $SNAPSHOT_PREFIX@$ROLLING_PREFIX | head -n -$ROLLING_COUNT | xargs -I {} doas zfs destroy {}
+  #EOF
 }
 
 # Clean up old rolling snapshots
