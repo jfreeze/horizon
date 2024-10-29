@@ -268,10 +268,11 @@ pkg:postgresql16-server
 pkg:postgresql16-contrib
 postgres.init
 
-postgres.db:us_utf8_full:mydb
+# Encode with UTF8 and sort with byte order
+postgres.db:c_mixed_utf8:mydb
 
 # Other postgresql options
-#postgres.db:c_mixed_utf8:mydb
+#postgres.db:us_utf8_full:mydb
 #postgres.db:c_utf8_full:mydb
 ```
 

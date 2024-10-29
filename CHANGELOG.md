@@ -6,12 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+
+## [0.1.1] - 2024-10-29
+### Added
+- Added zfs_snapshot script
 - Added functionality for connecting to VM providers to create host instances (starting with GCE VM hosts).
 - Introduced `Horizon.Target` module utilizing ADTs for deployment targets.
 - Added features to install and configure PostgreSQL on FreeBSD hosts.
 - Implemented initial support for setting up a database follower and moving the master.
 
 ### Changed
+- Updated postgres.conf comments
 - Renamed the project from "Horizon" to "HorizonOps".
 - Updated the structure to include components like `Horizon.GCE`, `Horizon.AWS`, `HorizonBSD`, and `HorizonLinux`.
 
