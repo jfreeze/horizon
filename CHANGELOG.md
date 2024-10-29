@@ -30,6 +30,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Tools for configuring FreeBSD hosts with Elixir/Phoenix releases.
 - Basic support for PostgreSQL installation and configuration on FreeBSD.
 
-[Unreleased]: https://github.com/jfreeze/Horizon/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/jfreeze/Horizon/releases/tag/v0.1.0
-[0.1.1]: https://github.com/jfreeze/Horizon/releases/tag/v0.1.1
+[Unreleased]: https://github.com/jfreeze/horizon/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/jfreeze/horizon/tree/0.1.1
