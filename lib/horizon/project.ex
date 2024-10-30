@@ -5,7 +5,7 @@ defmodule Horizon.Project do
 
   defstruct name: nil,
             server_names: nil,
-            ssl_certificate: nil,
+            letsencrypt_live: nil,
             acme_challenge_path: nil,
             suppress_ssl: false,
             servers: []
@@ -13,7 +13,7 @@ defmodule Horizon.Project do
   @type t :: %__MODULE__{
           name: String.t(),
           server_names: [String.t()],
-          ssl_certificate: String.t(),
+          letsencrypt_live: String.t(),
           acme_challenge_path: String.t(),
           suppress_ssl: boolean(),
           servers: [Horizon.Server.t()]
@@ -28,7 +28,7 @@ defmodule Horizon.Project do
       %Horizon.Project{
         name: "my_project",
         server_names: ["my-domain.com", "also-mine.io"],
-        ssl_certificate: nil,
+        letsencrypt_live: nil,
         acme_challenge_path: nil,
         suppress_ssl: false,
         servers: []

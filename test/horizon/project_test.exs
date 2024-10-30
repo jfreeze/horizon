@@ -11,7 +11,7 @@ defmodule Horizon.ProjectTest do
       assert %Project{
                name: "my_project",
                server_names: ["my-domain.com", "also-mine.io"],
-               ssl_certificate: nil,
+               letsencrypt_live: nil,
                acme_challenge_path: nil,
                suppress_ssl: false,
                servers: []
@@ -24,7 +24,7 @@ defmodule Horizon.ProjectTest do
       assert %Project{
                name: nil,
                server_names: nil,
-               ssl_certificate: nil,
+               letsencrypt_live: nil,
                acme_challenge_path: nil,
                suppress_ssl: false,
                servers: []

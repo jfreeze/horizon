@@ -58,7 +58,8 @@ defmodule Horizon.MixProject do
     [
       {:dialyxir, "~> 1.4", runtime: false},
       {:ex_check, "~> 0.16.0", runtime: false, only: :dev},
-      {:ex_doc, "~> 0.34", only: [:dev], runtime: false}
+      {:ex_doc, "~> 0.34", only: [:dev], runtime: false},
+      {:slugify, "~> 1.3"}
     ]
   end
 end
