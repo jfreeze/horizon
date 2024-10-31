@@ -1,6 +1,5 @@
 defmodule Horizon.NginxConfigTest do
   use ExUnit.Case
-  import ExUnit.CaptureIO
   alias Horizon.NginxConfig
 
   @sample_template """
