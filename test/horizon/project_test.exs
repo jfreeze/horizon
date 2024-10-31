@@ -13,7 +13,7 @@ defmodule Horizon.ProjectTest do
                server_names: ["my-domain.com", "also-mine.io"],
                letsencrypt_live: nil,
                acme_challenge_path: nil,
-               suppress_ssl: false,
+               http_only: false,
                servers: []
              } = project
     end
@@ -26,7 +26,7 @@ defmodule Horizon.ProjectTest do
                server_names: nil,
                letsencrypt_live: nil,
                acme_challenge_path: nil,
-               suppress_ssl: false,
+               http_only: false,
                servers: []
              } = project
     end

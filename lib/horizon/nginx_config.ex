@@ -57,7 +57,7 @@ defmodule Horizon.NginxConfig do
         server_names: ["example.com", "www.example.com"],
         letsencrypt_live: "mydomain.com",
         acme_challenge_path: "/apps/challenge/mydomain.com",
-        suppress_ssl: false,
+        http_only: false,
         servers: [
           %Horizon.Server{internal_ip: "10.0.0.1", port: 4000},
           %Horizon.Server{internal_ip: "10.0.0.2", port: 4001}
@@ -95,7 +95,7 @@ defmodule Horizon.NginxConfig do
   """
   @spec send([Horizon.Project.t()], String.t(), String.t(), String.t()) ::
           {:ok, any()} | {:error, non_neg_integer(), any()}
-  def(send(projects, user, host, remote_path \\ "/usr/local/etc/nginx/nginx.conf")) do
+  def send(projects, user, host, remote_path \\ "/usr/local/etc/nginx/nginx.conf") do
     encoded_content =
       projects
       |> Horizon.NginxConfig.generate()
