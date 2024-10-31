@@ -33,13 +33,9 @@ defmodule Horizon.NginxConfigTest do
       listen 80;
       server_name project1, project2;
     }
-
     """
 
-    output =
-      capture_io(fn ->
-        NginxConfig.generate(@sample_projects)
-      end)
+    output = NginxConfig.generate(@sample_projects)
 
     assert output == expected_output
   end

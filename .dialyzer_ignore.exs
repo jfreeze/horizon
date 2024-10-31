@@ -1,6 +1,6 @@
 [
   {"lib/horizon/ops/utils.ex", :unknown_function, 67},
-  {"lib/horizon/nginx_config.ex", :unknown_function, 28},
+  {"lib/horizon/nginx_config.ex", :unknown_function, 81},
   # Ignore all unknown functions related to Mix.shell/0 and Mix.Project.config/0
   ~r"lib/horizon/ops/utils.ex:\d+:unknown_function Function Mix.shell/0 does not exist",
   ~r"lib/horizon/ops/bsd/utils.ex:\d+:unknown_function Function Mix.shell/0 does not exist",
