@@ -110,9 +110,7 @@ defmodule Horizon.NginxConfig do
         {:ok, result}
 
       {result, exit_code} ->
-        Logger.error(
-          "Failed to update Nginx configuration. Exit code #{exit_code}. #{inspect(result)}"
-        )
+        Logger.error("Failed to update Nginx configuration. Exit code #{exit_code}. #{result}")
 
         {:error, exit_code, result}
     end
