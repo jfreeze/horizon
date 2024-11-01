@@ -10,7 +10,7 @@ defmodule Horizon.MixProject do
       deps: deps(),
       docs: [
         main: "readme",
-        extras: ["README.md", "CHANGELOG.md", "LICENSE.md"],
+        extras: ["README.md", "CHANGELOG.md", "LICENSE.md", "docs/Hertzner.md"],
         before_closing_body_tag: fn
           :html ->
             """
@@ -24,7 +24,10 @@ defmodule Horizon.MixProject do
       ],
       description: "Library for managing Elixir/Phoenix deployments",
       package: package(),
-      source_url: "https://github.com/jfreeze/horizon"
+      source_url: "https://github.com/jfreeze/horizon",
+      dialyzer: [
+        plt_add_apps: [:mix]
+      ]
     ]
   end
 

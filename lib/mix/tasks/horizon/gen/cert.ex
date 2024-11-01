@@ -3,6 +3,7 @@ defmodule Mix.Tasks.Horizon.Gen.Cert do
 
   use Mix.Task
 
+  @impl true
   def run(_args) do
     priv_cert_dir = Path.join(["priv", "cert"])
     cert_file = Path.join(priv_cert_dir, "selfsigned.pem")
