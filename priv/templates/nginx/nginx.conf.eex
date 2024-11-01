@@ -59,8 +59,8 @@ http {
   server {
     listen 443 ssl;
     server_name <%= Enum.join(project.server_names, ",") %>;
-    ssl_certificate /usr/local/etc/letsencrypt/live/<%= project.letsencrypt_live %>/fullchain.pem;
-    ssl_certificate_key /usr/local/etc/letsencrypt/live/<%= project.letsencrypt_live %>/privkey.pem;
+    ssl_certificate <%= Horizon.NginxConfig.cert(project) %>;
+    ssl_certificate_key <%= Horizon.NginxConfig.cert_key(project) %>;
 
     #location / {
     #    default_type text/plain;

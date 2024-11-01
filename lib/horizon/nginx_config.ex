@@ -84,43 +84,27 @@ defmodule Horizon.NginxConfig do
 
   def cert(%Horizon.Project{
         certificate: :letsencrypt,
-        letsencrypt_path: nil,
-        letsencrypt_domain: domain
+        letsencrypt_domain: domain,
+        cert_path: nil
       }) do
     "/usr/local/etc/letsencrypt/live/#{domain}/fullchain.pem"
   end
 
-  def cert(%Horizon.Project{
-        certificate: :letsencrypt,
-        letsencrypt_path: path
-      }),
-      do: path
+  def cert(%Horizon.Project{certificate: :letsencrypt, cert_path: path}), do: path
 
-  def cert(%Horizon.Project{
-        certificate: :self,
-        cert_selfsigned_path: path
-      }),
-      do: path
+  def cert(%Horizon.Project{certificate: :self, cert_path: path}), do: path
 
   def cert_key(%Horizon.Project{
         certificate: :letsencrypt,
-        letsencrypt_path: nil,
-        letsencrypt_domain: domain
+        letsencrypt_domain: domain,
+        cert_key_path: nil
       }) do
     "/usr/local/etc/letsencrypt/live/#{domain}/privkey.pem"
   end
 
-  def cert_key(%Horizon.Project{
-        certificate: :letsencrypt,
-        letsencrypt_path: path
-      }),
-      do: path
+  def cert_key(%Horizon.Project{certificate: :letsencrypt, cert_key_path: path}), do: path
 
-  def cert_key(%Horizon.Project{
-        certificate: :self,
-        cert_selfsigned_key_path: path
-      }),
-      do: path
+  def cert_key(%Horizon.Project{certificate: :self, cert_key_path: path}), do: path
 
   @doc """
   Sends the Nginx configuration to a remote host and reloads the Nginx service.

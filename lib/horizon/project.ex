@@ -3,9 +3,14 @@ defmodule Horizon.Project do
   Project configuration for web based projects.
   """
 
+  @type cert :: [nil | :self | :letsencrypt]
+
   defstruct name: nil,
             server_names: nil,
-            letsencrypt_live: nil,
+            certificate: nil,
+            cert_path: nil,
+            cert_key_path: nil,
+            letsencrypt_domain: nil,
             acme_challenge_path: nil,
             http_only: false,
             servers: []
@@ -13,7 +18,10 @@ defmodule Horizon.Project do
   @type t :: %__MODULE__{
           name: String.t(),
           server_names: [String.t()],
-          letsencrypt_live: String.t(),
+          certificate: cert(),
+          cert_path: String.t(),
+          cert_key_path: String.t(),
+          letsencrypt_domain: String.t(),
           acme_challenge_path: String.t(),
           http_only: boolean(),
           servers: [Horizon.Server.t()]
@@ -28,9 +36,9 @@ defmodule Horizon.Project do
       %Horizon.Project{
         name: "my_project",
         server_names: ["my-domain.com", "also-mine.io"],
-        letsencrypt_live: nil,
+        certificate: nil,
         acme_challenge_path: nil,
-        http_only: false,
+        http_only: true,
         servers: []
       }
 
