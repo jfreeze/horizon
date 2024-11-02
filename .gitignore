@@ -30,3 +30,6 @@ horizon-*.tar
 
 # Ignore LS files
 /.elixir_ls/
+
+# Ignore .DS_Store files
+.DS_Store

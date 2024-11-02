@@ -32,7 +32,8 @@ defmodule Horizon.Ops.BSD.Utils do
     :bsd_install,
     :bsd_install_args,
     :bsd_install_script,
-    :horizon_helpers
+    :horizon_helpers,
+    :certbot_crontab
   ]
 
   @doc """

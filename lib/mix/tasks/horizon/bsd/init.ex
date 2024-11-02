@@ -82,6 +82,7 @@ defmodule Mix.Tasks.Horizon.Bsd.Init do
   - `bsd_install_args.sh`
   - `bsd_install_script.sh`
   - `horizon_helpers.sh`
+  - `certbot_crontab.sh`
   - `release-my_app.sh`
   - `build-my_app.sh`
   - `stage-my_app.sh`
@@ -110,6 +111,7 @@ defmodule Mix.Tasks.Horizon.Bsd.Init do
     %Target{executable?: true, type: :template, key: :bsd_install},
     %Target{executable?: false, type: :static, key: :bsd_install_args},
     %Target{executable?: false, type: :static, key: :bsd_install_script},
+    %Target{executable?: false, type: :static, key: :certbot_crontab},
     # Subroutines
     %Target{executable?: false, type: :static, key: :horizon_helpers},
     # Release scripts
@@ -122,7 +124,7 @@ defmodule Mix.Tasks.Horizon.Bsd.Init do
     # {:executable, :template, :rc_d}
   ]
 
-  @impl true
+  @impl Mix.Task
   def run(args) do
     {opts, _, _} = OptionParser.parse(args, switches: [yes: :boolean], aliases: [y: :yes])
     overwrite = Keyword.get(opts, :yes, false)
