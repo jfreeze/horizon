@@ -82,29 +82,53 @@ defmodule Horizon.NginxConfig do
     |> EEx.eval_string(projects: projects)
   end
 
-  def cert(%Horizon.Project{
+  @doc """
+  Returns the path for the certificate
+
+  ## Examples
+      iex>cert_path(%Horizon.Project{certificate: :self, cert_path: "/path/to/cert.pem"})
+      "/path/to/cert.pem"
+
+      iex>cert_path(%Horizon.Project{certificate: :letsencrypt, domain: "example.com"})
+      "/user/local/etc/letsencrypt/live/example.com/fullchain.pem"
+
+  """
+  @spec cert_path(Horizon.Project.t()) :: String.t()
+  def cert_path(%Horizon.Project{
         certificate: :letsencrypt,
-        letsencrypt_domain: domain,
-        cert_path: nil
-      }) do
+        letsencrypt_domain: domain
+      })
+      when is_binary(domain) do
     "/usr/local/etc/letsencrypt/live/#{domain}/fullchain.pem"
   end
 
-  def cert(%Horizon.Project{certificate: :letsencrypt, cert_path: path}), do: path
+  def cert_path(%Horizon.Project{certificate: :letsencrypt, cert_path: path}), do: path
 
-  def cert(%Horizon.Project{certificate: :self, cert_path: path}), do: path
+  def cert_path(%Horizon.Project{certificate: :self, cert_path: path}), do: path
 
-  def cert_key(%Horizon.Project{
+  @doc """
+  Returns the path for the certificate
+
+  ## Examples
+      iex>cert_key_path(%Horizon.Project{certificate: :self, cert_key_path: "/path/to/cert_key.pem"})
+      "/path/to/cert_key.pem"
+
+      iex>cert_key_path(%Horizon.Project{certificate: :letsencrypt, domain: "example.com"})
+      "/user/local/etc/letsencrypt/live/example.com/privkey.pem"
+
+  """
+  @spec cert_key_path(Horizon.Project.t()) :: String.t()
+  def cert_key_path(%Horizon.Project{
         certificate: :letsencrypt,
-        letsencrypt_domain: domain,
-        cert_key_path: nil
-      }) do
+        letsencrypt_domain: domain
+      })
+      when is_binary(domain) do
     "/usr/local/etc/letsencrypt/live/#{domain}/privkey.pem"
   end
 
-  def cert_key(%Horizon.Project{certificate: :letsencrypt, cert_key_path: path}), do: path
+  def cert_key_path(%Horizon.Project{certificate: :letsencrypt, cert_key_path: path}), do: path
 
-  def cert_key(%Horizon.Project{certificate: :self, cert_key_path: path}), do: path
+  def cert_key_path(%Horizon.Project{certificate: :self, cert_key_path: path}), do: path
 
   @doc """
   Sends the Nginx configuration to a remote host and reloads the Nginx service.

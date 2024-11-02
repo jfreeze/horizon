@@ -122,7 +122,7 @@ defmodule Mix.Tasks.Horizon.Bsd.Init do
     # {:executable, :template, :rc_d}
   ]
 
-  @impl true
+  @impl Mix.Task
   def run(args) do
     {opts, _, _} = OptionParser.parse(args, switches: [yes: :boolean], aliases: [y: :yes])
     overwrite = Keyword.get(opts, :yes, false)

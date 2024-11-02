@@ -59,8 +59,8 @@ http {
   server {
     listen 443 ssl;
     server_name <%= Enum.join(project.server_names, ",") %>;
-    ssl_certificate <%= Horizon.NginxConfig.cert(project) %>;
-    ssl_certificate_key <%= Horizon.NginxConfig.cert_key(project) %>;
+    ssl_certificate <%= Horizon.NginxConfig.cert_path(project) %>;
+    ssl_certificate_key <%= Horizon.NginxConfig.cert_key_path(project) %>;
 
     #location / {
     #    default_type text/plain;
