@@ -26,7 +26,7 @@ graph LR
  C --> D[DEPLOY]
 ```
 
-In addition to easy host management and rapid deployments, Horizon.Ops was motivated to help facilitate Phoenix deployments for platforms other than your development platform, e.g., MacOS -> FreeBSD or MacOS -> Linux.
+In addition to easy host management and rapid deployments, Horizon.Ops was motivated to help facilitate Phoenix deployments for platforms other than your development platform, e.g., MacOS -> FreeBSD.
 
 ## Installation
 

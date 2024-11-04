@@ -16,8 +16,7 @@ defmodule Mix.Tasks.Horizon.Bsd.Init do
 
   ## Description
 
-  Horizon.Ops.Bsd.Init creates several scripts for deploying an Elixir application to a host.
-  Horizon.Ops.BSD is customized for FreeBSD hosts. Use Horizon.Oos.Linux for Linux hosts.
+  Horizon.Ops.Init creates several scripts for deploying an Elixir application to a BSD host.
 
   ### Customization
 
