@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Horizon.Bsd.Init do
+defmodule Mix.Tasks.Horizon.Init do
   @shortdoc "Creates Horizon.Ops deployment scripts for FreeBSD hosts."
 
   use Mix.Task
@@ -8,7 +8,7 @@ defmodule Mix.Tasks.Horizon.Bsd.Init do
 
   ## Usage
 
-      mix horizon.bsd.init [-y]
+      mix horizon.init [-y]
 
   ### Options
 
@@ -17,6 +17,7 @@ defmodule Mix.Tasks.Horizon.Bsd.Init do
   ## Description
 
   Horizon.Ops.Init creates several scripts for deploying an Elixir application to a BSD host.
+  See Horizon.Ops.Init for the creation for additional helper applications.
 
   ### Customization
 
