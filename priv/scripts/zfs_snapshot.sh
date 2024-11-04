@@ -1,25 +1,30 @@
 #!/bin/sh
 
-# This script automates the process of taking and managing ZFS snapshots on a remote host,
-# as well as sending them to a controlling host for backup. It handles both rolling and
-# daily snapshots, sending incremental snapshots when possible and full snapshots otherwise.
+# This script automates the process of taking and managing ZFS snapshots
+# and sending them to a backup host. It handles both rolling and daily
+# snapshots, sending incremental snapshots when possible and full snapshots otherwise.
 # The script also manages the cleanup of old snapshots based on retention policies.
+# THIS SCRIPT IS INTENDED TO BE RUN FROM THE BACKUP HOST
 #
 # Usage:
-#   ./zfs_snapshot.sh [-u user] host
+#   ./zfs_snapshot.sh [-u user] postgres_host
 #
 # Options:
-#   -u user   Specify the SSH user to connect to the remote host. Defaults to the current user if not provided.
-#   host      The remote host where PostgreSQL is running and ZFS snapshots will be managed.
+#   -u user   Specify the SSH user to connect to the remote host.
+#             Defaults to the current user name if not provided.
+#             The user must have access to elevated priviledges.
+#   host      The host where PostgreSQL is running
 #
 # Functionality:
-#   1. Takes a PostgreSQL backup on the remote host.
-#   2. Creates a ZFS snapshot of the PostgreSQL database directory.
-#   3. If a snapshot exists, it sends an incremental snapshot. Otherwise, it sends a full snapshot.
-#   4. At midnight, the script takes a daily snapshot and sends it to the controlling host using
-#      the same logic as the rolling snapshots (incremental vs full).
-#   5. Cleans up old rolling snapshots to maintain a 24-hour rolling window (24 snapshots).
-#   6. Cleans up old daily snapshots, keeping only the snapshots taken in the last 14 days (configurable).
+#   1. Creates a ZFS snapshot of the PostgreSQL database directory.
+#   2. If a snapshot already exists on the backup host, it sends an
+#      incremental snapshot. Otherwise, it sends a full snapshot to
+#      the backup host.
+#   3. At midnight, the script takes a daily snapshot and sends it
+#      to the backup host using the same logic as the rolling snapshots
+#      (incremental vs full).
+#   4. Cleans up old rolling snapshots to maintain a 24-hour rolling window (24/48 snapshots).
+#   5. Cleans up old daily snapshots, keeping only the snapshots taken in the last 14 days (configurable).
 #
 # Crontab Setup:
 #   To automate the script, add the following entries to your crontab (crontab -e):
@@ -35,12 +40,12 @@
 #   - ROLLING_COUNT:   Number of rolling snapshots to retain (default: 48 snapshots).
 #
 # Example:
-#   ./zfs_snapshot.sh -u backup_user 192.168.100.100
-#   This will run the snapshot process on the remote host 192.168.100.100 using the SSH user 'backup_user'.
+#   ./zfs_snapshot.sh -u postgres_user postgres_ip
+#   This will run the snapshot process on the remote host postgres_id using the SSH user 'postgres_user'.
 #
 # Dependencies:
 #   - ZFS must be installed and configured on both the remote and controlling hosts.
-#   - PostgreSQL must be running on the remote host, with access to manage backups.
+#   - PostgreSQL must be running on the backup host, with access to manage backups.
 #   - The 'doas' command is used to execute ZFS and PostgreSQL commands with elevated privileges.
 #
 # Notes:
@@ -52,7 +57,7 @@
 USER=$(whoami)
 HOST=""
 NOW=$(date +"%Y%m%d%H%M%S")
-SNAPSHOT_PREFIX="zroot/var/db/postgres"
+SNAPSHOT_PREFIX="zroot/var/db_postgres"
 DAILY_PREFIX="daily"
 ROLLING_PREFIX="rolling"
 RETENTION_DAYS=14
@@ -158,7 +163,7 @@ cleanup_old_daily_snapshots() {
   ssh "${USER}@${HOST}" "${ZFS_CMD} list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@$DAILY_PREFIX | head -n -$RETENTION_DAYS | xargs -I {} doas zfs destroy {}"
 }
 
-# Cleanup old rolling snapshots if more than 24 exist
+# Cleanup old rolling snapshots if more than ROLLING_COUNT exist
 cleanup_old_rolling_snapshots() {
   printf "${YELLOW}Cleaning up old rolling snapshots...${RESET}\n"
   snapshot_count=$(ssh "${USER}@${HOST}" "doas zfs list -t snapshot -o name | grep ${SNAPSHOT_PREFIX}@${ROLLING_PREFIX} | wc -l")
