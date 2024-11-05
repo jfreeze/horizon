@@ -13,22 +13,7 @@ DATE=$(date +%Y%m%d)
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
-RESET='\033[0m'
-
-# Retrieve a list of all user databases (excluding template databases)
-#DBLIST=$(psql -U postgres -Atc "SELECT datname FROM pg_database WHERE datistemplate = false AND datname NOT IN ('postgres', 'template0', 'template1');")
-
-# Loop through each database and perform the backup
-# for DB in $DBLIST; do
-#   echo "Backing up database: $DB"
-#   pg_dump -U postgres -F c -b -v -f "${DB}-${DATE}.sql" "$DB"
-# done
-
-# Optionally, include the 'postgres' database in the backup
-# Uncomment the following lines if you wish to back it up
-# echo "Backing up database: postgres"
-# pg_dump -U postgres -F c -b -v -f "postgres-${DATE}.sql" "postgres"
-#!/bin/sh
+RESET='\033[0m'å
 
 # Function to display usage
 usage() {
