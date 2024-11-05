@@ -1,10 +1,10 @@
 defmodule Mix.Tasks.Horizon.Init do
-  @shortdoc "Creates Horizon.Ops deployment scripts for FreeBSD hosts."
+  @shortdoc "Creates Horizon deployment scripts for FreeBSD hosts."
 
   use Mix.Task
 
   @moduledoc """
-  Creates Horizon.Ops deploy scripts in `bin/` and `rel/` directories.
+  Creates Horizon deploy scripts in `bin/` and `rel/` directories.
 
   ## Usage
 
@@ -16,12 +16,12 @@ defmodule Mix.Tasks.Horizon.Init do
 
   ## Description
 
-  Horizon.Ops.Init creates several scripts for deploying an Elixir application to a BSD host.
+  Horizon.Init creates several scripts for deploying an Elixir application to a BSD host.
   See Horizon.Ops.Init for the creation for additional helper applications.
 
   ### Customization
 
-  Horizon.Ops.Bsd.Init uses the `releases` configuration in `mix.exs` to customize the deployment scripts.
+  Horizon.Init uses the `releases` configuration in `mix.exs` to customize the deployment scripts.
   The available options are:
 
   - `bin_path`: default :`bin`
@@ -78,12 +78,7 @@ defmodule Mix.Tasks.Horizon.Init do
   Running `mix horizon.init` creates several files in the `bin_path` directory.
   For the project `my_app`, these files include:
 
-  - `bsd_install.sh`
-  - `bsd_install_args.sh`
-  - `bsd_install_script.sh`
   - `horizon_helpers.sh`
-  - `certbot_crontab.sh`
-  - `release-my_app.sh`
   - `build-my_app.sh`
   - `stage-my_app.sh`
   - `deploy-my_app.sh`
@@ -101,17 +96,12 @@ defmodule Mix.Tasks.Horizon.Init do
   - `bin/deploy-app_web.sh`
   - `bin/deploy-app_worker.sh`
 
-  An rc.d script is created in `rel/overlays/rc_d/` for each release.
+  An rc.d script is created in `rel/overlays/rc_d/` for each release when `mix release` is run.
 
   """
   alias Horizon.Ops.Target
 
   @targets [
-    # Install scripts
-    %Target{executable?: true, type: :template, key: :bsd_install},
-    %Target{executable?: false, type: :static, key: :bsd_install_args},
-    %Target{executable?: false, type: :static, key: :bsd_install_script},
-    %Target{executable?: false, type: :static, key: :certbot_crontab},
     # Subroutines
     %Target{executable?: false, type: :static, key: :horizon_helpers},
     # Release scripts
