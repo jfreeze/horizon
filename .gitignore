@@ -33,3 +33,8 @@ horizon-*.tar
 
 # Ignore .DS_Store files
 .DS_Store
+
+# Ignore working bins
+/bin/
+/ops/
+/backups/
