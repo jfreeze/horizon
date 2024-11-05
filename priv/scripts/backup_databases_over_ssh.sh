@@ -3,6 +3,7 @@
 # Default values
 LOCAL_BACKUP_DIR=$(pwd)
 DATE=$(date +%Y%m%d)
+
 # Colors
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
@@ -73,12 +74,12 @@ DBLIST=\$(psql -h localhost -U postgres -Atc "SELECT datname FROM pg_database WH
 
 for DB in \$DBLIST; do
     echo "Backing up database: \$DB" >&2
-    pg_dump -h localhost -U postgres -F c -b -f "\$REMOTE_TMP_DIR/\${DB}-\${DATE}.sql" "\$DB"
+    pg_dump -h localhost -U postgres -F c -b -f "\$REMOTE_TMP_DIR/\${DB}-\${DATE}.backup" "\$DB"
 done
 
 # Optional: Include the 'postgres' database
 # echo "Backing up database: postgres"
-# pg_dump -h localhost -U postgres -F c -b -f "\$REMOTE_TMP_DIR/postgres-\${DATE}.sql" "postgres"
+# pg_dump -h localhost -U postgres -F c -b -f "\$REMOTE_TMP_DIR/postgres-\${DATE}.backup" "postgres"
 
 echo "Creating tarball of backup files..." >&2
 tar -C "\$REMOTE_TMP_DIR" -czf - .

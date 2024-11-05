@@ -13,7 +13,7 @@ DATE=$(date +%Y%m%d)
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
-RESET='\033[0m'å
+RESET='\033[0m'
 
 # Function to display usage
 usage() {
@@ -26,8 +26,8 @@ usage() {
   exit 1
 }
 
-# Parse options
-while getopts ":h:p:U:o:" opt; do
+# Parse options using getopts
+while getopts ":p:U:o:" opt; do
   case $opt in
   p)
     PGPORT=$OPTARG
@@ -49,6 +49,7 @@ while getopts ":h:p:U:o:" opt; do
   esac
 done
 
+# Shift out the processed options
 shift $((OPTIND - 1))
 
 # Check for required positional argument 'host'
@@ -57,7 +58,15 @@ if [ $# -lt 1 ]; then
   usage
 fi
 
+# Assign the host argument
 PGHOST="$1"
+shift
+
+# Check for any additional arguments (which would be invalid)
+if [ $# -gt 0 ]; then
+  printf "${RED}Error: Options must be specified before the host argument.${RESET}\n"
+  usage
+fi
 
 # Ensure local backup directory exists
 mkdir -p "$LOCAL_BACKUP_DIR"
