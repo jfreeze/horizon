@@ -3,7 +3,6 @@
 # Default values
 LOCAL_BACKUP_DIR=$(pwd)
 DATE=$(date +%Y%m%d)
-
 # Colors
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
@@ -12,8 +11,7 @@ RESET='\033[0m'
 
 # Function to display usage
 usage() {
-  printf "${YELLOW}\nUsage: $0 [-u user] [-o output_dir] host${RESET}\n"
-  echo "Usae env variable SSH_OPTIONS if needed (e.g., export SSH_OPTIONS="-i $HOME/.ssh/google_compute_engine")\n\n"
+  echo "Usage: $0 [-o output_dir] host"
   exit 1
 }
 
@@ -38,7 +36,7 @@ shift $((OPTIND - 1))
 
 # Check for required positional argument 'host'
 if [ $# -lt 1 ]; then
-  printf "${RED}Error: host argument is required.${RESET}\n"
+  echo "Error: host argument is required."
   usage
 fi
 
@@ -49,42 +47,50 @@ mkdir -p "$LOCAL_BACKUP_DIR"
 
 echo "Starting backup process..."
 
+# Prompt for PGPASSWORD if not set
+if [ -z "$PGPASSWORD" ]; then
+  printf "${YELLOW}Enter PostgreSQL password for user 'postgres': ${RESET}"
+  stty -echo
+  read PGPASSWORD
+  stty echo
+  echo
+fi
+
 # Execute remote commands via a single SSH call, stream the tarball to local file
-ssh $REMOTE_HOST -t 'sh -s' <<'ENDSSH' >"$LOCAL_BACKUP_DIR/db_backups_${DATE}.tar.gz"
+ssh "$REMOTE_HOST" 'sh -s' >"$LOCAL_BACKUP_DIR/db_backups_${DATE}.tar.gz" <<ENDSSH
 set -e
 
 export PGPASSWORD='${PGPASSWORD}'
-export PGPASSWORD=r6grgfm
-echo $PGPASSWORD
-DATE=$(date +%Y%m%d)
-REMOTE_TMP_DIR="/tmp/db_backups_${DATE}_$$"
 
-echo "Creating temporary directory: $REMOTE_TMP_DIR"
-mkdir -p "$REMOTE_TMP_DIR"
+DATE=\$(date +%Y%m%d)
+REMOTE_TMP_DIR="/tmp/db_backups_\${DATE}_\$\$"
 
-echo "Retrieving database list..."
-DBLIST=$(psql -U postgres -Atc "SELECT datname FROM pg_database WHERE datistemplate = false AND datname NOT IN ('postgres', 'template0', 'template1');")
+echo "Creating temporary directory: \$REMOTE_TMP_DIR" >&2
+mkdir -p "\$REMOTE_TMP_DIR"
 
-for DB in $DBLIST; do
-    echo "Backing up database: $DB"
-    pg_dump -U postgres -F c -b -v -f "$REMOTE_TMP_DIR/${DB}-${DATE}.sql" "$DB"
+echo "Retrieving database list..." >&2
+DBLIST=\$(psql -h localhost -U postgres -Atc "SELECT datname FROM pg_database WHERE datistemplate = false AND datname NOT IN ('postgres', 'template0', 'template1');")
+
+for DB in \$DBLIST; do
+    echo "Backing up database: \$DB" >&2
+    pg_dump -h localhost -U postgres -F c -b -f "\$REMOTE_TMP_DIR/\${DB}-\${DATE}.sql" "\$DB"
 done
 
 # Optional: Include the 'postgres' database
 # echo "Backing up database: postgres"
-# pg_dump -U postgres -F c -b -v -f "$REMOTE_TMP_DIR/postgres-${DATE}.sql" "postgres"
+# pg_dump -h localhost -U postgres -F c -b -f "\$REMOTE_TMP_DIR/postgres-\${DATE}.sql" "postgres"
 
-echo "Creating tarball of backup files..."
-tar -C "$REMOTE_TMP_DIR" -czf - .
+echo "Creating tarball of backup files..." >&2
+tar -C "\$REMOTE_TMP_DIR" -czf - .
 
-echo "Cleaning up temporary files..."
-rm -rf "$REMOTE_TMP_DIR"
+echo "Cleaning up temporary files..." >&2
+rm -rf "\$REMOTE_TMP_DIR"
 ENDSSH
 
 if [ $? -eq 0 ]; then
-  echo "Backup completed successfully!"
-  echo "Backup file located at: $LOCAL_BACKUP_DIR/db_backups_${DATE}.tar.gz"
+  printf "${GREEN}Backup completed successfully!${RESET}\n"
+  echo "${GREEN}Backup file located at: $LOCAL_BACKUP_DIR/db_backups_${DATE}.tar.gz${RESET}\n"
 else
-  echo "Backup failed."
+  echo "${RED}Backup failed.${RESET}\n"
   exit 1
 fi
