@@ -33,7 +33,10 @@ defmodule Horizon.Ops.BSD.Utils do
     :bsd_install_args,
     :bsd_install_script,
     :horizon_helpers,
-    :certbot_crontab
+    :add_certbot_crontab,
+    :backup_databases,
+    :backup_databases_over_ssh,
+    :zfs_snapshot
   ]
 
   @doc """

@@ -14,7 +14,7 @@ defmodule Horizon.Ops.Target do
           | :bsd_install_args
           | :bsd_install_script
           | :horizon_helpers
-          | :certbot_crontab
+          | :add_certbot_crontab
           | :stage
           | :build
           | :build_script
