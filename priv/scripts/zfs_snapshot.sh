@@ -7,13 +7,15 @@
 # THIS SCRIPT IS INTENDED TO BE RUN FROM THE BACKUP HOST
 #
 # Usage:
-#   ./zfs_snapshot.sh [-u user] postgres_host
+#   ./zfs_snapshot.sh host
 #
-# Options:
-#   -u user   Specify the SSH user to connect to the remote host.
-#             Defaults to the current user name if not provided.
-#             The user must have access to elevated priviledges.
-#   host      The host where PostgreSQL is running
+#   host: The host where PostgreSQL is running. Host is your full name for
+#         accessing via ssh. May or may not include the SSH user (e.g., user@host).
+#
+# Examples:
+#
+#    ./zfs_snapshot.sh postgres_host  # postgres_host configured for access in ~/.ssh/config
+#    ./zfs_snapshot.sh user1@10.0.0.1
 #
 # Functionality:
 #   1. Creates a ZFS snapshot of the PostgreSQL database directory.
@@ -30,7 +32,7 @@
 #   To automate the script, add the following entries to your crontab (crontab -e):
 #
 #   # Rolling snapshots: Run every 30 minutes and daily at midnight
-#   */30 * * * * /path/to/zfs_snapshot.sh -u <backup_user> <postgres_host> >> /path/to/zfs_snapshot.log 2>&1
+#   */30 * * * * /path/to/zfs_snapshot.sh <postgres_host> >> /path/to/zfs_snapshot.log 2>&1
 #
 # Configuration:
 #   - SNAPSHOT_PREFIX: The ZFS dataset to snapshot (e.g., zroot/var/db/postgres).
@@ -40,8 +42,8 @@
 #   - ROLLING_COUNT:   Number of rolling snapshots to retain (default: 48 snapshots).
 #
 # Example:
-#   ./zfs_snapshot.sh -u postgres_user postgres_ip
-#   This will run the snapshot process on the remote host postgres_id using the SSH user 'postgres_user'.
+#   ./zfs_snapshot.sh postgres_ip
+#   This will run the snapshot process on the remote host postgres_ip.
 #
 # Dependencies:
 #   - ZFS must be installed and configured on both the remote and controlling hosts.
@@ -54,7 +56,6 @@
 #   - All snapshots are created with a timestamp-based naming convention for easy tracking.
 
 # Defaults
-USER=$(whoami)
 HOST=""
 NOW=$(date +"%Y%m%d%H%M%S")
 SNAPSHOT_PREFIX="zroot/var/db_postgres"
@@ -69,11 +70,18 @@ YELLOW='\033[0;33m'
 RED='\033[0;31m'
 RESET='\033[0m'
 
+if ! zfs list "zroot" >/dev/null 2>&1; then
+  printf "${RED}Error: The filesystem 'zroot' is not a ZFS filesystem.${RESET}\n"
+  printf "${YELLOW}This script is intended to be run from the remote host backing up your postgres database.${RESET}\n\n"
+  printf "Usage: $0 host\n\n"
+  exit 1
+fi
+
 # Parse command-line arguments
 while getopts "u:" opt; do
   case $opt in
   u) USER="$OPTARG" ;;
-  *) echo "Usage: $0 [-u user] host" && exit 1 ;;
+  *) echo "Usage: $0 host" && exit 1 ;;
   esac
 done
 
@@ -83,17 +91,17 @@ shift $((OPTIND - 1))
 # Get the host argument (first remaining argument after options)
 HOST="$1"
 if [ -z "$HOST" ]; then
-  echo "Host is required. Usage: $0 [-u user] host"
+  echo "Host is required. Usage: $0 host"
   exit 1
 fi
 
 # SSH and ZFS commands
-SSH_CMD="ssh -T ${USER}@${HOST} sh -s"
+SSH_CMD="ssh -T ${HOST} sh -s"
 ZFS_CMD="doas zfs"
 
 # Get the latest snapshot on the remote host
 get_latest_remote_snapshot() {
-  ssh "${USER}@${HOST}" "${ZFS_CMD} list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@$ROLLING_PREFIX | sort -V | tail -1"
+  ssh "${HOST}" "${ZFS_CMD} list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@$ROLLING_PREFIX | sort -V | tail -1"
 }
 
 # Get the latest snapshot on the local (controlling) host
@@ -109,11 +117,11 @@ send_snapshot_to_host() {
 
   if [ -z "$previous_snapshot" ]; then
     printf "${YELLOW}Sending full ${prefix} snapshot $snapshot_name to controlling host...${RESET}\n"
-    ssh "${USER}@${HOST}" "doas zfs send -vcR ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
+    ssh "${HOST}" "doas zfs send -vcR ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
     chown -R postgres:postgres /var/db/postgres
   else
     printf "${YELLOW}Sending incremental ${prefix} snapshot from $previous_snapshot to $snapshot_name...${RESET}\n"
-    ssh "${USER}@${HOST}" "doas zfs send -vcRI ${previous_snapshot} ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
+    ssh "${HOST}" "doas zfs send -vcRI ${previous_snapshot} ${snapshot_name}" | doas zfs receive -F ${SNAPSHOT_PREFIX}
   fi
 }
 
@@ -160,17 +168,17 @@ EOF
 # Clean up old daily snapshots (older than RETENTION_DAYS)
 cleanup_old_daily_snapshots() {
   printf "${YELLOW}Cleaning up old daily snapshots older than ${RETENTION_DAYS} days...${RESET}\n"
-  ssh "${USER}@${HOST}" "${ZFS_CMD} list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@$DAILY_PREFIX | head -n -$RETENTION_DAYS | xargs -I {} doas zfs destroy {}"
+  ssh "${HOST}" "${ZFS_CMD} list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@$DAILY_PREFIX | head -n -$RETENTION_DAYS | xargs -I {} doas zfs destroy {}"
 }
 
 # Cleanup old rolling snapshots if more than ROLLING_COUNT exist
 cleanup_old_rolling_snapshots() {
   printf "${YELLOW}Cleaning up old rolling snapshots...${RESET}\n"
-  snapshot_count=$(ssh "${USER}@${HOST}" "doas zfs list -t snapshot -o name | grep ${SNAPSHOT_PREFIX}@${ROLLING_PREFIX} | wc -l")
+  snapshot_count=$(ssh "${HOST}" "doas zfs list -t snapshot -o name | grep ${SNAPSHOT_PREFIX}@${ROLLING_PREFIX} | wc -l")
 
   if [ "$snapshot_count" -gt "$ROLLING_COUNT" ]; then
     printf "${YELLOW}Cleaning up old rolling snapshots...${RESET}\n"
-    ssh "${USER}@${HOST}" "${ZFS_CMD} list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@${ROLLING_PREFIX} | head -n -$ROLLING_COUNT | xargs -I {} doas zfs destroy {}"
+    ssh "${HOST}" "${ZFS_CMD} list -t snapshot -o name -s creation | grep ${SNAPSHOT_PREFIX}@${ROLLING_PREFIX} | head -n -$ROLLING_COUNT | xargs -I {} doas zfs destroy {}"
   else
     echo "Not enough snapshots for cleanup. Current count: $snapshot_count, required: $ROLLING_COUNT"
   fi
