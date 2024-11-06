@@ -103,7 +103,8 @@ info "Updating the system..."
 # Use 'yes' to automatically answer 'yes' to prompts
 # Combine fetch and install to minimize prompts
 # Suppress output except for errors
-yes | doas freebsd-update fetch install >/dev/null 2>&1
+# yes | doas freebsd-update fetch install >/dev/null 2>&1
+yes | doas freebsd-update fetch install
 
 # Check if freebsd-update was successful
 if [ $? -eq 0 ]; then
