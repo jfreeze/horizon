@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Exit immediately if a command exits with a non-zero status
-set -e
+set -ex
 
 # Function to display informational messages
 info() {
