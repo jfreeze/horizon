@@ -104,7 +104,9 @@ info "Updating the system..."
 # Combine fetch and install to minimize prompts
 # Suppress output except for errors
 # yes | doas freebsd-update fetch install >/dev/null 2>&1
-yes | doas freebsd-update fetch install
+export ASSUME_ALWAYS_YES=YES
+env PAGER=/bin/cat /usr/sbin/freebsd-update --not-running-from-cron fetch install
+unset ASSUME_ALWAYS_YES
 
 # Check if freebsd-update was successful
 if [ $? -eq 0 ]; then
