@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Exit immediately if a command exits with a non-zero status
-set -ex
+set -e
 
 # Function to display informational messages
 info() {
@@ -12,20 +12,6 @@ info() {
 error() {
   printf "\033[1;31m[ERROR]\033[0m %s\n" "$1" >&2
   exit 1
-}
-
-# Function to prompt for user confirmation
-confirm() {
-  printf "\033[1;33m[WARNING]\033[0m %s [y/N]: " "$1"
-  read response
-  case "$response" in
-  [yY][eE][sS] | [yY])
-    return 0
-    ;;
-  *)
-    return 1
-    ;;
-  esac
 }
 
 # Run the script from the home directory
