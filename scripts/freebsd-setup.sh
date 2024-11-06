@@ -97,10 +97,20 @@ else
   doas service sshd restart
 fi
 
-# Update the system
+# Update the system non-interactively
 info "Updating the system..."
-doas freebsd-update fetch
-doas freebsd-update install
+
+# Use 'yes' to automatically answer 'yes' to prompts
+# Combine fetch and install to minimize prompts
+# Suppress output except for errors
+yes | doas freebsd-update fetch install >/dev/null 2>&1
+
+# Check if freebsd-update was successful
+if [ $? -eq 0 ]; then
+  info "System updated successfully."
+else
+  error "System update failed. Please run 'freebsd-update fetch install' manually."
+fi
 
 # Final messages
 info "Initial setup complete."
