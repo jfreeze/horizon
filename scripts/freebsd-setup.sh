@@ -105,10 +105,10 @@ info "Updating the system..."
 # Suppress output except for errors
 # yes | doas freebsd-update fetch install >/dev/null 2>&1
 export ASSUME_ALWAYS_YES=YES
-env PAGER=/bin/cat doas /usr/sbin/freebsd-update --not-running-from-cron fetch
+env PAGER=/bin/cat doas /usr/sbin/freebsd-update --not-running-from-cron fetch install
 if [ $? -eq 0 ]; then
   info "Installing update"
-  env PAGER=/bin/cat doas /usr/sbin/freebsd-update --not-running-from-cron install
+  # env PAGER=/bin/cat doas /usr/sbin/freebsd-update --not-running-from-cron install
 fi
 unset ASSUME_ALWAYS_YES
 
