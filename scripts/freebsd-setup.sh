@@ -14,10 +14,20 @@ error() {
   exit 1
 }
 
-# Check if the script is run from the home directory
-# if [ "$PWD" != "$HOME" ]; then
-#     error "Please run this script from your home directory."
-# fi
+# Function to prompt for user confirmation
+confirm() {
+  printf "\033[1;33m[WARNING]\033[0m %s [y/N]: " "$1"
+  read response
+  case "$response" in
+  [yY][eE][sS] | [yY])
+    return 0
+    ;;
+  *)
+    return 1
+    ;;
+  esac
+}
+
 # Run the script from the home directory
 cd $HOME
 
@@ -28,6 +38,16 @@ fi
 
 # Get the current username
 USERNAME=$(whoami)
+
+# Check for SSH key setup
+info "Verifying SSH key setup..."
+if [ ! -d "$HOME/.ssh" ]; then
+  error "Directory ~/.ssh does not exist. Please create it and add your public keys before running this script."
+fi
+
+if [ ! -f "$HOME/.ssh/authorized_keys" ]; then
+  error "File ~/.ssh/authorized_keys does not exist. Please create it and add your public keys before running this script."
+fi
 
 # Backup existing configuration files
 info "Backing up existing configuration files..."
@@ -56,11 +76,9 @@ EOF"
 
 # Set SSH-related permissions
 info "Setting SSH-related permissions..."
-chmod go-w /home/$USERNAME
-chmod 700 /home/$USERNAME/.ssh
-chmod 600 /home/$USERNAME/.ssh/authorized_keys || true
-
-# The `|| true` ensures the script doesn't exit if `authorized_keys` doesn't exist
+chmod go-w "/home/$USERNAME"
+chmod 700 "/home/$USERNAME/.ssh"
+chmod 600 "/home/$USERNAME/.ssh/authorized_keys"
 
 # Configure /boot/loader.conf
 info "Configuring /boot/loader.conf..."
@@ -69,6 +87,15 @@ autoboot_delay=\"-1\"
 beastie_disable=\"YES\"
 loader_logo=\"none\"
 EOF"
+
+# Reload SSH service to apply changes
+info "Reloading sshd service..."
+if doas service sshd reload; then
+  info "sshd service reloaded successfully."
+else
+  info "sshd service reload failed. Attempting to restart..."
+  doas service sshd restart
+fi
 
 # Update the system
 info "Updating the system..."
