@@ -14,6 +14,42 @@ error() {
   exit 1
 }
 
+# Check if the script is being run with a hostname argument
+if [ "$#" -ne 1 ]; then
+  error "Usage: $0 <hostname>"
+fi
+
+HOST="$1"
+
+# Ensure doas is installed on the remote host
+info "Ensuring 'doas' is installed on the remote host..."
+if ! ssh "$HOST" command -v doas >/dev/null 2>&1; then
+  error "'doas' is not installed on the remote host. Please install it first."
+fi
+
+# Run the script on the remote host
+info "Running setup script on remote host $HOST..."
+ssh "$HOST" /bin/sh <<'EOF'
+
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+# Function to display informational messages
+info() {
+  printf "\033[1;34m[INFO]\033[0m %s\n" "$1"
+}
+
+# Function to display error messages
+error() {
+  printf "\033[1;31m[ERROR]\033[0m %s\n" "$1" >&2
+  exit 1
+}
+
+# Function to display alert messages
+alert() {
+  printf "\033[0;33m%s\033[0m\n" "$1" >&2
+}
+
 # Run the script from the home directory
 cd "$HOME"
 
@@ -54,7 +90,7 @@ fi
 info "Configuring .shrc..."
 SHRC_CONFIG="\nexport TERM=\"xterm-256color\"\nalias d='ls -alFG'\nset -o vi"
 if ! grep -Fq "export TERM=\"xterm-256color\"" ~/.shrc; then
-  printf "%s" "$SHRC_CONFIG" >>~/.shrc
+  printf "%s" "$SHRC_CONFIG" >> ~/.shrc
 fi
 
 # Configure sshd
@@ -100,7 +136,7 @@ info "Updating the system..."
 # Combine fetch and install to minimize prompts
 # Suppress output except for errors
 export ASSUME_ALWAYS_YES=YES
-env PAGER=/bin/cat doas /usr/sbin/freebsd-update --not-running-from-cron fetch install
+#env PAGER=/bin/cat doas /usr/sbin/freebsd-update --not-running-from-cron fetch install
 unset ASSUME_ALWAYS_YES
 
 # Check if freebsd-update was successful
@@ -112,6 +148,11 @@ fi
 
 # Final messages
 info "Initial setup complete."
-echo "Please reboot your system and run the following commands after rebooting:"
-echo "  doas pkg upgrade -y"
-echo "  doas zfs snapshot zroot/ROOT/default@initial-setup"
+alert "Please reboot your system and run the following commands after rebooting:"
+alert "  doas pkg upgrade -y"
+alert "  doas zfs snapshot zroot/ROOT/default@initial-setup"
+
+EOF
+
+info "Remote installs complete. Reboot, upgrade and snapshot remaining."
+printf "\033[0;33m  RUN:\033[0m ssh $HOST 'doas shutdown -r now'\n"
