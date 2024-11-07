@@ -115,7 +115,7 @@ chmod 600 "/home/$USERNAME/.ssh/authorized_keys"
 # Configure /boot/loader.conf
 info "Configuring /boot/loader.conf..."
 LOADER_CONF="/boot/loader.conf"
-LOADER_CONFIG="\nautoboot_delay=\"-1\"\nbeastie_disable=\"YES\"\nloader_logo=\"none\"\n"
+LOADER_CONFIG="autoboot_delay=\"-1\"\nbeastie_disable=\"YES\"\nloader_logo=\"none\"\n"
 if ! grep -Fq "autoboot_delay=\"-1\"" "$LOADER_CONF"; then
   doas sh -c "printf '%b' '$LOADER_CONFIG' >> $LOADER_CONF"
 fi
