@@ -88,9 +88,9 @@ fi
 
 # Configure .shrc
 info "Configuring .shrc..."
-SHRC_CONFIG="\nexport TERM=\"xterm-256color\"\nalias d='ls -alFG'\nset -o vi"
+SHRC_CONFIG="\nexport TERM=\"xterm-256color\"\nalias d='ls -alFG'\nset -o vi\n"
 if ! grep -Fq "export TERM=\"xterm-256color\"" ~/.shrc; then
-  printf "%s" "$SHRC_CONFIG" >> ~/.shrc
+  printf "%b" "$SHRC_CONFIG" >> ~/.shrc
 fi
 
 # Configure sshd
@@ -115,9 +115,9 @@ chmod 600 "/home/$USERNAME/.ssh/authorized_keys"
 # Configure /boot/loader.conf
 info "Configuring /boot/loader.conf..."
 LOADER_CONF="/boot/loader.conf"
-LOADER_CONFIG="\nautoboot_delay=\"-1\"\nbeastie_disable=\"YES\"\nloader_logo=\"none\""
+LOADER_CONFIG="\nautoboot_delay=\"-1\"\nbeastie_disable=\"YES\"\nloader_logo=\"none\"\n"
 if ! grep -Fq "autoboot_delay=\"-1\"" "$LOADER_CONF"; then
-  doas sh -c "printf '%s' '$LOADER_CONFIG' >> $LOADER_CONF"
+  doas sh -c "printf '%b' '$LOADER_CONFIG' >> $LOADER_CONF"
 fi
 
 # Reload SSH service to apply changes
