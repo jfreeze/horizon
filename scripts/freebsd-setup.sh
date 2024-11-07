@@ -15,7 +15,7 @@ error() {
 }
 
 # Run the script from the home directory
-cd $HOME
+cd "$HOME"
 
 # Ensure doas is installed
 if ! command -v doas >/dev/null 2>&1; then
@@ -38,34 +38,37 @@ fi
 # Backup existing configuration files
 info "Backing up existing configuration files..."
 [ -f ~/.shrc ] && cp ~/.shrc ~/.shrc.backup
-doas cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
-doas cp /boot/loader.conf /boot/loader.conf.backup
-doas cp /usr/local/etc/doas.conf /usr/local/etc/doas.conf.backup
+[ -f /etc/ssh/sshd_config ] && doas cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
+[ -f /boot/loader.conf ] && doas cp /boot/loader.conf /boot/loader.conf.backup
+[ -f /usr/local/etc/doas.conf ] && doas cp /usr/local/etc/doas.conf /usr/local/etc/doas.conf.backup
 
 # Configure doas.conf
 info "Configuring doas..."
-doas sh -c "cat <<EOF > /usr/local/etc/doas.conf
-permit nopass setenv { -ENV PATH=\$PATH LANG=\$LANG LC_CTYPE=\$LC_CTYPE } :wheel
-EOF"
+DOAS_CONF="/usr/local/etc/doas.conf"
+DOAS_RULE="permit nopass setenv { -ENV PATH=\$PATH LANG=\$LANG LC_CTYPE=\$LC_CTYPE } :wheel"
+if ! grep -Fxq "$DOAS_RULE" "$DOAS_CONF"; then
+  doas sh -c "echo '$DOAS_RULE' > $DOAS_CONF"
+fi
 
 # Configure .shrc
 info "Configuring .shrc..."
-cat <<EOF >>~/.shrc
-
-export TERM="xterm-256color"
-alias d='ls -alFG'
-set -o vi
-EOF
+SHRC_CONFIG="\nexport TERM=\"xterm-256color\"\nalias d='ls -alFG'\nset -o vi"
+if ! grep -Fq "export TERM=\"xterm-256color\"" ~/.shrc; then
+  printf "%s" "$SHRC_CONFIG" >>~/.shrc
+fi
 
 # Configure sshd
 info "Configuring sshd..."
-doas sh -c "cat <<EOF >> /etc/ssh/sshd_config
+SSHD_CONFIG="/etc/ssh/sshd_config"
+if ! grep -Fq "PasswordAuthentication no" "$SSHD_CONFIG"; then
+  doas sh -c "cat <<EOF >> $SSHD_CONFIG
 PasswordAuthentication no
 ChallengeResponseAuthentication no
 PermitRootLogin no
 Protocol 2
 AllowUsers $USERNAME
 EOF"
+fi
 
 # Set SSH-related permissions
 info "Setting SSH-related permissions..."
@@ -75,11 +78,11 @@ chmod 600 "/home/$USERNAME/.ssh/authorized_keys"
 
 # Configure /boot/loader.conf
 info "Configuring /boot/loader.conf..."
-doas sh -c "cat <<EOF >> /boot/loader.conf
-autoboot_delay=\"-1\"
-beastie_disable=\"YES\"
-loader_logo=\"none\"
-EOF"
+LOADER_CONF="/boot/loader.conf"
+LOADER_CONFIG="\nautoboot_delay=\"-1\"\nbeastie_disable=\"YES\"\nloader_logo=\"none\""
+if ! grep -Fq "autoboot_delay=\"-1\"" "$LOADER_CONF"; then
+  doas sh -c "printf '%s' '$LOADER_CONFIG' >> $LOADER_CONF"
+fi
 
 # Reload SSH service to apply changes
 info "Reloading sshd service..."
@@ -96,10 +99,10 @@ info "Updating the system..."
 # Use 'yes' to automatically answer 'yes' to prompts
 # Combine fetch and install to minimize prompts
 # Suppress output except for errors
-# yes | doas freebsd-update fetch install >/dev/null 2>&1
 export ASSUME_ALWAYS_YES=YES
 env PAGER=/bin/cat doas /usr/sbin/freebsd-update --not-running-from-cron fetch install
 unset ASSUME_ALWAYS_YES
+
 # Check if freebsd-update was successful
 if [ $? -eq 0 ]; then
   info "System updated successfully."
