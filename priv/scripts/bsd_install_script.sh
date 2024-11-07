@@ -169,6 +169,10 @@ while [ $# -gt 0 ]; do
 			exit 1
 		fi
 		;;
+	--postgres-init-zfs)
+		# no arguments to shift
+		COMMANDS="$COMMANDS postgres-init-zfs"
+		;;
 	--postgres-init)
 		# no arguments to shift
 		COMMANDS="$COMMANDS postgres-init"
@@ -369,6 +373,33 @@ echo_credentials() {
 	puts "success" "Database: $DB"
 	puts "warn" "Record these credentials in a secure location."
 	puts "warn" "You will not be able to retrieve the password later."
+}
+
+#
+# Function: init_zfs
+#
+# Description:
+#
+#     Initializes zfs dataset for Postgres
+#
+init_zfs() {
+	postgres_dataset=zroot/var/db_postgres
+
+	if [ -d /var/db/postgres ]; then
+		puts "info" "/var/db/postgres already exists."
+		doas service postgresql stop
+		doas mv /var/db/postgres /var/db/postgres_old
+		doas zfs create -o mountpoint=/var/db/postgres $postgres_dataset
+		# doas zfs set mountpoint=/var/db/postgres zroot/var/db/postgres
+		doas mv /var/db/postgres_old/* /var/db/postgres/
+		sudo chown -R postgres:postgres /var/db/postgres
+		doas service postgresql start
+	else
+		doas zfs create -o mountpoint=/var/db/postgres $postgres_dataset
+	fi
+	doas zfs set compression=lz4
+	doas zfs set recordsize=32K $postgres_dataset
+	doas zfs set primarycache=metadata $postgres_dataset
 }
 
 #
@@ -624,6 +655,10 @@ for CMD in $COMMANDS; do
 				exit 1
 			fi
 		fi
+		;;
+	postgres-init-zfs)
+		# Handle zfs setup for Postgres
+		init_zfs
 		;;
 	postgres-init)
 		# Handle Postgres configuration

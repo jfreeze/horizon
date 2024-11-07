@@ -49,6 +49,9 @@ while IFS= read -r line; do
     ELIXIR_VERSION="${line#elixir:}"
     ARGS="$ARGS --elixir $ELIXIR_VERSION"
     ;;
+  postgres\.init-zfs)
+    ARGS="$ARGS --postgres-init-zfs"
+    ;;
   postgres\.init)
     ARGS="$ARGS --postgres-init"
     ;;
