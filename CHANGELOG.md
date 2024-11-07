@@ -7,7 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 
-## [0.1.3] - 2024-10-29
+## [0.1.3] - 2024-11-??
+### Changed
+- Added `freebsd_setup.sh` script to help setup first-boot configuration for FreeBSD hosts.
+- Changed host on `bsd_install.sh` to combine user and host into a single argument.
+- Added `postgres.zfs-init` command to `bsd_install.sh` script.
+
 ### Fixed
 - Fixed documentation issues.
 
