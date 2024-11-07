@@ -8,27 +8,21 @@ export SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Function to display usage
 usage() {
   echo "\n"
-  echo "${GREEN}Usage: $0 [-u user] [--json] host config_file${NC}"
-  echo "  -u user      Specify the remote user (optional, defaults to current user)"
+  echo "${GREEN}Usage: $0 [--json] host config_file${NC}"
   echo "  --json       Output in JSON format (optional)"
-  echo "  host         Target host's IP address or hostname"
+  echo "  host         Target IP address, or host, or user@host"
   echo "  config_file  Path to the configuration file"
   echo "\n"
   exit 1
 }
 
 # Initialize variables
-REMOTE_USER=""
 OUTPUT_FORMAT=""
 QUIET=""
 
 # Parse options
 while [ $# -gt 0 ]; do
   case "$1" in
-  -u)
-    shift
-    REMOTE_USER="$1@"
-    ;;
   --json)
     OUTPUT_FORMAT="--output-format=json"
     ;;
@@ -59,7 +53,7 @@ HOST="$1"
 CONFIG_FILE="$2"
 
 # Display parsed values
-puts "info" "Installing $CONFIG_FILE on ${REMOTE_USER}${HOST}"
+puts "info" "Installing $CONFIG_FILE on ${HOST}"
 
 # Check if configuration file exists
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -99,7 +93,7 @@ fi
 # Using SSH with the specified user and machine
 # The -- ensures that sh does not interpret any further options
 # Properly quote the arguments to handle spaces or special characters
-ssh "${REMOTE_USER}${HOST}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"
+ssh "${HOST}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"
 
 # Alternatively, if you prefer piping:
-# cat "$INSTALL_SCRIPT" | ssh "${REMOTE_USER}@${HOST}" "sh -s -- $INSTALL_ARGS"
+# cat "$INSTALL_SCRIPT" | ssh "${HOST}" "sh -s -- $INSTALL_ARGS"
