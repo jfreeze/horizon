@@ -136,7 +136,7 @@ info "Updating the system..."
 # Combine fetch and install to minimize prompts
 # Suppress output except for errors
 export ASSUME_ALWAYS_YES=YES
-#env PAGER=/bin/cat doas /usr/sbin/freebsd-update --not-running-from-cron fetch install
+env PAGER=/bin/cat doas /usr/sbin/freebsd-update --not-running-from-cron fetch install
 unset ASSUME_ALWAYS_YES
 
 # Check if freebsd-update was successful
