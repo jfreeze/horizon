@@ -96,7 +96,7 @@ fi
 # Configure sshd
 info "Configuring sshd..."
 SSHD_CONFIG="/etc/ssh/sshd_config"
-if ! grep -Fq "PasswordAuthentication no" "$SSHD_CONFIG"; then
+if ! grep -Fq "ChallengeResponseAuthentication no" "$SSHD_CONFIG"; then
   doas sh -c "cat <<EOF >> $SSHD_CONFIG
 PasswordAuthentication no
 ChallengeResponseAuthentication no
