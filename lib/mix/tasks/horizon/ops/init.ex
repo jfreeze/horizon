@@ -29,6 +29,7 @@ defmodule Mix.Tasks.Horizon.Ops.Init do
   - `add_certbot_crontab.sh`
   - `backup_databases.sh`
   - `backup_databases_over_ssh.sh`
+  - `freebsd_setup.sh`
   - `_zfs_snapshot.sh`
 
 
@@ -38,11 +39,12 @@ defmodule Mix.Tasks.Horizon.Ops.Init do
   @targets [
     # Helper scripts
     %Target{executable?: true, type: :static, key: :bsd_install},
-    %Target{executable?: false, type: :static, key: :bsd_install_args},
+    %Target{executable?: true, type: :static, key: :bsd_install_args},
     %Target{executable?: false, type: :static, key: :bsd_install_script},
-    %Target{executable?: false, type: :static, key: :add_certbot_crontab},
-    %Target{executable?: false, type: :static, key: :backup_databases},
-    %Target{executable?: false, type: :static, key: :backup_databases_over_ssh},
+    %Target{executable?: true, type: :static, key: :add_certbot_crontab},
+    %Target{executable?: true, type: :static, key: :backup_databases},
+    %Target{executable?: true, type: :static, key: :backup_databases_over_ssh},
+    %Target{executable?: true, type: :static, key: :freebsd_setup},
     # restore
     %Target{executable?: false, type: :static, key: :zfs_snapshot},
     # Subroutines
