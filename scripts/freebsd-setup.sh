@@ -40,6 +40,13 @@ info "Backing up existing configuration files..."
 [ -f ~/.shrc ] && cp ~/.shrc ~/.shrc.backup
 doas cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
 doas cp /boot/loader.conf /boot/loader.conf.backup
+doas cp /usr/local/etc/doas.conf /usr/local/etc/doas.conf.backup
+
+# Configure doas.conf
+info "Configuring doas..."
+doas sh -c "cat <<EOF > /usr/local/etc/doas.conf
+permit nopass setenv { -ENV PATH=\$PATH LANG=\$LANG LC_CTYPE=\$LC_CTYPE } :wheel
+EOF"
 
 # Configure .shrc
 info "Configuring .shrc..."
