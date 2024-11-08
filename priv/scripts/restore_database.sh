@@ -108,7 +108,11 @@ fi
 
 # Restore the database
 echo "Restoring database '$DATABASE' from backup file '$BACKUP_FILE'..."
+echo " cmd: pg_restore -h \"$PGHOST\" -p \"$PGPORT\" -U \"$PGUSER\" -d \"$DATABASE\" -v \"$BACKUP_FILE\""
+
 pg_restore -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$DATABASE" -v "$BACKUP_FILE"
+# pg_restore -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$DATABASE" -v --schema-only "$BACKUP_FILE"
+# pg_restore -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$DATABASE" -v --data-only "$BACKUP_FILE"
 
 if [ $? -eq 0 ]; then
   printf "${GREEN}Database '$DATABASE' restored successfully!${RESET}\n"
