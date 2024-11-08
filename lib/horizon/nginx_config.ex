@@ -143,14 +143,20 @@ defmodule Horizon.NginxConfig do
   """
   @spec send([Horizon.Project.t()], String.t(), String.t(), String.t()) ::
           {:ok, any()} | {:error, non_neg_integer(), any()}
-  def send(projects, user, host, remote_path \\ "/usr/local/etc/nginx/nginx.conf") do
+  def send(
+        projects,
+        user,
+        host,
+        remote_path \\ "/usr/local/etc/nginx/nginx.conf",
+        action \\ :reload
+      ) do
     encoded_content =
       projects
       |> Horizon.NginxConfig.generate()
       |> :base64.encode()
 
     command =
-      "echo #{encoded_content} | ssh #{user}@#{host} 'base64 -d | doas tee #{remote_path} > /dev/null && doas service nginx reload'"
+      "echo #{encoded_content} | ssh #{user}@#{host} 'base64 -d | doas tee #{remote_path} > /dev/null && doas service nginx #{action}'"
 
     case System.cmd("sh", ["-c", command]) do
       {result, 0} ->
