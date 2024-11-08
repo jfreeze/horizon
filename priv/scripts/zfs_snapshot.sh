@@ -32,7 +32,8 @@
 #   To automate the script, add the following entries to your crontab (crontab -e):
 #
 #   # Rolling snapshots: Run every 30 minutes and daily at midnight
-#   */30 * * * * /path/to/zfs_snapshot.sh <postgres_host> >> /path/to/zfs_snapshot.log 2>&1
+#   */30 * * * * /path/to/zfs_snapshot.sh <postgres_local_ip> >> /path/to/zfs_snapshot.log 2>&1
+#   */30 * * * * /home/admin/bin/zfs_snapshot.sh 10.1.1.1 >> /var/log/zfs_snapshot.log 2>&1
 #
 # Configuration:
 #   - SNAPSHOT_PREFIX: The ZFS dataset to snapshot (e.g., zroot/var/db/postgres).
