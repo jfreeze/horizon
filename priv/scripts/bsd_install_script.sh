@@ -169,9 +169,9 @@ while [ $# -gt 0 ]; do
 			exit 1
 		fi
 		;;
-	--postgres-init-zfs)
+	--postgres-zfs-init)
 		# no arguments to shift
-		COMMANDS="$COMMANDS postgres-init-zfs"
+		COMMANDS="$COMMANDS postgres-zfs-init"
 		;;
 	--postgres-init)
 		# no arguments to shift
@@ -385,21 +385,15 @@ echo_credentials() {
 init_zfs() {
 	postgres_dataset=zroot/var/db_postgres
 
-	if [ -d /var/db/postgres ]; then
+	if zfs list | grep -q "zroot/var/db_postgres"; then
 		puts "info" "/var/db/postgres already exists."
-		doas service postgresql stop
-		doas mv /var/db/postgres /var/db/postgres_old
-		doas zfs create -o mountpoint=/var/db/postgres $postgres_dataset
-		# doas zfs set mountpoint=/var/db/postgres zroot/var/db/postgres
-		doas mv /var/db/postgres_old/* /var/db/postgres/
-		sudo chown -R postgres:postgres /var/db/postgres
-		doas service postgresql start
+		puts "warn" "Must manually manage dataset setup if needed."
 	else
 		doas zfs create -o mountpoint=/var/db/postgres $postgres_dataset
+		doas zfs set compression=lz4 $postgres_dataset
+		doas zfs set recordsize=32K $postgres_dataset
+		doas zfs set primarycache=metadata $postgres_dataset
 	fi
-	doas zfs set compression=lz4
-	doas zfs set recordsize=32K $postgres_dataset
-	doas zfs set primarycache=metadata $postgres_dataset
 }
 
 #
@@ -425,13 +419,14 @@ init_postgres() {
 	fi
 
 	# Run initdb if the data directory doesn't exist
-
-	# Check if ${POSTGRES_DB_PATH}/data$vsn directory exists
-	if [ ! -d "${POSTGRES_DB_PATH}/data${PG_VERSION}" ]; then
-		puts "info" "${POSTGRES_DB_PATH}/data${PG_VERSION} not found, initializing database..."
+	DBPATH="${POSTGRES_DB_PATH}/data${PG_VERSION}"
+	if [ ! -d "${DBPATH}" ]; then
+		puts "info" "${DBPATH} not found, initializing database..."
+		doas mkdir -p "${DBPATH}"
+		doas chown -R postgres:postgres "${DBPATH}"
 		doas service postgresql initdb
 	else
-		puts "info" "${POSTGRES_DB_PATH}/data${PG_VERSION} already exists."
+		puts "info" "${DBPATH} already exists."
 		return 0
 	fi
 
@@ -656,7 +651,7 @@ for CMD in $COMMANDS; do
 			fi
 		fi
 		;;
-	postgres-init-zfs)
+	postgres-zfs-init)
 		# Handle zfs setup for Postgres
 		init_zfs
 		;;
