@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -eu
+set -eux
 
 #
 # The script that does the actual install on the remote host.
@@ -340,8 +340,11 @@ install_elixir() {
 #
 #     Get the IP address of the current host.
 #
+# ip_address() {
+# 	ifconfig | awk '/inet / && $2 != "127.0.0.1" {print $2}'
+# }
 ip_address() {
-	ifconfig | awk '/inet / && $2 != "127.0.0.1" {print $2}'
+	ifconfig | awk '/inet / && $2 != "127.0.0.1" {print $2; exit}'
 }
 
 #
@@ -444,7 +447,7 @@ host    replication     replicator      ${server_ip}/24         md5
 """
 
 	# Set the listen_address in postgresql.conf
-	doas -u postgres sh -c "sed -i '' \"s/#listen_addresses = 'localhost'/listen_addresses = 'localhost, $server_ip'/\" ${POSTGRES_CONF_FILE}"
+	doas -u postgres sed -i '' "s/#listen_addresses = 'localhost'/listen_addresses = 'localhost, $server_ip'/" "${POSTGRES_CONF_FILE}"
 
 	cat <<EOL | doas -u postgres tee -a "$POSTGRES_CONF_FILE" >/dev/null
 log_min_messages = notice
