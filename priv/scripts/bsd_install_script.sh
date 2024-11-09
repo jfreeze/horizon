@@ -584,7 +584,7 @@ create_db() {
 
 	if run_cmd doas -u postgres sh -c "cat >> ${POSTGRES_HBA_FILE} << EOF
 host    ${DB}           ${username}           samenet        md5
-host    ${DB}           ${username}           0.0.0.0/0      md5
+#host    ${DB}           ${username}           0.0.0.0/0      md5
 EOF
 "; then
 		puts "success" "Added user ${username}@${DB} to pg_hba.conf."
