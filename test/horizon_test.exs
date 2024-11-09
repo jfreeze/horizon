@@ -116,7 +116,7 @@ defmodule Horizon.Ops.Utils.Test do
 
       assert File.exists?(target)
       assert File.read!(target) == "Sample data"
-      assert output =~ "Created #{target}"
+      assert output =~ "\e[32mCreated   \e[0m#{target}"
     end
 
     test "overwrites the file when overwrite is true", %{tmp_dir: tmp_dir} do
@@ -131,7 +131,7 @@ defmodule Horizon.Ops.Utils.Test do
         end)
 
       assert File.read!(target) == "New data"
-      assert output =~ "Overwrote #{target}"
+      assert output =~ "\e[33mOverwrote \e[0m#{target}"
     end
 
     test "prompts and overwrites when user agrees", %{tmp_dir: tmp_dir} do
@@ -214,7 +214,7 @@ defmodule Horizon.Ops.Utils.Test do
       assert File.exists?(target)
       assert File.read!(target) == "#!/bin/bash\necho 'Hello World'"
       assert (File.stat!(target).mode &&& 0o111) != 0
-      assert output =~ "Created #{target}"
+      assert output =~ "\e[32mCreated   \e[0m#{target}"
     end
   end
 end
