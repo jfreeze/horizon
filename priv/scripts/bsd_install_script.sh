@@ -634,7 +634,7 @@ for CMD in $COMMANDS; do
 		fi
 
 		# Check if the service is already running
-		run_cmd doas service "$SERVICE" status
+		doas service "$SERVICE" status >/dev/null 2>&1
 		SERVICE_STATUS=$?
 
 		if [ $SERVICE_STATUS -eq 0 ]; then
