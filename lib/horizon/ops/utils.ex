@@ -82,15 +82,15 @@ defmodule Horizon.Ops.Utils do
     cond do
       not File.exists?(target) ->
         copy_file(source, target, executable)
-        Mix.shell().info("Created #{target}")
+        Mix.shell().info([:green, "Created   ", :reset, target])
 
       overwrite ->
         copy_file(source, target, executable)
-        Mix.shell().info("Overwrote #{target}")
+        Mix.shell().info([:yellow, "Overwrote ", :reset, target])
 
       Mix.shell().yes?("#{target} already exists. Overwrite? [y/N]") ->
         copy_file(source, target, executable)
-        Mix.shell().info("Overwrote #{target}")
+        Mix.shell().info([:yellow, "Overwrote ", :reset, target])
 
       true ->
         Mix.shell().info("Skipped #{target}")
