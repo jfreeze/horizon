@@ -581,12 +581,15 @@ create_db() {
 	fi
 
 	server_ip=$(ip_address)
-	hba="host    ${DB}           ${username}           samenet        md5"
 
-	if run_cmd doas -u postgres sh -c "echo \"$hba\" >> ${POSTGRES_HBA_FILE}"; then
+	if run_cmd doas -u postgres sh -c "cat >> ${POSTGRES_HBA_FILE} << EOF
+host    ${DB}           ${username}           samenet        md5
+host    ${DB}           ${username}           0.0.0.0/0      md5
+EOF
+"; then
 		puts "success" "Added user ${username}@${DB} to pg_hba.conf."
 	else
-		puts "error" "Failed to add host ${server_ip} to pg_hba.conf."
+		puts "error" "Failed to add entries to pg_hba.conf."
 		exit_message
 		exit 1
 	fi
