@@ -31,6 +31,8 @@ defmodule Mix.Tasks.Horizon.Ops.Init do
   - `backup_databases_over_ssh.sh`
   - `restore_database.sh`
   - `update_database_owner.sh`
+  - `turn_on_postgres_access.sh`
+  - `turn_off_postgres_access.sh`
   - `freebsd_setup.sh`
   - `_zfs_snapshot.sh`
 
@@ -48,6 +50,8 @@ defmodule Mix.Tasks.Horizon.Ops.Init do
     %Target{executable?: true, type: :static, key: :backup_databases_over_ssh},
     %Target{executable?: true, type: :static, key: :restore_database},
     %Target{executable?: true, type: :static, key: :update_database_owner},
+    %Target{executable?: true, type: :static, key: :turn_on_postgres_access},
+    %Target{executable?: true, type: :static, key: :turn_off_postgres_access},
     %Target{executable?: true, type: :static, key: :freebsd_setup},
     # restore
     %Target{executable?: false, type: :static, key: :zfs_snapshot},

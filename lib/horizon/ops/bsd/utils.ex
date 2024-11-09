@@ -38,6 +38,8 @@ defmodule Horizon.Ops.BSD.Utils do
     :backup_databases_over_ssh,
     :restore_database,
     :update_database_owner,
+    :turn_on_postgres_access,
+    :turn_off_postgres_access,
     :freebsd_setup,
     :zfs_snapshot
   ]
