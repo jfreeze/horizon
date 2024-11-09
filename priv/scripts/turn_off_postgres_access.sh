@@ -21,8 +21,8 @@ if ! doas test -f "$PG_HBA_CONF"; then
   exit 1
 fi
 
-# Ensure PG_HBA_CONF is not empty
-if [ -z "$PG_HBA_CONF" ]; then
+# Ensure pg_hba.conf file exists
+if [ -z "$PG_HBA_CONF" ] || ! doas test -f "$PG_HBA_CONF"; then
   echo "Error: pg_hba.conf file not found."
   exit 1
 fi
