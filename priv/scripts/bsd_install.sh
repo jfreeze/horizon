@@ -10,7 +10,7 @@ usage() {
   echo "\n"
   echo "${GREEN}Usage: $0 [--json] host config_file${NC}"
   echo "  --json       Output in JSON format (optional)"
-  echo "  host         Host as defined in .ssh/config or user@host"
+  echo "  host         [user@]remote_host"
   echo "  config_file  Path to the configuration file"
   echo "\n"
   exit 1
