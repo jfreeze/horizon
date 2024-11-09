@@ -37,7 +37,7 @@ defmodule Horizon.Ops.BSD.Utils do
     :backup_databases,
     :backup_databases_over_ssh,
     :restore_database,
-    :update_db_owner,
+    :update_database_owner,
     :freebsd_setup,
     :zfs_snapshot
   ]
