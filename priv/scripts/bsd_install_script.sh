@@ -450,6 +450,7 @@ init_postgres() {
 
 local   all             postgres                                peer
 host    all             postgres        samenet         	md5
+#host    all             postgres        0.0.0.0/0         	md5
 host    replication     replicator      samenet         	md5
 
 	### Database access rules
@@ -580,7 +581,6 @@ create_db() {
 	fi
 
 	server_ip=$(ip_address)
-	# hba="host    ${DB}           ${username}           ${server_ip}/24        md5"
 	hba="host    ${DB}           ${username}           samenet        md5"
 
 	if run_cmd doas -u postgres sh -c "echo \"$hba\" >> ${POSTGRES_HBA_FILE}"; then
