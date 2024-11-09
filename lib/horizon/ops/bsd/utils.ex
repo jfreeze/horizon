@@ -36,6 +36,8 @@ defmodule Horizon.Ops.BSD.Utils do
     :add_certbot_crontab,
     :backup_databases,
     :backup_databases_over_ssh,
+    :restore_database,
+    :update_db_owner,
     :freebsd_setup,
     :zfs_snapshot
   ]

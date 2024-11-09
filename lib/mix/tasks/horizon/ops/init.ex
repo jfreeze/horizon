@@ -29,6 +29,8 @@ defmodule Mix.Tasks.Horizon.Ops.Init do
   - `add_certbot_crontab.sh`
   - `backup_databases.sh`
   - `backup_databases_over_ssh.sh`
+  - `restore_database.sh`
+  - `update_db_owner.sh`
   - `freebsd_setup.sh`
   - `_zfs_snapshot.sh`
 
@@ -44,6 +46,8 @@ defmodule Mix.Tasks.Horizon.Ops.Init do
     %Target{executable?: true, type: :static, key: :add_certbot_crontab},
     %Target{executable?: true, type: :static, key: :backup_databases},
     %Target{executable?: true, type: :static, key: :backup_databases_over_ssh},
+    %Target{executable?: true, type: :static, key: :restore_database},
+    %Target{executable?: true, type: :static, key: :update_db_owner},
     %Target{executable?: true, type: :static, key: :freebsd_setup},
     # restore
     %Target{executable?: false, type: :static, key: :zfs_snapshot},
