@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -eux
+set -eu
 
 #
 # The script that does the actual install on the remote host.
@@ -340,11 +340,19 @@ install_elixir() {
 #
 #     Get the IP address of the current host.
 #
-# ip_address() {
-# 	ifconfig | awk '/inet / && $2 != "127.0.0.1" {print $2}'
-# }
 ip_address() {
 	ifconfig | awk '/inet / && $2 != "127.0.0.1" {print $2; exit}'
+}
+
+#
+# Function: ip_address
+#
+# Description:
+#
+#     Get the IP addresses of the current host.
+#
+ip_addresses_list() {
+	ifconfig | awk '/inet / && $2 != "127.0.0.1" {print $2}' | paste -sd ',' -
 }
 
 #
@@ -434,20 +442,21 @@ init_postgres() {
 	fi
 
 	server_ip=$(ip_address)
+	server_ip_list=$(ip_addresses_list)
 
 	# Set the permissions
 	hba="""
 # TYPE  DATABASE        USER            ADDRESS                 METHOD
 
 local   all             postgres                                peer
-host    all             postgres        ${server_ip}/24         md5
-host    replication     replicator      ${server_ip}/24         md5
+host    all             postgres        samenet         	md5
+host    replication     replicator      samenet         	md5
 
-### Database access rules
+	### Database access rules
 """
 
 	# Set the listen_address in postgresql.conf
-	doas -u postgres sed -i '' "s/#listen_addresses = 'localhost'/listen_addresses = 'localhost, $server_ip'/" "${POSTGRES_CONF_FILE}"
+	doas -u postgres sed -i '' "s/#listen_addresses = 'localhost'/listen_addresses = 'localhost,$server_ip_list'/" "${POSTGRES_CONF_FILE}"
 
 	cat <<EOL | doas -u postgres tee -a "$POSTGRES_CONF_FILE" >/dev/null
 log_min_messages = notice
@@ -571,7 +580,8 @@ create_db() {
 	fi
 
 	server_ip=$(ip_address)
-	hba="host    ${DB}           ${username}           ${server_ip}/24        md5"
+	# hba="host    ${DB}           ${username}           ${server_ip}/24        md5"
+	hba="host    ${DB}           ${username}           samenet        md5"
 
 	if run_cmd doas -u postgres sh -c "echo \"$hba\" >> ${POSTGRES_HBA_FILE}"; then
 		puts "success" "Added user ${username}@${DB} to pg_hba.conf."
