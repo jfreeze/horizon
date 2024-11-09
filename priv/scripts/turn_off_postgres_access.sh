@@ -15,12 +15,6 @@ ssh "$REMOTE_HOST" 'sh -s' <<'ENDSSH'
 # Get the path to pg_hba.conf
 PG_HBA_CONF=$(doas -u postgres psql -Atc "SHOW hba_file;" | xargs)
 
-# Ensure PG_HBA_CONF file exists
-if ! doas test -f "$PG_HBA_CONF"; then
-  echo "Error: pg_hba.conf file not found at '$PG_HBA_CONF'"
-  exit 1
-fi
-
 # Ensure pg_hba.conf file exists
 if [ -z "$PG_HBA_CONF" ] || ! doas test -f "$PG_HBA_CONF"; then
   echo "Error: pg_hba.conf file not found."
