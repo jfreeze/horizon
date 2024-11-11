@@ -130,6 +130,8 @@ defmodule Horizon.NginxConfig do
 
   def cert_key_path(%Horizon.Project{certificate: :self, cert_key_path: path}), do: path
 
+  @nginxconf_path "/usr/local/etc/nginx/nginx.conf"
+
   @doc """
   Sends the Nginx configuration to a remote host and reloads the Nginx service.
 
@@ -139,24 +141,27 @@ defmodule Horizon.NginxConfig do
       iex>host = "myhost"
       iex>projects = [%Horizon.Project{name: "my project", ...}]
       iex>NginxConfig.send(projects, user, host)
+      iex>NginxConfig.send(projects, user, host, nginxconf_path: "/usr/nginx/nginx.conf", action: :restart)
 
   """
-  @spec send([Horizon.Project.t()], String.t(), String.t(), String.t()) ::
+  @spec send([Horizon.Project.t()], String.t(), String.t(), keyword()) ::
           {:ok, any()} | {:error, non_neg_integer(), any()}
   def send(
         projects,
         user,
         host,
-        remote_path \\ "/usr/local/etc/nginx/nginx.conf",
-        action \\ :reload
+        opts \\ []
       ) do
+    nginxconf_path = Keyword.get(opts, :nginxconf_path, @nginxconf_path)
+    action = Keyword.get(opts, :action, :reload)
+
     encoded_content =
       projects
       |> Horizon.NginxConfig.generate()
       |> :base64.encode()
 
     command =
-      "echo #{encoded_content} | ssh #{user}@#{host} 'base64 -d | doas tee #{remote_path} > /dev/null && doas service nginx #{action}'"
+      "echo #{encoded_content} | ssh #{user}@#{host} 'base64 -d | doas tee #{nginxconf_path} > /dev/null && doas service nginx #{action}'"
 
     case System.cmd("sh", ["-c", command]) do
       {result, 0} ->
