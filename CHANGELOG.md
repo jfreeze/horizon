@@ -4,10 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0 - Unreleased]
+### Added
+- Added ssl headers to nginx.conf (NginxConfig.generate/4)
+- Added `mix horizon.ops.init` to install HorizonOps scripts.
+
+### Changed
+- Moved last two arguments to ops in NginxConfig.send/4
+- Changed log_duration to `off` in postgresql.conf to save space.
+- Changed log_statement to `ddl` in postgresql.conf to save space.
+- Changed `mix horizon.init` to only install project specific deploy scripts.
+
+### Fixed
+- Fixed bug in NginxConfig.generate to properly handle multiple server names.
 
 
-## [0.1.3] - 2024-11-??
+
+## [0.1.3]
 ### Changed
 - Added `freebsd_setup.sh` script to help setup first-boot configuration for FreeBSD hosts.
 - Changed host on `bsd_install.sh` to combine user and host into a single argument.
@@ -15,6 +28,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 - Fixed documentation issues.
+
+
 
 ## [0.1.2] - 2024-10-29
 ### Changed
