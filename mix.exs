@@ -10,7 +10,19 @@ defmodule Horizon.MixProject do
       deps: deps(),
       docs: [
         main: "readme",
-        extras: ["README.md", "CHANGELOG.md", "LICENSE.md", "docs/Hertzner.md"],
+        extras: [
+          "README.md",
+          "CHANGELOG.md",
+          "LICENSE.md",
+          "docs/Initial-Setup-for-Horizon.md",
+          "docs/Host-Configuration.md",
+          "docs/Deploying-with-Horizon.md",
+          "docs/FreeBSD-Setup.md",
+          "docs/Hetzner-Cloud.md",
+          "docs/FreeBSD-Install.md",
+          "docs/Example-Multi-Host-Setup.md",
+          "docs/Proxmox.md"
+        ],
         before_closing_body_tag: fn
           :html ->
             """
