@@ -163,7 +163,7 @@ deploy_rsync() {
   echo -e "${GREEN}Staging using rsync...${RESET}"
 
   # Create the target directory on the remote host if it doesn't exist
-  ssh "$BUILD_HOST_SSH" "user=$(whoami) && doas mkdir -p '$BUILD_PATH' && doas chown -R $user '$BUILD_PATH'"
+  ssh "$BUILD_HOST_SSH" "export username=\$(whoami) && doas mkdir -p '$BUILD_PATH'"
 
   # Generate exclude options for rsync
   EXCLUDE_OPTIONS=$(generate_exclude_options)
@@ -176,6 +176,8 @@ deploy_rsync() {
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: rsync failed.${RESET}" >&2
     exit 1
+  else
+    ssh "$BUILD_HOST_SSH" "export username=\$(whoami) && doas chown -R \$username '$BUILD_PATH'"
   fi
 }
 
@@ -185,7 +187,7 @@ deploy_tar_scp() {
   echo -e "${GREEN}Staging using tar and ssh pipeline...${RESET}"
 
   # Create an empty target directory on the remote host
-  ssh "$BUILD_HOST_SSH" "user=$(whoami) && doas rm -rf \"$BUILD_PATH\" && doas mkdir -p \"$BUILD_PATH\" && doas chown -R $user '$BUILD_PATH'"
+  ssh "$BUILD_HOST_SSH" "doas rm -rf \"$BUILD_PATH\" && doas mkdir -p \"$BUILD_PATH\" && export username=\$(whoami)"
 
   # Generate exclude options for tar
   EXCLUDE_OPTIONS=$(generate_exclude_options)
@@ -200,6 +202,8 @@ deploy_tar_scp() {
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: tar and ssh pipeline failed.${RESET}" >&2
     exit 1
+  else
+    ssh "$BUILD_HOST_SSH" "export username=\$(whoami) && doas chown -R \$username '$BUILD_PATH'"
   fi
 }
 
