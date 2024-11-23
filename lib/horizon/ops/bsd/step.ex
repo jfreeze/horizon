@@ -15,10 +15,13 @@ defmodule Horizon.Ops.BSD.Step do
   """
   @spec setup(Mix.Release.t()) :: Mix.Release.t()
   def setup(%Mix.Release{} = release) do
+    release =
+      release
+      |> merge_defaults()
+      |> setup_rcd()
+
+    IO.inspect(Process.info(self(), :current_stacktrace), label: "STACKTRACE")
     release
-    |> merge_defaults()
-    |> setup_rcd()
-    |> dbg()
   end
 
   @doc """
@@ -73,7 +76,8 @@ defmodule Horizon.Ops.BSD.Step do
       fn _app, _opts -> file end
     )
 
-    IO.puts("#{IO.ANSI.red()}[MADEIT] release #{inspect(release)}#{IO.ANSI.reset()}")
+    IO.puts("#{IO.ANSI.red()}[MADEIT]#{IO.ANSI.reset()}")
+    IO.inspect(Process.info(self(), :current_stacktrace), label: "STACKTRACE")
 
     release
   end
