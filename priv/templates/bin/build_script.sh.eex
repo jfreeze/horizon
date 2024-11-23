@@ -5,14 +5,6 @@
 # Build script for a project to be run on the target machine.
 # This app is located in the build folder for each `bin_path` and release.
 #
-# This app can be called remotely via SSH.
-#
-#    ssh me@build_server "(cd /path/to/deploy; doas ./bin/dir/release.sh)"
-#
-# Example
-#
-#    ssh me@192.168.100.100 "(cd /usr/local/my_app; doas ./bin/release-my_app.sh)"
-#
 
 
 # Exit immediately if a command exits with a non-zero status
@@ -40,7 +32,7 @@ MIX_ENV=prod mix deps.get --only prod
 
 create_app_dir() {
   doas mkdir -p <%= @app_path %>/releases
-  doas chown -R <%= @build_user %> <%= @app_path %>
+  doas chown -R $(whoami) <%= @app_path %>
 }
 
 mix_assets_setup_freebsd() {

@@ -8,25 +8,23 @@
 #
 # Example
 #
-#    ./bin/deploy-my_app.sh [-u user] [-h host]
+#    ./bin/deploy-my_app.sh [-h host]
 #
 #
 
 set -eu
 
 # Default deployment user and host
-DEPLOY_USER="<%= @deploy_user %>"
-DEPLOY_HOST="<%= @deploy_host %>"
+DEPLOY_HOST_SSH="<%= @deploy_host_ssh %>"
 APP_PATH="<%= @app_path %>"
 APP="<%= @app %>"
 
 # Parse arguments
 while getopts "u:h:" opt; do
   case $opt in
-  u) DEPLOY_USER=$OPTARG ;;
-  h) DEPLOY_HOST=$OPTARG ;;
+  h) DEPLOY_HOST_SSH=$OPTARG ;;
   *)
-    echo "Usage: $0 [-u user] [-h host]"
+    echo "Usage: $0 [-h [user@]host]"
     exit 1
     ;;
   esac
@@ -34,19 +32,19 @@ done
 shift $((OPTIND - 1))
 
 if [ $# -gt 0 ]; then
-  echo "Usage: $0 [-u user] [-h host]"
+  echo "Usage: $0 [-h [user@]host]"
   exit 1
 fi
 
 release=$(cat "<%= @releases_path %>/$APP.data")
-scp "<%= @releases_path %>/$release" "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/$APP.tar.gz"
+scp "<%= @releases_path %>/$release" "${DEPLOY_HOST_SSH}:/tmp/$APP.tar.gz"
 
 # Define the installation script and arguments
 INSTALL_SCRIPT="<%= @bin_path %>/deploy_script-<%= @app %>.sh"
 INSTALL_ARGS="$APP $APP_PATH $release"
 
 # Run the deploy script on the remote host
-ssh "${DEPLOY_USER}@${DEPLOY_HOST}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"
+ssh "${DEPLOY_HOST_SSH}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"
 
 GREEN='\033[0;32m'
 RED='\033[0;31m'

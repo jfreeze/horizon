@@ -12,7 +12,7 @@ RESET='\033[0m'
 
 # Function to display usage
 usage() {
-  echo "Usage: $0 [-o output_dir] host"
+  echo "Usage: $0 [-o output_dir] [user@]host"
   exit 1
 }
 

@@ -16,7 +16,7 @@ error() {
 
 # Check if the script is being run with a hostname argument
 if [ "$#" -ne 1 ]; then
-  error "Usage: $0 <hostname>"
+  error "Usage: $0 [user@]host"
 fi
 
 HOST="$1"
