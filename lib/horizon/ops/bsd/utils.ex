@@ -11,6 +11,8 @@ defmodule Horizon.Ops.BSD.Utils do
   """
   @spec assigns(atom(), keyword()) :: keyword()
   def assigns(app, opts) do
+    dbg(opts)
+
     [
       assigns: [
         app: app,
