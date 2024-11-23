@@ -61,6 +61,7 @@ defmodule Horizon.Ops.BSD.Step do
     IO.puts("#{IO.ANSI.red()}[DDEEBBUUGG] Creating dir #{dir}#{IO.ANSI.reset()}")
     File.mkdir_p(dir)
     file = Path.join(dir, "#{name}")
+    IO.puts("#{IO.ANSI.red()}[DDEEBBUUGG] file #{file}#{IO.ANSI.reset()}")
 
     Horizon.Ops.Utils.create_file_from_template(
       Horizon.Ops.BSD.Utils.get_src_tgt(:rc_d, name),
@@ -71,6 +72,8 @@ defmodule Horizon.Ops.BSD.Step do
       &Horizon.Ops.BSD.Utils.assigns/2,
       fn _app, _opts -> file end
     )
+
+    IO.puts("#{IO.ANSI.red()}[MADEIT] release #{inspect(release)}#{IO.ANSI.reset()}")
 
     release
   end
