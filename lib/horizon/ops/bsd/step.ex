@@ -58,7 +58,7 @@ defmodule Horizon.Ops.BSD.Step do
 
     rel_template_path = get_rel_template_path(release)
     dir = Path.join(rel_template_path, "rc_d")
-    IO.puts("creating dir: #{dir}")
+    IO.puts("#{IO.ANSI.red()}[DDEEBBUUGG] Creating dir #{dir}#{IO.ANSI.reset()}")
     File.mkdir_p(dir)
     file = Path.join(dir, "#{name}")
 
@@ -76,7 +76,7 @@ defmodule Horizon.Ops.BSD.Step do
   end
 
   defp get_rel_template_path(release) do
-    IO.puts("#{IO.ANSI.yellow()}[INFO] Getting rel template path#{IO.ANSI.reset()}")
+    IO.puts("#{IO.ANSI.red()}[DDEEBBUUGG] Getting rel template path#{IO.ANSI.reset()}")
     dbg(release)
 
     release.options
