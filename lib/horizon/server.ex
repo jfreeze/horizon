@@ -17,7 +17,7 @@ defmodule Horizon.Server do
 
       iex> Horizon.Server.new()
       %Horizon.Server{internal_ip: "127.0.0.1", port: 4000}
-      iex> Horizon.Server.new internal_ip: "10.0.0.2", port: 4001
+      iex> Horizon.Server.new(internal_ip: "10.0.0.2", port: 4001)
       %Horizon.Server{internal_ip: "10.0.0.2", port: 4001}
 
   """
