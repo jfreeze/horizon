@@ -18,6 +18,7 @@ defmodule Horizon.Ops.BSD.Step do
     release
     |> merge_defaults()
     |> setup_rcd()
+    |> dbg()
   end
 
   @doc """
