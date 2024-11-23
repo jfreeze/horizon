@@ -76,6 +76,9 @@ defmodule Horizon.Ops.BSD.Step do
   end
 
   defp get_rel_template_path(release) do
+    IO.puts("#{IO.ANSI.yellow()}[INFO] Getting rel template path#{IO.ANSI.reset()}")
+    dbg(release)
+
     release.options
     |> Keyword.get(:rel_templates_path, "rel/overlays")
     |> get_path()
