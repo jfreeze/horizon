@@ -58,6 +58,7 @@ defmodule Horizon.Ops.BSD.Step do
 
     rel_template_path = get_rel_template_path(release)
     dir = Path.join(rel_template_path, "rc_d")
+    IO.puts("creating dir: #{dir}")
     File.mkdir_p(dir)
     file = Path.join(dir, "#{name}")
 
