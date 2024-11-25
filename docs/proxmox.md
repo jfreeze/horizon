@@ -2,7 +2,7 @@
 
 An example configuration to create a VM for FreeBSD in Proxmox.
 
-This guide is not intended to be a tutorial for Proxmox, but rather a reference for creating a VM for FreeBSD.
+This guide is not intended to be a tutorial for Proxmox, but rather a reference for creating a VM for FreeBSD on Proxmox.
 
 ## Name Your Virtual Machine
 ![Name Your Virtual Machine](../docs/proxmox-create-vm/proxmox-create-vm-010.png)
@@ -17,7 +17,7 @@ FreeBSD ISO's can be found at [FreeBSD ISO Images](https://download.freebsd.org/
 Pasting the 14.1 link `https://download.freebsd.org/ftp/releases/ISO-IMAGES/14.1/FreeBSD-14.1-RELEASE-amd64-disc1.iso` into the URL section and clicking Query URL will validate the link to the ISO.
 ![Select the ISO](../docs/proxmox-create-vm/proxmox-create-vm-022.png)
 
-Back to your VM creation, select the ISO you just added.
+Back at your VM creation, select the ISO you just added.
 ![Select the ISO](../docs/proxmox-create-vm/proxmox-create-vm-020.png)
 
 ## Set the OS Type
@@ -58,7 +58,7 @@ Use the `VirtIO (paravirtualized)` network card.
 
 ## Proxmox Configuration File
 
-The resulting config file for this example FreeBSD VM configuration in Proxmox.
+Below is the resulting config file for this example FreeBSD VM configuration in Proxmox.
 ```
 agent: 1
 boot: order=virtio0;ide2;net0
