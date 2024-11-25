@@ -55,10 +55,10 @@ for host in $DEPLOY_HOSTS_SSH; do
   scp "<%= @releases_path %>/$release" "${DEPLOY_HOSTS_SSH}:/tmp/$APP.tar.gz"
 
   # Run the deploy script on the remote host
-  ssh "${DEPLOY_HOSTS_SSH}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"
+  ssh "${host}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"
 
   if [ $? -eq 0 ]; then
-    printf "${GREEN}Deployment to ${DEPLOY_HOSTS_SSH} successful.${RESET}\n"
+    printf "${GREEN}Deployment to ${host} successful.${RESET}\n"
   else
     printf "${RED}Deployment failed.${RESET}\n"
     exit 1
