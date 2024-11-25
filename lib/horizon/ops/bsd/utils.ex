@@ -11,9 +11,6 @@ defmodule Horizon.Ops.BSD.Utils do
   """
   @spec assigns(atom(), keyword()) :: keyword()
   def assigns(app, opts) do
-    # dbg(opts)
-    # IO.inspect(Process.info(self(), :current_stacktrace), label: "STACKTRACE")
-
     [
       assigns: [
         app: app,
@@ -21,7 +18,7 @@ defmodule Horizon.Ops.BSD.Utils do
         bin_path: opts[:bin_path],
         build_path: opts[:build_path],
         build_host_ssh: opts[:build_host_ssh],
-        deploy_host_ssh: opts[:deploy_host_ssh],
+        deploy_hosts_ssh: opts[:deploy_hosts_ssh],
         release_commands: opts[:release_commands] || [],
         releases_path: opts[:releases_path],
         is_default?: opts[:is_default?] || false

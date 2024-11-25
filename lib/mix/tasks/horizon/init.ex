@@ -38,9 +38,9 @@ defmodule Mix.Tasks.Horizon.Init do
   - `build_host_ssh`: `[nil]`
     - If not provided, `stage` script will use env var `BUILD_HOST_SSH`. Required for the `stage` script to copy the release to the build machine and for the `build` script.
     - Example: `[user@]host`
-  - `deploy_host_ssh`: `[nil]`
-    - If not provided, the ssh host may be passed to the `deploy` script with the `-h` option.
-    - Example: `[user@]host`
+  - `deploy_hosts_ssh`: `[[]]`
+    - If not provided, ssh hosts may be passed to the `deploy` script with the `-h` option.
+    - Example: `user@host1,user@host2`
   - `release_commands`: `[[]]`
     - A list of commands to run after the release is copied to the deploy machine.
     - These are typically zero arity commands defined in `release.ex`. For example, `["migrate"]`.

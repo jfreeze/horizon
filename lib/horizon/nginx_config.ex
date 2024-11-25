@@ -105,6 +105,10 @@ defmodule Horizon.NginxConfig do
 
   def cert_path(%Horizon.Project{certificate: :letsencrypt, cert_path: path}), do: path
 
+  def cert_path(%Horizon.Project{name: name, certificate: :self, cert_path: nil}) do
+    "/usr/local/#{name}/cert/selfsigned.pem"
+  end
+
   def cert_path(%Horizon.Project{certificate: :self, cert_path: path}), do: path
 
   @doc """
@@ -131,6 +135,10 @@ defmodule Horizon.NginxConfig do
   end
 
   def cert_key_path(%Horizon.Project{certificate: :letsencrypt, cert_key_path: path}), do: path
+
+  def cert_key_path(%Horizon.Project{name: name, certificate: :self, cert_key_path: nil}) do
+    "/usr/local/#{name}/cert/selfsigned_key.pem"
+  end
 
   def cert_key_path(%Horizon.Project{certificate: :self, cert_key_path: path}), do: path
 
