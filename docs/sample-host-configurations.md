@@ -1,12 +1,19 @@
 # Sample Host Configurations
 
+This guide contains sample configuration files for setting up a multi-host environment with Horizon.
+Using these sample files you can build the host collateral that you need to deploy your Elixir/Phoenix application.
+
 ## Build Host
 
-Sample config file for a build host. The only expectation for this host is to build a release but not run the application.
+We start with a sample config file for a build host. 
+The only expectation for this host is to build a release but not run the application.
 
 This config file uses the current pkg version of erlang `erlang-runtime27` and builds Elixir 1.17.3 from source.
 
-The `dot-path` is used to store the path to erlang for builds. The `path` is set to the erlang bin directory so we can install elixir.
+The `path` is set to the erlang bin directory and must precede the Elixir install.
+This dynamically sets the path so the Elixir installer knows where to find Erlang.
+
+> **Note:** The `path` is dependent upon the version of erlang that is installed and you will need to update it accordingly.
 
 ```build.conf
 pkg:ca_root_nss
@@ -16,19 +23,16 @@ pkg:gmake
 pkg:git
 pkg:erlang-runtime27
 
-# Store the path to erlang for builds
-dot-path:/usr/local/lib/erlang27
-
 # Set the path to erlang so we can install elixir
 path:/usr/local/lib/erlang27/bin
 
 elixir:1.17.3
 ```
 
-Configure the build host with:
+You can now configure the `demo-build` build host with:
 
 ```shell
-bsd_install.sh admin@demo-build build.conf
+./ops/bin/bsd_install.sh admin@demo-build build.conf
 ```
 
 ## Web Host
@@ -51,10 +55,12 @@ service:nginx
 pkg:py311-certbot
 ```
 
-To configure the proxy host run:
+The `pkg` commands install the packages and the `service` command starts the Nginx service.
+
+In this example, we are going to configure the `demo-web1` host as the proxy host:
 
 ```
-./ops/bin/bsd_install.sh me@target_host build.conf
+./ops/bin/bsd_install.sh admin@demo-web1 proxy.conf
 ```
 
 ## Postgres Host
@@ -68,7 +74,9 @@ There are four steps to getting Postgres up and running:
 3. Initialize postgres. This configures `postgresql.conf`, `pg_hba.conf` and logging. Logging is at `/var/log/postgresql.log`
 4. Create a database. Creating a database creates a user/password, and updates `pg_hba.conf`. You can also choose the locale and `ctype` of the database.
 
-When creating a database you need to specify how it is to sort strings and how text is encoded. Horizon provides a few options:
+### Creating a Database
+
+When creating a database you need to specify how it is to sort strings and how text is encoded. Horizon provides three options:
 
 - `postgres-db-c_mixed_utf8`
 - `postgres-db-c_utf8_full`
@@ -81,8 +89,8 @@ The `c` in `c_mixed_utf8` and `c_utf8_full` stands for `C` locale. This locale s
 The `postgres.conf` file for the `postgres` host looks like:
 
 ```postgres.con
-pkg:postgresql16-server
-pkg:postgresql16-contrib
+pkg:postgresql17-server
+pkg:postgresql17-contrib
 postgres.zfs-init
 postgres.init
 
@@ -97,7 +105,7 @@ postgres.db:c_mixed_utf8:mydb
 Configure your postgres host with:
 
 ```
-bsd_install.sh admin@demo-pg1 postgres.conf
+./ops/bin/bsd_install.sh admin@demo-pg1 postgres.conf
 ```
 
 ## Postgres Backup Host
@@ -113,11 +121,12 @@ pkg:postgresql17-contrib
 postgres.zfs-init
 ```
 
-Install the postgres backup host with:
+Setup the postgres backup host with:
 
 ```
-bsd_install.sh admin@demo-pg2 postgres-backup.conf
+./ops/bin/bsd_install.sh admin@demo-pg2 postgres-backup.conf
 ```
 
+That's it! You now have hosts ready for start your Elixir/Phoenix application deployment with Horizon.
 
 ---
