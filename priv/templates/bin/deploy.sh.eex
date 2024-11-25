@@ -52,7 +52,7 @@ INSTALL_SCRIPT="<%= @bin_path %>/deploy_script-<%= @app %>.sh"
 INSTALL_ARGS="$APP $APP_PATH $release"
 
 for host in $DEPLOY_HOSTS_SSH; do
-  scp "<%= @releases_path %>/$release" "${DEPLOY_HOSTS_SSH}:/tmp/$APP.tar.gz"
+  scp "<%= @releases_path %>/$release" "${host}:/tmp/$APP.tar.gz"
 
   # Run the deploy script on the remote host
   ssh "${host}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"
