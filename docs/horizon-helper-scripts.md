@@ -11,7 +11,7 @@ bsd_install.sh
 Usage: freebsd_setup.sh [user@]host
 ```
 
-This `freebsd_setup.sh`script automates the initial setup of a newly created FreeBSD host. This script automates configuration of elevated privileges, configures SSH keys, and disables password login, and updates the system.
+The `freebsd_setup.sh` script automates the initial setup of a newly created FreeBSD host. This script automates configuration of elevated privileges, configures SSH keys, disables password login, and updates the system.
 
 It performs the following tasks:
 - Ensures `doas` command (replacement for `sudo`) is installed.
@@ -22,7 +22,8 @@ It performs the following tasks:
 
 ## bsd_install.sh
 
-This script automates the installation of packages on a remote FreeBSD host. It reads a configuration file that lists the packages to install and installs them on the remote host.
+This script automates the installation of packages on a remote FreeBSD host. 
+It reads a configuration file and performs the install actions defined therein on the remote host.
 
 ```shell
 bsd_install.sh
@@ -38,10 +39,10 @@ See [Sample Host Configurations](../doc/sample-host-configurations.html) for exa
 
 ```
 add_certbot_crontab.sh
-Usage: /Users/jimfreeze/horizon/add_certbot_crontab.sh host
+Usage: ops/bin/add_certbot_crontab.sh [user@]host
 ```
 
-Add the cronjob for certbot to renew the SSL certificates and restart nginx.
+Adds the cronjob for certbot to renew the SSL certificates and restart nginx.
 
 
 ## zfs_snapshot.sh
@@ -73,7 +74,7 @@ backup_databases_over_ssh.sh
 Usage: backup_databases_over_ssh.sh [-o output_dir] [user@]host
 ```
 
-If your database does not have an open port from which to backup, or if you don't have a compatible `psql` client, you can use this script to backup the databases over SSH. This script will connect to the remote host using `ssh` and run `psql` to backup the databases.
+If your database does not have an open port from which to backup, or if you don't have a compatible `psql` client, you can use this script to backup the databases over SSH. This script will connect to the remote host using `ssh` and run `psql` on the remote host to backup the databases.
 
 ### restore_database.sh
 
@@ -98,7 +99,7 @@ This script restores a database from a backup file to a remote PostgreSQL server
 
 ```shell
 update_database_owner.sh
-Usage: update_database_owner.sh [-p PORT] [-U USER] DB_NAME TARGET_USER HOST
+Usage: update_database_owner.sh [-p port] [-U user] db_name target_user host
 ```
 
 This script updates the owner of a database to a new user. It connects to the specified PostgreSQL server using `psql` at host `HOST` and changes the owner of the specified database to the target user.

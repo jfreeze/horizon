@@ -4,12 +4,12 @@ A quick guide to creating a FreeBSD host template on [Hetzner Cloud](https://con
 
 This guide will walk you through setting up a new Hetzner Cloud project, creating a firewall, a network, and adding servers.
 
-After creating a project, our strategy is to create network and firewall artifacts first. 
+After creating a project, our strategy is to create network and firewall collateral first. 
 Then we will add servers to the network and create a new server and save it as a template.
 
 That template will be used to create new servers in the future.
 
-## FreeBSD Host Installation on Hetzner Cloud
+## FreeBSD Host Installation on Hetzner Cloud Summary
 
 - [Create a new project](#create-a-new-project)
 - [Create a Firewall](#create-a-firewall)
@@ -31,7 +31,7 @@ and add your project.
 
 ## Project Overview
 
-In the project page, you can configure networks, firewalls, and add servers.
+In the project page, you can configure networks, firewalls, and servers.
 
 ![Project page](../docs/hetzner-cloud/hetzner-cloud-050.png)
 
@@ -64,6 +64,8 @@ this can be accessed when `nginx` is running on port 80 and 443.
 Also shown in the image below are the LAN rules that allow servers to talk to each other.
 The web hosts will need to access the postgres server on port 5432 and
 the postgres backup server will need to access the postgres server for backups.
+
+We open all the ports for the LAN because the servers are in a private network.
 ![Port 4000 and LAN](../docs/hetzner-cloud/hetzner-cloud-100.png)
 
 ### Name the Firewall
@@ -134,20 +136,29 @@ The notable difference is that you will need to select the `vtnet0` network inte
 We will configure `vtnet1` for the LAN interface in a later step.
 ![FreeBSD Boot Installer](../docs/hetzner-cloud/hetzner-cloud-270.png)
 
+The network and IPv6 configuration shown below are additional steps not found in the [FreeBSD install](freebsd-install.html) guide.
+
 ## vtnet0 Configuration
+Choose `vtnet0` for the public network interface. `vtne1` will be used for the private LAN interface.
 ![vtnet0 Configuration](../docs/hetzner-cloud/hetzner-cloud-280.png)
 
 ## IPv6 Configuration
+Configure the IPv6 address for the public network interface.
 ![IPv6 Configuration](../docs/hetzner-cloud/hetzner-cloud-290.png)
 
 ## SLAAC Autoconfiguration for IPv6
 ![SLAAC Autoconfiguration](../docs/hetzner-cloud/hetzner-cloud-300.png)
 
+Continue with the [FreeBSD install](freebsd-install.html) guide.
+
 ## Unmount ISO
-After the installation is complete, unmount the ISO image before rebooting the server.
+After the installation is complete, you will need to reboot the server and then **unmount the ISO image** before it starts up.
 ![Reboot](../docs/hetzner-cloud/hetzner-cloud-310.png)
 
 ## Reboot
-Unmount the ISO and reboot the server.
+Reboot the server and unmount the ISO. Be quick! :-)
 ![Unmount ISO](../docs/hetzner-cloud/hetzner-cloud-320.png)
 
+## Template Creation
+
+You now have a FreeBSD server that is almost ready to be used as a template for future servers. xxxx
