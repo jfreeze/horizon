@@ -22,7 +22,7 @@ defmodule Horizon.Ops.Utils.Test do
 
       assert File.exists?(file)
       assert File.read!(file) == data
-      assert output =~ "Created #{file}"
+      assert output =~ "\e[32mCreated   \e[0m#{file}\e[0m\n"
     end
 
     test "overwrites the file when it exists and overwrite is true", %{tmp_file: tmp_file} do
@@ -35,7 +35,7 @@ defmodule Horizon.Ops.Utils.Test do
 
       assert File.exists?(tmp_file)
       assert File.read!(tmp_file) == data
-      assert output =~ "Overwrote #{tmp_file}"
+      assert output =~ "\e[33mOverwrote \e[0m#{tmp_file}\e[0m\n"
     end
 
     test "safe_write/4 prompts and overwrites when user agrees", %{tmp_file: tmp_file} do
@@ -49,8 +49,11 @@ defmodule Horizon.Ops.Utils.Test do
           Horizon.Ops.Utils.safe_write(new_data, tmp_file, false)
         end)
 
-      assert output =~ "#{tmp_file} already exists. Overwrite? [y/N]"
-      assert output =~ "Overwrote #{tmp_file}"
+      # Remove ANSI escape codes from the captured output
+      sanitized_output = Regex.replace(~r/\e\[[\d;]*m/, output, "")
+
+      assert sanitized_output =~ "#{tmp_file} already exists. Overwrite? [y/N]"
+      assert sanitized_output =~ "Overwrote #{tmp_file}"
       assert File.read!(tmp_file) == new_data
     end
 
@@ -65,8 +68,11 @@ defmodule Horizon.Ops.Utils.Test do
           Horizon.Ops.Utils.safe_write(new_data, tmp_file, false)
         end)
 
-      assert output =~ "#{tmp_file} already exists. Overwrite? [y/N]"
-      assert output =~ "Skipped #{tmp_file}"
+      # Remove ANSI escape codes from the captured output
+      sanitized_output = Regex.replace(~r/\e\[[\d;]*m/, output, "")
+
+      assert sanitized_output =~ "#{tmp_file} already exists. Overwrite? [y/N]"
+      assert sanitized_output =~ "Skipped   #{tmp_file}"
       assert File.read!(tmp_file) == initial_data
     end
 
@@ -82,7 +88,7 @@ defmodule Horizon.Ops.Utils.Test do
       assert File.exists?(file)
       assert File.read!(file) == data
       assert (File.stat!(file).mode &&& 0o111) != 0
-      assert output =~ "Created #{file}"
+      assert output =~ "\e[32mCreated   \e[0m#{file}\e[0m\n"
     end
 
     test "handles write errors gracefully", %{tmp_dir: tmp_dir} do
