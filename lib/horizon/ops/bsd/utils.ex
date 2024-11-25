@@ -18,7 +18,7 @@ defmodule Horizon.Ops.BSD.Utils do
         bin_path: opts[:bin_path],
         build_path: opts[:build_path],
         build_host_ssh: opts[:build_host_ssh],
-        deploy_hosts_ssh: opts[:deploy_hosts_ssh],
+        deploy_hosts_ssh: hosts_ssh(opts[:deploy_hosts_ssh]),
         release_commands: opts[:release_commands] || [],
         releases_path: opts[:releases_path],
         is_default?: opts[:is_default?] || false
@@ -152,4 +152,8 @@ defmodule Horizon.Ops.BSD.Utils do
     Horizon.Ops.Utils.validate_releases(releases)
     releases
   end
+
+  defp hosts_ssh(nil), do: []
+  defp hosts_ssh(hosts) when is_binary(hosts), do: [hosts]
+  defp hosts_ssh(hosts), do: hosts
 end

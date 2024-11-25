@@ -17,7 +17,7 @@
 set -eu
 
 # Default deployment user and host
-DEPLOY_HOSTS_SSH="<%= @deploy_hosts_ssh %>"
+DEPLOY_HOSTS_SSH="<%= Enum.join(@deploy_hosts_ssh, ",") %>"
 APP_PATH="<%= @app_path %>"
 APP="<%= @app %>"
 
