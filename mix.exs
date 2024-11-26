@@ -12,16 +12,36 @@ defmodule Horizon.MixProject do
         main: "readme",
         extras: [
           "README.md",
-          "CHANGELOG.md",
-          "LICENSE.md",
-          "docs/Initial-Setup-for-Horizon.md",
-          "docs/Host-Configuration.md",
           "docs/Deploying-with-Horizon.md",
-          "docs/FreeBSD-Setup.md",
-          "docs/Hetzner-Cloud.md",
-          "docs/FreeBSD-Install.md",
-          "docs/Example-Multi-Host-Setup.md",
-          "docs/Proxmox.md"
+          "docs/horizon-helper-scripts.md",
+          "docs/sample-host-configurations.md",
+          "docs/freebsd-template-setup.md",
+          "docs/proxy-conf.livemd",
+          "docs/hetzner-cloud.md",
+          "docs/hetzner-cloud-host-instantiation.md",
+          "docs/freebsd-install.md",
+          "docs/build_conf.md",
+          "docs/web_proxy_conf.md",
+          "docs/postgres_conf.md",
+          "docs/postgres_backup_conf.md",
+          "docs/proxmox.md",
+          "CHANGELOG.md",
+          "LICENSE.md"
+        ],
+        groups_for_extras: [
+          "Installation Guides": [
+            "docs/freebsd-template-setup.md",
+            "docs/hetzner-cloud.md",
+            "docs/hetzner-cloud-host-instantiation.md",
+            "docs/freebsd-install.md",
+            "docs/proxmox.md"
+          ],
+          "Configuration Files": [
+            "docs/build_conf.md",
+            "docs/web_proxy_conf.md",
+            "docs/postgres_conf.md",
+            "docs/postgres_backup_conf.md"
+          ]
         ],
         before_closing_body_tag: fn
           :html ->

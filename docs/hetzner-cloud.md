@@ -161,4 +161,5 @@ Reboot the server and unmount the ISO. Be quick! :-)
 
 ## Template Creation
 
-You now have a FreeBSD server that is almost ready to be used as a template for future servers. xxxx
+You now have a FreeBSD server that is almost ready to be used as a template for future servers.
+Follow the steps in [FreeBSD Template Setup](freebsd-template-setup.html) to complete the template setup.

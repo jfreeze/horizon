@@ -61,8 +61,69 @@ And update your path if needed:
 export PATH=$PATH:~/bin
 ```
 
+## Naming Hosts and Configuring LAN
 
-## Configure Hosts
+If you have just followed the [host instantiation instructions](hetzner-cloud-host-instantiation.html) and created five VMs, you will need to assign host names to each VM and, for convenience, add them to your `/etc/hosts` file.
+
+Define the host names in your `/etc/hosts` file with the public IP addresses of each host.
+
+The IP addresses for our demo project were:
+
+```shell
+cat /etc/hosts
+...
+## Demo
+178.156.153.24	demo-build
+5.161.249.144	demo-web1
+178.156.153.23	demo-web2
+178.156.153.21	demo-pg1
+178.156.153.22	demo-pg2
+```
+
+### Set Hostnames
+With host name aliases set, you can set the hostname of each host.
+
+```shell
+ssh admin@demo-web1 "doas hostname demo-web1; doas sysrc hostname=demo-web1"
+ssh admin@demo-web2 "doas hostname demo-web2; doas sysrc hostname=demo-web2"
+ssh admin@demo-pg1 "doas hostname demo-pg1; doas sysrc hostname=demo-pg1"
+ssh admin@demo-pg2 "doas hostname demo-pg2; doas sysrc hostname=demo-pg2"
+ssh admin@demo-build "doas hostname demo-build; doas sysrc hostname=demo-build"
+```
+
+### Configure LAN
+Hetzner Cloud VMs are configured with a private network interface on `vtnet1`.
+We will configure the `vtnet1` interface on each host to use DHCP.
+
+```shell
+ssh admin@demo-web1 "doas sysrc ifconfig_vtnet1=DHCP"
+ssh admin@demo-web2 "doas sysrc ifconfig_vtnet1=DHCP"
+ssh admin@demo-pg1 "doas sysrc ifconfig_vtnet1=DHCP"
+ssh admin@demo-pg2 "doas sysrc ifconfig_vtnet1=DHCP"
+ssh admin@demo-build "doas sysrc ifconfig_vtnet1=DHCP"
+```
+
+Note that on Hetzner Cloud, the DHCP server assigns a netmask of `0xFFFF`.
+This means that there is no LAN in the traditional sense and no `arp` requests.
+Instead, traffic sent to a another host on the "LAN" is handled by the gateway router.
+
+This will come into play when configuring the host-based authentication for the database.
+
+```shell
+$ netstat -rn
+Routing tables
+
+Internet:
+Destination        Gateway            Flags     Netif Expire
+default            172.31.1.1         UGS      vtnet0
+5.161.249.144      link#3             UH          lo0
+10.0.0.0/16        10.0.0.1           UGS      vtnet1
+10.0.0.1           link#2             UHS      vtnet1
+10.0.0.2           link#3             UH          lo0
+127.0.0.1          link#3             UH          lo0
+```
+
+## Configuring Hosts
 Each type of host has different requirements. 
 You can use Horizon Ops `bsd_install.sh` and a config file to set up each host according its needs. 
 We'll look at each type of host and the configuration needed -- `web`, `postgres`, `postgres-backup`, and `build`.

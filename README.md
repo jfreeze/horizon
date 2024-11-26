@@ -4,7 +4,7 @@ Welcome to **Horizon**, an ops library for **deploying Elixir/Phoenix
 projects** to FreeBSD hosts. 
 
 ## Features
-- Only SSH access required for administration
+- Only SSH access is required for administration
 - Uses install files so you can version manage host configuration
 - Installs Elixir, Erlang, Postgres and Postgres databases
 - Full Postgres install with a single command
@@ -14,18 +14,16 @@ projects** to FreeBSD hosts.
 
 ## Getting Started
 
-This guide is intended to help you get started with Horizon.
-Follow the installation instructions on this page to setup your project to use Horizon for deployment.
+This guide is intended to help you get started with Horizon for deploying your Elixir/Phoenix application to FreeBSD hosts.
+Follow the installation instructions on this page to configure your existing project to use Horizon for deployment.
 
 Then follow the guides below to setup your host servers and deploy your Elixir/Phoenix application with Horizon.
 
-- [Initial Host Setup-for-Horizon](../doc/freebsd-setup.html)
-- [Initial Host Setup-for-Horizon](../doc/initial-setup-for-horizon.html)
-- [Host Configuration](../doc/host-configuration.html)
 - [Deploying with Horizon](../doc/deploying-with-horizon.html)
-- [Example of Multi-host and Postgres Server Setup Server](../doc/example-multi-host-setup.html) on Hetzner Cloud
+- [FreeBSD Setup](../doc/freebsd-setup.html)
 
 ### Additional Guides and Resources
+- [Sample Host Configurations](../doc/sample-host-configurations.html)
 - [Installing FreeBSD](../doc/freebsd-install.html)
 - [Creating a FreeBSD Host Template on Hetzner Cloud](../doc/hetzner-cloud.html)
 - [Creating a FreeBSD VM on Proxmox](../doc/proxmox.html)
