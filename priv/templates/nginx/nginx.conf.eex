@@ -20,14 +20,12 @@ http {
     default upgrade;
     ''      close;
   }
-
   <%= for project <- projects do %>
   # Define upstream servers (local or remote)
   upstream backend_<%= Slug.slugify(project.name, separator: ?_) %> {
     ip_hash;
   <%= for server <- project.servers do %>  server <%= server.internal_ip %>:<%= server.port %>;
   <% end %>}
-
   <%= if project.http_only do %>
   # Define server block for HTTP
   server {
