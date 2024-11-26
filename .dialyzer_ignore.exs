@@ -17,6 +17,6 @@
 
   # Ignore callback info missing for Mix.Task behavior
   ~r"lib/mix/tasks/horizon/bsd/init.ex:\d+:callback_info_missing",
-  {"lib/horizon/nginx_config.ex", :unknown_function, 80},
+  {"lib/horizon/nginx_config.ex", :unknown_function, 82},
   {"lib/horizon/ops/utils.ex", :unknown_function, 77}
 ]
