@@ -38,3 +38,4 @@ horizon-*.tar
 /bin/
 /ops/
 /backups/
+/demo/
