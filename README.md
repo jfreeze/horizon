@@ -20,12 +20,16 @@ Follow the installation instructions on this page to configure your existing pro
 Then follow the guides below to setup your host servers and deploy your Elixir/Phoenix application with Horizon.
 
 - [Deploying with Horizon](../doc/deploying-with-horizon.html)
-- [FreeBSD Setup](../doc/freebsd-setup.html)
+- [Horizon Ops Scripts](../doc/horizon-helper-scripts.html)
+- [Sample Host Configurations](../doc/sample-host-configurations.html)
+- [Proxy Configuration](../doc/proxy-conf.html)
+
 
 ### Additional Guides and Resources
-- [Sample Host Configurations](../doc/sample-host-configurations.html)
-- [Installing FreeBSD](../doc/freebsd-install.html)
-- [Creating a FreeBSD Host Template on Hetzner Cloud](../doc/hetzner-cloud.html)
+- [FreeBSD Template Setup](../doc/freebsd-template-setup.html)
+- [Hetzner Cloud Setup Guide](../doc/hetzner-cloud.html)
+- [Hetzner Cloud Host Instantiation](../doc/hetzner-cloud-host-instantiation.html)
+- [FreeBSD Installation](../doc/freebsd-install.html)
 - [Creating a FreeBSD VM on Proxmox](../doc/proxmox.html)
 
 ## Installation
