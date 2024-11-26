@@ -1,6 +1,5 @@
 defmodule Horizon.NginxConfigTest do
   use ExUnit.Case
-  import ExUnit.CaptureIO
 
   alias Horizon.NginxConfig
 
@@ -111,7 +110,6 @@ defmodule Horizon.NginxConfigTest do
 
     output = NginxConfig.generate(projects)
 
-    IO.puts(output)
     assert output == expected_output
   end
 
