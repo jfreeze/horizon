@@ -1,0 +1,87 @@
+```conf
+#
+# Horizon.Ops - Sample Config for a Postgres Server
+#
+# This installation script sets up a PostgreSQL server,
+# initializes the database, and creates multiple databases
+# with different locale and encoding settings.
+#
+# Install Options
+# The script uses several configuration options to set up and customize the PostgreSQL server.
+#
+# 1. Install Packages
+#
+# Option: pkg
+#
+#     pkg:<package_name>
+#
+# The `pkg` option installs the specified package using the package manager.
+#
+# Examples:
+#
+#     pkg:postgresql16-server
+#     pkg:postgresql16-contrib
+#
+# These commands install the PostgreSQL 17 server and additional contributed utilities.
+# Note that you don't need to specify the full name of the package.
+#
+#
+# 2. Initialize ZFS
+#
+# Option: postgres.zfs-init
+#
+# This option initializes ZFS for the PostgreSQL server.
+# It creates a ZFS pool and sets up the mount point for the database.
+# This must be run before initializing the PostgreSQL server.
+#
+# Example:
+#
+#    postgres.zfs-init
+#
+#
+# 3. Initialize PostgreSQL
+#
+# Option: postgres.init
+#
+# This option initializes the PostgreSQL server.
+# It calls `initdb` starts the database server.
+#
+# Example:
+#
+#     postgres.init
+#
+#
+# 4. Create Databases with Specific Locale Settings
+#
+# Option: postgres.db:<encoding_type>:<database_name>
+#
+# This option creates a PostgreSQL database with a specific encoding type and locale settings.
+# The <encoding_type> specifies the collation and character type (ctype) settings,
+# and <database_name> is the name of the database to be created.
+#
+# Encoding Types:
+#
+# c_mixed_utf8: Collate = C,           CType = C.UTF-8 (default, uses template1)
+# c_utf8_full:  Collate = C.UTF-8,     CType = C.UTF-8
+# us_utf8_full: Collate = en_US.UTF-8, CType = en_US.UTF-8
+#
+# Examples:
+#
+#     postgres.db:c_mixed_utf8:mydb1
+#     postgres.db:c_utf8_full:mydb2
+#     postgres.db:us_utf8_full:mydb3
+#
+# These commands create three databases:
+# mydb1 with collation C and ctype C.UTF-8
+# mydb2 with both collation and ctype set to C.UTF-8
+# mydb3 with both collation and ctype set to en_US.UTF-8
+#
+
+pkg:postgresql17-server
+pkg:postgresql17-contrib
+postgres.zfs-init
+postgres.init
+
+# Create individual database
+postgres.db:c_mixed_utf8:my_app
+```

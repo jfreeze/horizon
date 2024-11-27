@@ -16,7 +16,7 @@ error() {
 
 # Check if the script is being run with a hostname argument
 if [ "$#" -ne 1 ]; then
-  error "Usage: $0 <hostname>"
+  error "Usage: $0 [user@]host"
 fi
 
 HOST="$1"
@@ -98,6 +98,7 @@ info "Configuring sshd..."
 SSHD_CONFIG="/etc/ssh/sshd_config"
 if ! grep -Fq "ChallengeResponseAuthentication no" "$SSHD_CONFIG"; then
   doas sh -c "cat <<EOF >> $SSHD_CONFIG
+PermitUserEnvironment yes
 PasswordAuthentication no
 ChallengeResponseAuthentication no
 PermitRootLogin no
@@ -148,9 +149,8 @@ fi
 
 # Final messages
 info "Initial setup complete."
-alert "Please reboot your system and run the following commands after rebooting:"
-alert "  doas pkg upgrade -y"
-alert "  doas zfs snapshot zroot/ROOT/default@initial-setup"
+alert "Please reboot your system and run the following command after rebooting:"
+alert "  ssh $HOST 'doas pkg upgrade -y; doas zfs snapshot zroot/ROOT/default@initial-setup'"
 
 EOF
 

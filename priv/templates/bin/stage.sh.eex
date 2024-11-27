@@ -27,8 +27,7 @@
 # - app - name of release
 # - :path - root of release
 # - :build_path - root of build sources
-# - build_user
-# - build_host
+# - :build_host_ssh
 #
 
 
@@ -38,8 +37,7 @@
 APP_NAME="<%= @app %>"
 SRC_REPO_DIR=$(cd . && pwd)
 BUILD_PATH=<%= @build_path %>
-BUILD_USER="${BUILD_USER:-<%= @build_user %>}"
-BUILD_HOST="${BUILD_HOST:-<%= @build_host %>}"
+BUILD_HOST_SSH="${BUILD_HOST_SSH:-<%= @build_host_ssh %>}"
 
 # Default staging method
 STAGING_METHOD="auto" # Options: auto, rsync, tar
@@ -48,12 +46,11 @@ FORCE_STAGE=0         # 0 = do not force, 1 = force staging with uncommitted cha
 echo ""
 puts "info" "${GREEN}Staging application: ${RESET}$APP_NAME"
 echo ""
-echo -e "${GREEN}== STAGING SUMMARY ==${RESET}"
-echo -e "${GREEN}Source Repo path:    ${RESET}$SRC_REPO_DIR"
-echo -e "${GREEN}Build path:          ${RESET}$BUILD_PATH"
-echo -e "${GREEN}App path:            ${RESET}<%= @app_path %>"
-echo -e "${YELLOW}Build user:          ${RESET}$BUILD_USER"
-echo -e "${YELLOW}Build host:          ${RESET}$BUILD_HOST"
+echo -e "${GREEN}== STAGING SUMMARY ==   ${RESET}"
+echo -e "${GREEN}Source Repo path:       ${RESET}$SRC_REPO_DIR"
+echo -e "${GREEN}Build path:             ${RESET}$BUILD_PATH"
+echo -e "${GREEN}App path:               ${RESET}<%= @app_path %>"
+echo -e "${YELLOW}Build host ssh access: ${RESET}$BUILD_HOST_SSH"
 echo ""
 
 # ==============================
@@ -104,9 +101,9 @@ generate_exclude_options() {
 usage() {
   echo -e "${GREEN}Usage: $0 [--rsync | --tar] [--force]${RESET}"
   echo ""
-  echo "To override user and host:"
+  echo "To override host authentication:"
   echo ""
-  echo -e "${GREEN}Usage: ${YELLOW}BUILD_USER=user BUILD_HOST=host${RESET} $0 [--rsync | --tar] [--force]"
+  echo -e "${GREEN}Usage: ${YELLOW}BUILD_USER_SSH=[user@]host${RESET} $0 [--rsync | --tar] [--force]"
   echo ""
 
   exit 1
@@ -157,7 +154,7 @@ compute_remote_hash() {
   # Build the find command
   find_cmd="find . $excludes -type f -print0"
 
-  ssh "$BUILD_USER@$BUILD_HOST" "cd '$BUILD_PATH' && $find_cmd | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print \$1}'"
+  ssh "$BUILD_HOST_SSH" "cd '$BUILD_PATH' && $find_cmd | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | awk '{print \$1}'"
 }
 
 
@@ -166,19 +163,21 @@ deploy_rsync() {
   echo -e "${GREEN}Staging using rsync...${RESET}"
 
   # Create the target directory on the remote host if it doesn't exist
-  ssh "$BUILD_USER@$BUILD_HOST" "doas mkdir -p '$BUILD_PATH' && doas chown -R $BUILD_USER '$BUILD_PATH'"
+  ssh "$BUILD_HOST_SSH" "export username=\$(whoami) && doas mkdir -p '$BUILD_PATH'"
 
   # Generate exclude options for rsync
   EXCLUDE_OPTIONS=$(generate_exclude_options)
 
   # Build the rsync arguments
-  set -- -avzc --delete --rsync-path="doas rsync" $EXCLUDE_OPTIONS "$SRC_REPO_DIR/" "$BUILD_USER@$BUILD_HOST:$BUILD_PATH/"
+  set -- -avzc --delete --rsync-path="doas rsync" $EXCLUDE_OPTIONS "$SRC_REPO_DIR/" "$BUILD_HOST_SSH:$BUILD_PATH/"
 
   rsync "$@"
 
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: rsync failed.${RESET}" >&2
     exit 1
+  else
+    ssh "$BUILD_HOST_SSH" "export username=\$(whoami) && doas chown -R \$username '$BUILD_PATH'"
   fi
 }
 
@@ -188,7 +187,7 @@ deploy_tar_scp() {
   echo -e "${GREEN}Staging using tar and ssh pipeline...${RESET}"
 
   # Create an empty target directory on the remote host
-  ssh "$BUILD_USER@$BUILD_HOST" "doas rm -rf \"$BUILD_PATH\" && doas mkdir -p \"$BUILD_PATH\" && doas chown -R $BUILD_USER '$BUILD_PATH'"
+  ssh "$BUILD_HOST_SSH" "doas rm -rf \"$BUILD_PATH\" && doas mkdir -p \"$BUILD_PATH\" && export username=\$(whoami)"
 
   # Generate exclude options for tar
   EXCLUDE_OPTIONS=$(generate_exclude_options)
@@ -198,11 +197,13 @@ deploy_tar_scp() {
 
   # Run the tar command without eval
   COPYFILE_DISABLE=1 tar "$@" \
-  | ssh "$BUILD_USER@$BUILD_HOST" "doas tar --no-xattrs --no-acls -xzvp -C '$BUILD_PATH'"
+  | ssh "$BUILD_HOST_SSH" "doas tar --no-xattrs --no-acls -xzvp -C '$BUILD_PATH'"
 
   if [ $? -ne 0 ]; then
     echo -e "${RED}Error: tar and ssh pipeline failed.${RESET}" >&2
     exit 1
+  else
+    ssh "$BUILD_HOST_SSH" "export username=\$(whoami) && doas chown -R \$username '$BUILD_PATH'"
   fi
 }
 

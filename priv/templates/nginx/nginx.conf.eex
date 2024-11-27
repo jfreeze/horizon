@@ -16,34 +16,36 @@ http {
   access_log on;
   access_log /var/log/nginx/access.log;
 
+  map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+  }
   <%= for project <- projects do %>
   # Define upstream servers (local or remote)
   upstream backend_<%= Slug.slugify(project.name, separator: ?_) %> {
+    ip_hash;
   <%= for server <- project.servers do %>  server <%= server.internal_ip %>:<%= server.port %>;
   <% end %>}
-
   <%= if project.http_only do %>
   # Define server block for HTTP
   server {
     listen 80;
-    server_name <%= Enum.join(project.server_names, ",") %>;
+    server_name <%= Enum.join(project.server_names, " ") %>;
     location / {
       proxy_pass http://backend_<%= Slug.slugify(project.name, separator: ?_) %>;
-
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection $connection_upgrade;
       proxy_set_header Host $host;
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-
-      proxy_http_version 1.1;
-      proxy_set_header Upgrade $http_upgrade;
-      proxy_set_header Connection "Upgrade";
-      proxy_set_header Host $host;
     }
   }<% else %>
   # Define server block for HTTP
   server {
     listen 80;
-    server_name <%= Enum.join(project.server_names, ",") %>;
+    server_name <%= Enum.join(project.server_names, " ") %>;
+    <%= if not is_nil(project.acme_challenge_path) do %>
     location ^~ /.well-known/acme-challenge/ {
       # Project.acme_challenge_path
       alias <%= project.acme_challenge_path %>/.well-known/acme-challenge/;
@@ -51,14 +53,17 @@ http {
     location = /.well-known/acme-challenge/ {
       return 404;
     }
+    <% end %>
     location / {
-      return 301 https://$server_name$request_uri;
+      return 301 https://$host$request_uri;
     }
   }
   # Define server block for HTTPS
   server {
     listen 443 ssl;
-    server_name <%= Enum.join(project.server_names, ",") %>;
+    server_name <%= Enum.join(project.server_names, " ") %>;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_certificate <%= Horizon.NginxConfig.cert_path(project) %>;
     ssl_certificate_key <%= Horizon.NginxConfig.cert_key_path(project) %>;
 
@@ -69,15 +74,12 @@ http {
 
     location / {
       proxy_pass http://backend_<%= Slug.slugify(project.name, separator: ?_) %>;
-
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection $connection_upgrade;
       proxy_set_header Host $host;
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-
-      proxy_http_version 1.1;
-      proxy_set_header Upgrade $http_upgrade;
-      proxy_set_header Connection "Upgrade";
-      proxy_set_header Host $host;
     }
   }<% end %>
-}<% end %>
+<% end %>}

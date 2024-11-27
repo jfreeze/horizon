@@ -1,6 +1,20 @@
 defmodule Mix.Tasks.Horizon.Gen.Cert do
   @shortdoc "Sets up SSL self-signed certificates"
 
+  @moduledoc """
+  This task checks for existing self-signed certificates created by `mix phx.gen.cert`.
+  If they don't exist it creates them.
+
+  It then copies the certificates to the `rel/overlays/cert` directory, and sets the file permissions to 600.
+
+  This allows you to access the deployed project webpage at its IP address over HTTPS without a domain name and letsencrypt certificate.
+
+  ## Examples
+
+      mix horizon.gen.cert
+
+  """
+
   use Mix.Task
 
   @impl Mix.Task

@@ -8,8 +8,9 @@ export SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # Function to display usage
 usage() {
   echo "\n"
-  echo "${GREEN}Usage: $0 [--json] host config_file${NC}"
+  echo "${GREEN}Usage: $0 [--json] [--verbose] host config_file${NC}"
   echo "  --json       Output in JSON format (optional)"
+  echo "  --verbose    Enable verbose output (optional)"
   echo "  host         [user@]remote_host"
   echo "  config_file  Path to the configuration file"
   echo "\n"
@@ -25,6 +26,7 @@ print_error() {
 # Initialize variables
 OUTPUT_FORMAT=""
 QUIET=""
+VERBOSE=""
 
 # Parse options
 while [ $# -gt 0 ]; do
@@ -34,6 +36,9 @@ while [ $# -gt 0 ]; do
     ;;
   --quiet)
     QUIET="--quiet"
+    ;;
+  --verbose)
+    VERBOSE="--verbose"
     ;;
   --)
     shift
@@ -102,6 +107,6 @@ echo "\033[0;33m[DEBUG] Generated installation arguments: $INSTALL_ARGS\033[0m"
 # Using SSH with the specified user and machine
 # The -- ensures that sh does not interpret any further options
 # Properly quote the arguments to handle spaces or special characters
-if ! ssh "${HOST}" "sh -s -- $INSTALL_ARGS" <"$INSTALL_SCRIPT"; then
+if ! ssh "${HOST}" "sh -s -- $INSTALL_ARGS $VERBOSE" <"$INSTALL_SCRIPT"; then
   print_error "Failed to execute the installation script on the remote machine: ${HOST}"
 fi

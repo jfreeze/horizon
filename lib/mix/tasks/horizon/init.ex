@@ -16,87 +16,67 @@ defmodule Mix.Tasks.Horizon.Init do
 
   ## Description
 
-  Horizon.Init creates several scripts for deploying an Elixir application to a BSD host.
-  See Horizon.Ops.Init for the creation for additional helper applications.
+  Horizon.Init creates scripts for deploying an Elixir application to a host.
+  See [`Horizon.Ops.Init`](Mix.Tasks.Horizon.Ops.Init.html) for the creation for additional helper applications.
+
+  Scripts are created in the `bin/` directory of the project by default,
+  but each release defined in `mix.exs` may override the default path
+  by setting the `bin_path` option.
+
+  The run control script for each release is created in `rel/overlays/rc_d/` when `mix release` is run.
 
   ### Customization
 
   Horizon.Init uses the `releases` configuration in `mix.exs` to customize the deployment scripts.
   The available options are:
 
-  - `bin_path`: default :`bin`
-  - `path`: default: `/usr/local/<app_name>`
-  - `build_user`: default: `whoami`
-  - `build_host`: default: `HOSTUNKNOWN`
-  - `deploy_user`: default: `whoami`
-  - `deploy_host`: default: `HOSTUNKNOWN`
-  - `release_commands`: default: `[]`
-  - `releases_path`: default: `.releases`
-
-  #### `bin_path`
-
-  The directory where the scripts are created. If there is a `bin_path` for each release, scripts
-  are copied to each bin directory.
-
-  #### `path`
-
-  The final destination of the release on the deploy host. This will be the same on deploy only hosts and the build host.
-
-  #### `build_user`
-
-  The username on the build machine. This is used to copy the release to the build machine.
-  This is used by the `stage` script to copy the release to the build machine, but may be overridden
-  on the commandline.
-
-  #### `build_host`
-
-  The hostname of the build machine. This is used to copy the release to the build machine.
-  This is used by the `stage` script to copy the release to the build machine, but may be overridden
-  on the commandline.
-
-  #### `deploy_user`
-
-  The username on the deploy machine. This is used to copy the release to the deploy machine.
-
-  #### `deploy_host`
-
-  The hostname of the deploy machine. This is used to copy the release to the deploy machine.
-
-  #### `release_commands`
-
-  A list of commands to run after the release is copied to the deploy machine.
-  These commands should be `0` arity functions in Release.ex.
-
-  #### `releases_path`
-
-  The directory where releases are stored on the local host.
-  The build script places the release tarball in this directory and the deploy
+  - `bin_path`: `[bin/]`
+    - This is the directory where the scripts are created. If there is a `bin_path` for each release, scripts
+      associated with each release are copied to their respective bin directory.
+  - `path`: `[/usr/local/<release_name>]`
+    - This is the final destination of the release on the deploy host. This will be the same on deploy only hosts and the build host.
+  - `build_host_ssh`: `[nil]`
+    - If not provided, `stage` script will use env var `BUILD_HOST_SSH`. Required for the `stage` script to copy the release to the build machine and for the `build` script.
+    - Example: `[user@]host`
+  - `deploy_hosts_ssh`: `[[]]`
+    - If not provided, ssh hosts may be passed to the `deploy` script with the `-h` option.
+    - Example: `user@host1,user@host2`
+  - `release_commands`: `[[]]`
+    - A list of commands to run after the release is copied to the deploy machine.
+    - These are typically zero arity commands defined in `release.ex`. For example, `["migrate"]`.
+  - `releases_path`: `[.releases]`
+    - The directory where releases are stored on the local host. The build script places the release tarball in this directory and the deploy
   script copies the release from this directory.
+
 
   ### Files Created
 
   Running `mix horizon.init` creates several files in the `bin_path` directory.
   For the project `my_app`, these files include:
 
-  - `horizon_helpers.sh`
-  - `build-my_app.sh`
-  - `stage-my_app.sh`
-  - `deploy-my_app.sh`
-  - `deploy_script-my_app.sh`
+  - `bin/horizon_helpers.sh`
+  - `bin/stage-my_app.sh`
+  - `bin/build-my_app.sh`
+  - `bin/build_script-my_app.sh`
+  - `bin/deploy-my_app.sh`
+  - `bin/deploy_script-my_app.sh`
 
-  If you have multiple releases, a `stage`, and `build` and `deploy` script
+  If you have multiple releases, a `stage`, `build` and `deploy` script
   is created for each release.
   For example, imagine you have releases `app_web` and `app_worker`.
-  Horizon.Ops.Bsd.Init will create
+  Horizon.Ops.Init will create
 
+  - `bin/horizon_helpers.sh`
   - `bin/stage-app_web.sh`
-  - `bin/stage-app_worker.sh`
-  - `bin/build-0app_web.sh`
-  - `bin/build-0app_worker.sh`
+  - `bin/build-app_web.sh`
+  - `bin/build_script-app_web.sh`
   - `bin/deploy-app_web.sh`
+  - `bin/deploy_script-app_web.sh`
+  - `bin/stage-app_worker.sh`
+  - `bin/build-app_worker.sh`
+  - `bin/build_script-app_worker.sh`
   - `bin/deploy-app_worker.sh`
-
-  An rc.d script is created in `rel/overlays/rc_d/` for each release when `mix release` is run.
+  - `bin/deploy_script-app_worker.sh`
 
   """
   alias Horizon.Ops.Target

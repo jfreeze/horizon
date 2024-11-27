@@ -1,6 +1,6 @@
 defmodule Horizon.NginxConfig do
   @moduledoc ~S"""
-  Generates an Nginx configuration file using a templating system.
+  This module generates an Nginx configuration file using a templating system.
   Allows for template overrides in the current project.
   The configuration is based on Horizon.Project and Horizon.Server.
 
@@ -14,7 +14,6 @@ defmodule Horizon.NginxConfig do
   ## Running the generator from iex
 
   ## Examples
-
 
   ```elixir
   user = "username"
@@ -52,7 +51,7 @@ defmodule Horizon.NginxConfig do
 
   ## Examples
 
-      iex> project =   %Horizon.Project{
+      iex> project = %Horizon.Project{
         name: "example_project",
         server_names: ["example.com", "www.example.com"],
         letsencrypt_live: "mydomain.com",
@@ -63,10 +62,12 @@ defmodule Horizon.NginxConfig do
           %Horizon.Server{internal_ip: "10.0.0.2", port: 4001}
         ]
       }
-      iex>Horizon.NginxConfig.generate([project])
+      iex> Horizon.NginxConfig.generate([project])
 
   """
   @spec generate([Horizon.Project.t()]) :: String.t()
+  def generate([]), do: ""
+
   def generate(projects) when is_list(projects) do
     project_template_path = "priv/horizon/templates/nginx.conf.eex"
 
@@ -86,10 +87,10 @@ defmodule Horizon.NginxConfig do
   Returns the path for the certificate
 
   ## Examples
-      iex>cert_path(%Horizon.Project{certificate: :self, cert_path: "/path/to/cert.pem"})
+      iex> cert_path(%Horizon.Project{certificate: :self, cert_path: "/path/to/cert.pem"})
       "/path/to/cert.pem"
 
-      iex>cert_path(%Horizon.Project{certificate: :letsencrypt, domain: "example.com"})
+      iex> cert_path(%Horizon.Project{certificate: :letsencrypt, domain: "example.com"})
       "/user/local/etc/letsencrypt/live/example.com/fullchain.pem"
 
   """
@@ -104,16 +105,23 @@ defmodule Horizon.NginxConfig do
 
   def cert_path(%Horizon.Project{certificate: :letsencrypt, cert_path: path}), do: path
 
+  def cert_path(%Horizon.Project{name: name, certificate: :self, cert_path: nil}) do
+    "/usr/local/#{name}/cert/selfsigned.pem"
+  end
+
   def cert_path(%Horizon.Project{certificate: :self, cert_path: path}), do: path
 
   @doc """
   Returns the path for the certificate
 
   ## Examples
-      iex>cert_key_path(%Horizon.Project{certificate: :self, cert_key_path: "/path/to/cert_key.pem"})
+      iex> cert_key_path(%Horizon.Project{
+      ...>   certificate: :self,
+      ...>   cert_key_path: "/path/to/cert_key.pem"
+      ...> })
       "/path/to/cert_key.pem"
 
-      iex>cert_key_path(%Horizon.Project{certificate: :letsencrypt, domain: "example.com"})
+      iex> cert_key_path(%Horizon.Project{certificate: :letsencrypt, domain: "example.com"})
       "/user/local/etc/letsencrypt/live/example.com/privkey.pem"
 
   """
@@ -128,35 +136,44 @@ defmodule Horizon.NginxConfig do
 
   def cert_key_path(%Horizon.Project{certificate: :letsencrypt, cert_key_path: path}), do: path
 
+  def cert_key_path(%Horizon.Project{name: name, certificate: :self, cert_key_path: nil}) do
+    "/usr/local/#{name}/cert/selfsigned_key.pem"
+  end
+
   def cert_key_path(%Horizon.Project{certificate: :self, cert_key_path: path}), do: path
+
+  @nginxconf_path "/usr/local/etc/nginx/nginx.conf"
 
   @doc """
   Sends the Nginx configuration to a remote host and reloads the Nginx service.
 
   ## Example
 
-      iex>user = "me"
-      iex>host = "myhost"
-      iex>projects = [%Horizon.Project{name: "my project", ...}]
-      iex>NginxConfig.send(projects, user, host)
+      iex> user = "me"
+      ...> host = "myhost"
+      ...> projects = [%Horizon.Project{name: "my project", ...}]
+      ...> NginxConfig.send(projects, user, host)
+      ...> NginxConfig.send(projects, user, host, nginxconf_path: "/usr/nginx/nginx.conf", action: :restart)
 
   """
-  @spec send([Horizon.Project.t()], String.t(), String.t(), String.t()) ::
+  @spec send([Horizon.Project.t()], String.t(), String.t(), keyword()) ::
           {:ok, any()} | {:error, non_neg_integer(), any()}
   def send(
         projects,
         user,
         host,
-        remote_path \\ "/usr/local/etc/nginx/nginx.conf",
-        action \\ :reload
+        opts \\ []
       ) do
+    nginxconf_path = Keyword.get(opts, :nginxconf_path, @nginxconf_path)
+    action = Keyword.get(opts, :action, :reload)
+
     encoded_content =
       projects
       |> Horizon.NginxConfig.generate()
       |> :base64.encode()
 
     command =
-      "echo #{encoded_content} | ssh #{user}@#{host} 'base64 -d | doas tee #{remote_path} > /dev/null && doas service nginx #{action}'"
+      "echo #{encoded_content} | ssh #{user}@#{host} 'base64 -d | doas tee #{nginxconf_path} > /dev/null && doas service nginx #{action}'"
 
     case System.cmd("sh", ["-c", command]) do
       {result, 0} ->

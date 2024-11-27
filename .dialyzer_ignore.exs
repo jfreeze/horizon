@@ -16,7 +16,7 @@
   ~r"lib/horizon/ops/bsd/config.ex:\d+:\d+:unknown_type Unknown type: Mix.Release.t/0",
 
   # Ignore callback info missing for Mix.Task behavior
-  ~r"lib/mix/tasks/horizon/bsd/init.ex:\d+:callback_info_missing"
+  ~r"lib/mix/tasks/horizon/bsd/init.ex:\d+:callback_info_missing",
+  {"lib/horizon/nginx_config.ex", :unknown_function, 82},
+  {"lib/horizon/ops/utils.ex", :unknown_function, 77}
 ]
-#lib/horizon/ops/utils.ex:67:unknown_function
-#EEx.eval_string/2

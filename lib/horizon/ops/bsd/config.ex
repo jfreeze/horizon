@@ -16,20 +16,18 @@ defmodule Horizon.Ops.BSD.Config do
           bin_path: "bin",
           build_path: "/usr/local/opt/my_app/build",
           releases_path: ".releases",
-          build_host: "HOSTUNKNOWN",
-          build_user: "$(whoami)",
-          path: "/usr/my_app"
+          build_host_ssh: "USER@HOSTUNKNOWN",
+          path: "/usr/apps/my_app"
         ]
       ]
-      iex> merge_defaults([my_app: []])
+      iex> merge_defaults(my_app: [])
       [
         my_app: [
           path: "/usr/local/my_app",
           bin_path: "bin",
           build_path: "/usr/local/opt/my_app/build",
           releases_path: ".releases",
-          build_host: "HOSTUNKNOWN",
-          build_user: "$(whoami)"
+          build_host_ssh: "USER@HOSTUNKNOWN",
         ]
       ]
 
@@ -65,14 +63,13 @@ defmodule Horizon.Ops.BSD.Config do
 
   ## Examples
 
-        iex> merge_defaults([], "foo")
+        iex> merge_default_options([], "foo")
         [
           path: "/usr/local/foo",
           bin_path: "bin",
           build_path: "/usr/local/opt/foo/build",
           releases_path: ".releases",
-          build_host: "HOSTUNKNOWN",
-          build_user: "$(whoami)"
+          build_host_ssh: "USER@HOSTUNKNOWN",
         ]
 
   """
@@ -87,8 +84,7 @@ defmodule Horizon.Ops.BSD.Config do
       bin_path: "bin",
       build_path: "/usr/local/opt/#{name}/build",
       releases_path: ".releases",
-      build_host: "HOSTUNKNOWN",
-      build_user: "$(whoami)"
+      build_host_ssh: "USER@HOSTUNKNOWN"
     ]
   end
 end

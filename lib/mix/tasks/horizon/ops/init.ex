@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Horizon.Ops.Init do
   use Mix.Task
 
   @moduledoc """
-  Creates Horizon.Ops helper scripts in `ops/bin/ directory.
+  Creates Horizon.Ops helper scripts in `ops/bin/` directory.
 
   ## Usage
 
@@ -36,7 +36,8 @@ defmodule Mix.Tasks.Horizon.Ops.Init do
   - `turn_on_user_access.sh`
   - `turn_off_user_access.sh`
   - `freebsd_setup.sh`
-  - `_zfs_snapshot.sh`
+  - `zfs_snapshot.sh`
+
 
 
   """

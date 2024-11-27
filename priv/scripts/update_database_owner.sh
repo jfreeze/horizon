@@ -15,7 +15,7 @@ while getopts "p:U:" opt; do
         ;;
     \?)
         echo "Invalid option: -$OPTARG" >&2
-        echo "Usage: $0 [-p PORT] [-U USER] DB_NAME TARGET_USER HOST"
+        echo "Usage: $0 [-p port] [-U user] db_name target_user host"
         exit 1
         ;;
     esac
@@ -27,7 +27,7 @@ shift $((OPTIND - 1))
 # Check for required positional arguments
 if [ $# -lt 3 ]; then
     echo "Error: Missing required arguments."
-    echo "Usage: $0 [-p PORT] [-U USER] DB_NAME TARGET_USER HOST"
+    echo "Usage: $0 [-p port] [-U user] db_name target_user host"
     exit 1
 fi
 

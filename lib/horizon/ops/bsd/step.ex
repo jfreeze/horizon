@@ -15,9 +15,12 @@ defmodule Horizon.Ops.BSD.Step do
   """
   @spec setup(Mix.Release.t()) :: Mix.Release.t()
   def setup(%Mix.Release{} = release) do
+    release =
+      release
+      |> merge_defaults()
+      |> setup_rcd()
+
     release
-    |> merge_defaults()
-    |> setup_rcd()
   end
 
   @doc """

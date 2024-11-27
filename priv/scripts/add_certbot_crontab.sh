@@ -3,16 +3,15 @@
 # Script to add certbot renew command to crontab
 
 # Check arguments
-if [ $# -eq 1 ]; then
-  echo "Invalid option: -$OPTARG" >&2
-  echo "Usage: $0 host"
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 [user@]host"
   exit 1
 fi
 
 HOST="$1"
 
-# Run certbot renew once a week
-CRON_JOB="0 0 * * 0 doas /usr/local/bin/certbot renew --quiet"
+# Run certbot renew twice daily
+CRON_JOB='0 0,12 * * * /usr/local/bin/doas /usr/local/bin/certbot renew --quiet --post-hook "/usr/local/bin/doas /usr/sbin/service nginx reload"'
 
 # SSH into the remote host and execute the commands
 ssh "$HOST" /bin/sh <<EOF

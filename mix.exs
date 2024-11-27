@@ -4,13 +4,45 @@ defmodule Horizon.MixProject do
   def project do
     [
       app: :horizon,
-      version: "0.2.0",
+      version: "0.2.1",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: [
         main: "readme",
-        extras: ["README.md", "CHANGELOG.md", "LICENSE.md", "docs/Hertzner.md"],
+        extras: [
+          "README.md",
+          "docs/Deploying-with-Horizon.md",
+          "docs/horizon-helper-scripts.md",
+          "docs/sample-host-configurations.md",
+          "docs/freebsd-template-setup.md",
+          "docs/proxy-conf.livemd",
+          "docs/hetzner-cloud.md",
+          "docs/hetzner-cloud-host-instantiation.md",
+          "docs/freebsd-install.md",
+          "docs/build_conf.md",
+          "docs/web_proxy_conf.md",
+          "docs/postgres_conf.md",
+          "docs/postgres_backup_conf.md",
+          "docs/proxmox.md",
+          "CHANGELOG.md",
+          "LICENSE.md"
+        ],
+        groups_for_extras: [
+          "Installation Guides": [
+            "docs/freebsd-template-setup.md",
+            "docs/hetzner-cloud.md",
+            "docs/hetzner-cloud-host-instantiation.md",
+            "docs/freebsd-install.md",
+            "docs/proxmox.md"
+          ],
+          "Configuration Files": [
+            "docs/build_conf.md",
+            "docs/web_proxy_conf.md",
+            "docs/postgres_conf.md",
+            "docs/postgres_backup_conf.md"
+          ]
+        ],
         before_closing_body_tag: fn
           :html ->
             """
@@ -46,6 +78,7 @@ defmodule Horizon.MixProject do
         "lib",
         "priv",
         "samples",
+        "docs",
         ".formatter.exs",
         "mix.exs",
         "README.md",

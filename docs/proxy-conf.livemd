@@ -1,0 +1,133 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Sample Proxy Configuration
+
+```elixir
+Mix.install([
+  {:horizon, "~> 0.2"}
+])
+```
+
+## Section
+
+```elixir
+user = "admin"
+host = "demo-web1"
+
+projects = [
+  %Horizon.Project{
+    name: "my_app1",
+    server_names: ["demo-web1"],
+    http_only: true,
+    # certificate: :letsencrypt,
+    # letsencrypt_domain: "my_app",
+    servers: [
+      # Verify PORT is same as in runtime.exs or env.sh.eex
+      %Horizon.Server{internal_ip: "10.0.0.2", port: 4000},
+      %Horizon.Server{internal_ip: "10.0.0.5", port: 4000}
+    ]
+  }
+]
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[
+  %Horizon.Project{
+    name: "my_app1",
+    server_names: ["demo-web1"],
+    certificate: nil,
+    authenticator: nil,
+    cert_path: nil,
+    cert_key_path: nil,
+    letsencrypt_domain: nil,
+    acme_challenge_path: nil,
+    http_only: true,
+    servers: [
+      %Horizon.Server{internal_ip: "10.0.0.2", port: 4000},
+      %Horizon.Server{internal_ip: "10.0.0.5", port: 4000}
+    ]
+  }
+]
+```
+
+```elixir
+  IO.puts Horizon.NginxConfig.generate(projects)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+load_module /usr/local/libexec/nginx/ngx_mail_module.so;
+load_module /usr/local/libexec/nginx/ngx_stream_module.so;
+worker_processes auto;
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  include mime.types;
+  default_type application/octet-stream;
+  client_max_body_size 6M;
+  sendfile on;
+  keepalive_timeout 65;
+  gzip on;
+  access_log on;
+  access_log /var/log/nginx/access.log;
+
+  map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+  }
+
+  # Define upstream servers (local or remote)
+  upstream backend_my_app1 {
+    ip_hash;
+    server 10.0.0.2:4000;
+    server 10.0.0.5:4000;
+  }
+  
+  # Define server block for HTTP
+  server {
+    listen 80;
+    server_name demo-web1;
+    location / {
+      proxy_pass http://backend_my_app1;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection $connection_upgrade;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+  }
+}
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+```elixir
+  Horizon.NginxConfig.send(projects, user, host, action: :restart)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+
+11:09:45.483 [info] Nginx configuration sent to demo-web1
+
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:ok,
+ "Performing sanity check on nginx configuration:\nStopping nginx.\nWaiting for PIDS: 75496.\nPerforming sanity check on nginx configuration:\nStarting nginx.\n"}
+```

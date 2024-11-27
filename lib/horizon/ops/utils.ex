@@ -10,7 +10,14 @@ defmodule Horizon.Ops.Utils do
 
   ## Example
 
-        iex> safe_copy_file(:horizon_helpers, app, overwrite, false, opts, &Path.join(&2[:bin_path], &1))
+        iex> safe_copy_file(
+        ...>   :horizon_helpers,
+        ...>   app,
+        ...>   overwrite,
+        ...>   false,
+        ...>   opts,
+        ...>   &Path.join(&2[:bin_path], &1)
+        ...> )
 
   """
   @spec copy_static_file(
@@ -34,7 +41,10 @@ defmodule Horizon.Ops.Utils do
 
   ## Example
 
-        iex> create_file_from_template("source", "target", true, false, %{}, &assigns/2, fn target, opts -> target end)
+        iex> create_file_from_template("source", "target", true, false, %{}, &assigns/2, fn target,
+        ...>                                                                                opts ->
+        ...>   target
+        ...> end)
 
   """
   @spec create_file_from_template(
@@ -111,18 +121,18 @@ defmodule Horizon.Ops.Utils do
     cond do
       not File.exists?(file) ->
         write_file(data, file, executable)
-        Mix.shell().info("Created #{file}")
+        Mix.shell().info([:green, "Created   ", :reset, file])
 
       overwrite ->
         write_file(data, file, executable)
-        Mix.shell().info("Overwrote #{file}")
+        Mix.shell().info([:yellow, "Overwrote ", :reset, file])
 
       Mix.shell().yes?("#{file} already exists. Overwrite? [y/N]") ->
         write_file(data, file, executable)
-        Mix.shell().info("Overwrote #{file}")
+        Mix.shell().info([:yellow, "Overwrote ", :reset, file])
 
       true ->
-        Mix.shell().info("Skipped #{file}")
+        Mix.shell().info("Skipped   #{file}")
     end
   end
 
@@ -142,7 +152,8 @@ defmodule Horizon.Ops.Utils do
   ## Examples
 
     iex> validate_releases([..., build_user: nil, ..])
-    releases #=> ["phx_only -> build_user", "phx_only -> build_host"]
+    # => ["phx_only -> build_user", "phx_only -> build_host"]
+    releases
 
   """
   @spec validate_releases(keyword()) :: :ok | nil

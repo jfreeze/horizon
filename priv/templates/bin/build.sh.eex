@@ -16,12 +16,11 @@ set -e
 
 export SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-BUILD_USER="${BUILD_USER:-<%= @build_user %>}"
-BUILD_HOST="${BUILD_HOST:-<%= @build_host %>}"
+BUILD_HOST_SSH="${BUILD_HOST_SSH:-<%= @build_host_ssh %>}"
 BUILD_SCRIPT="${SCRIPT_DIR}/build_script-<%= @app %>.sh"
 
-ssh ${BUILD_USER}@${BUILD_HOST} 'export PATH=$(cat .path):$PATH; (cd <%= @build_path %>; MIX_ENV=prod ./<%= @bin_path %>/build_script-<%= @app %>.sh)'
-version=$(ssh ${BUILD_USER}@${BUILD_HOST} "cat <%= @app_path %>/releases/start_erl.data")
+ssh ${BUILD_HOST_SSH} 'export PATH=$(cat .path):$PATH; (cd <%= @build_path %>; MIX_ENV=prod ./<%= @bin_path %>/build_script-<%= @app %>.sh)'
+version=$(ssh ${BUILD_HOST_SSH} "cat <%= @app_path %>/releases/start_erl.data")
 
 if [ -z "$version" ]; then
   echo "No release version found from '$version'."
@@ -31,6 +30,6 @@ else
   mkdir -p <%= @releases_path %>
 
   # Copy the release tarball to the releases directory
-  scp -q ${BUILD_USER}@${BUILD_HOST}:"<%= @app_path %>/<%= @app %>-${version}.tar.gz" <%= @releases_path %>
+  scp -q ${BUILD_HOST_SSH}:"<%= @app_path %>/<%= @app %>-${version}.tar.gz" <%= @releases_path %>
   echo "<%= @app %>-${version}.tar.gz" > "<%= @releases_path %>/<%= @app %>.data"
 fi

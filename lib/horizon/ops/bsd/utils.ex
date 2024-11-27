@@ -17,10 +17,8 @@ defmodule Horizon.Ops.BSD.Utils do
         app_path: opts[:path],
         bin_path: opts[:bin_path],
         build_path: opts[:build_path],
-        build_host: opts[:build_host],
-        build_user: opts[:build_user] || "$(whoami)",
-        deploy_host: opts[:deploy_host],
-        deploy_user: opts[:deploy_user] || "$(whoami)",
+        build_host_ssh: opts[:build_host_ssh],
+        deploy_hosts_ssh: hosts_ssh(opts[:deploy_hosts_ssh]),
         release_commands: opts[:release_commands] || [],
         releases_path: opts[:releases_path],
         is_default?: opts[:is_default?] || false
@@ -103,18 +101,25 @@ defmodule Horizon.Ops.BSD.Utils do
     if is_nil(mix_config[:aliases][:"assets.setup.freebsd"]) do
       Mix.shell().error("Please add the assets.setup.freebsd alias to your mix.exs file.")
 
-      msg = ~S"""
+      msg = ~s"""
 
-      A common alias for setting up a FreeBSD build environment is as follows:
+      Horizon needs `#{IO.ANSI.yellow()}assets.setup.freebsd#{IO.ANSI.reset()}` if using tailwind.
+      Update `mix.exs` with the new alias:
 
-      "assets.setup.freebsd": [
-        "tailwind.install #{@tailwindcss_freebsd_x64}",
-        "esbuild.install --if-missing"
-      ]
+      # mix.exs
+      #{IO.ANSI.green()}@tailwindcss_freebsd_x64 "https://people.freebsd.org/~dch/pub/tailwind/v$version/tailwindcss-$target"#{IO.ANSI.reset()}
 
-      with @tailwindcss_freebsd_x64 defined in your mix.exs file as:
-
-      @tailwindcss_freebsd_x64 "https://people.freebsd.org/~dch/pub/tailwind/v$version/tailwindcss-$target"
+      #{IO.ANSI.yellow()}defp aliases do
+        ...
+        "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      #{IO.ANSI.green()}  "assets.setup.freebsd": [
+          "tailwind.install \#{@tailwindcss_freebsd_x64}",
+          "esbuild.install --if-missing"
+        ],#{IO.ANSI.yellow()}
+        "assets.build": ["tailwind my_app1", "esbuild my_app1"],
+        ...
+      end}
+      #{IO.ANSI.reset()}
       """
 
       Mix.shell().info(msg)
@@ -147,4 +152,8 @@ defmodule Horizon.Ops.BSD.Utils do
     Horizon.Ops.Utils.validate_releases(releases)
     releases
   end
+
+  defp hosts_ssh(nil), do: []
+  defp hosts_ssh(hosts) when is_binary(hosts), do: [hosts]
+  defp hosts_ssh(hosts), do: hosts
 end
