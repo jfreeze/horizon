@@ -33,7 +33,7 @@ Usage: bsd_install.sh [--json] host config_file
   config_file  Path to the configuration file
 ```
 
-See [Sample Host Configurations](../doc/sample-host-configurations.html) for examples of configuration files.
+See [Sample Host Configurations](sample-host-configurations.html) for examples of configuration files.
 
 ## add_certbot_crontab.sh
 
