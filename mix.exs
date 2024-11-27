@@ -84,7 +84,6 @@ defmodule Horizon.MixProject do
         "lib",
         "priv",
         "samples",
-        "docs",
         ".formatter.exs",
         "mix.exs",
         "README.md",
