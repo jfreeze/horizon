@@ -51,7 +51,7 @@ mix deps.get
 ```
 
 Use the following instructions to configure your application so Horizon can 
-build the `stage`, `build` and `deploy` scripts.
+`stage`, `build` and `deploy` your applications.
 
 - [Define a Release in `mix.exs`](#configuring-your-project-for-horizon)
 - [Add Tailwind to your `assets.setup`](#configuring-tailwind-for-freebsd)

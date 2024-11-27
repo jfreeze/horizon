@@ -556,6 +556,13 @@ This script will add a cron job that looks like this:
 
 ## Deploying a Release
 
+```mermaid
+graph LR
+ A[YOUR APP] --> B[STAGE]
+ B --> C[BUILD]
+ C --> D[DEPLOY]
+```
+
 The configuration and install steps described above are run infrequently; usually when versions change or servers are added. 
 The majority of the work in a new deployment is the setup; with that out of the way, you can now build and release your Elixir application into the wild.
 
