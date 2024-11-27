@@ -30,7 +30,6 @@ defmodule Horizon.MixProject do
           "docs/web_proxy_conf.md",
           "docs/postgres_conf.md",
           "docs/postgres_backup_conf.md",
-          "docs/proxmox.md",
           "CHANGELOG.md",
           "LICENSE.md"
         ],
@@ -39,8 +38,7 @@ defmodule Horizon.MixProject do
             "docs/freebsd-template-setup.md",
             "docs/hetzner-cloud.md",
             "docs/hetzner-cloud-host-instantiation.md",
-            "docs/freebsd-install.md",
-            "docs/proxmox.md"
+            "docs/freebsd-install.md"
           ],
           "Configuration Files": [
             "docs/build_conf.md",
