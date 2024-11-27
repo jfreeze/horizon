@@ -39,7 +39,7 @@ Add `horizon` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
  [
-    {:horizon, "~> 0.1.3", runtime: false}
+    {:horizon, "~> 0.2", runtime: false}
  ]
 end
 ```
