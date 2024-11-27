@@ -61,6 +61,8 @@ Use the following instructions to configure your application so Horizon can
 
 Horizon builds scripts for each release in your project to `stage`, `build`, and `deploy` your Elixir/Phoenix app.
 
+### Add a Release to your `mix.exs` file
+
 If you haven't defined a release, add one to your `mix.exs` file. 
 
 The simplest release configuration looks like:
@@ -107,6 +109,39 @@ and to create the run control script](Horizon.Ops.BSD.Step.html) in the `rel/ove
     end
 ```
 > `assemble` is required to create your release target. `tar` is needed to build a tarball for deployment.
+
+### Configure Runtime.exs for IPv4
+
+If you are using a default `config/runtime.exs` file, it ships with a default IPv6 listen address.
+For the examples in this guide you will need to configure it for IPv4.
+
+```elixir
+  config :my_app1, MyApp1Web.Endpoint,
+    url: [host: host, port: 443, scheme: "https"],
+    http: [
+      # Enable IPv6 and bind on all interfaces.
+      # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
+      # See the documentation on https://hexdocs.pm/bandit/Bandit.html#t:options/0
+      # for details about using IPv6 vs IPv4 and loopback vs public addresses.
+      ip: {0, 0, 0, 0},
+      port: port
+    ],
+```
+
+### Configure Host and Port in Runtime.exs
+
+You may also need to configure the host and port in your `config/runtime.exs` file.
+The host `demo-web` in this example is the name used in your browser to access your website.
+This can be an actual domain name,  an IP address or an alias in your `/etc/hosts` file.
+
+The `port` is the port number your Phoenix application will listen on. 
+If you are running multiple applications in your Horizon setup, each application will need a unique port number.
+
+```elixir
+  host = System.get_env("PHX_HOST") || "demo-web1"
+  port = String.to_integer(System.get_env("PORT") || "4000")
+```
+
 
 ## Configuring Tailwind for FreeBSD
 
@@ -166,10 +201,21 @@ Running `mix release.init` creates a `rel/` directory that contains the file `en
 
 ```
 ...
-export SECRET_KEY_BASE=5HPxy5qOJ...
 export PHX_SERVER=true
+export SECRET_KEY_BASE=O7Delm59ZMLKlSh80ZnrBIhZmf6sz1NVMhbAofIxYNNZUqnkaa9SnizAA1jpxDl6
+export PGHOSTADDR=10.0.0.3
+export PHX_HOST=demo-web1
+
+export DATABASE_URL=ecto://451f8d75-a808-11ef-8e9c-e1aff46a3315:0462ae2ea0e180b4beb0558bf5baec29e87c1ec9bd4f5c6c@$PGHOSTADDR/my_app1_prod
 ...
 ```
+
+Update the `env.sh.eex` file with the environment variables required for your application.
+
+> You can generate a secret key with:
+> ```
+> mix phx.gen.secret
+> ```
 
 ### Alternative: Importing existing `.env` file
 If you are using a `.env` file for environment variables, one method is just to add it to your `env.sh.eex` file:
