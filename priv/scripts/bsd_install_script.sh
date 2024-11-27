@@ -483,6 +483,7 @@ EOL
 
 	doas service postgresql status || doas service postgresql start >/dev/null
 
+	create_psql_history
 	configure_postgres_logging
 }
 
@@ -539,6 +540,25 @@ configure_postgres_logging() {
 	puts "info" "Reloaded PostgreSQL service."
 	doas service syslogd restart
 	puts "info" "Restarted syslogd service."
+}
+
+#
+# Function: create_psql_history
+#
+# Description:
+#
+# 	 Create a .psql_history file for the postgres user
+#
+create_psql_history() {
+	# Create a .psql_history file for the postgres user
+	PSQL_HISTORY_FILE="/var/db/postgres/.psql_history"
+	if [ ! -f "$PSQL_HISTORY_FILE" ]; then
+		doas touch "$PSQL_HISTORY_FILE"
+		doas chown postgres "$PSQL_HISTORY_FILE"
+		puts "info" "Created $PSQL_HISTORY_FILE for the postgres user."
+	else
+		puts "info" "$PSQL_HISTORY_FILE already exists."
+	fi
 }
 
 #
