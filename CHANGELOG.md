@@ -8,16 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 - Added ssl headers to nginx.conf (NginxConfig.generate/4)
 - Added `mix horizon.ops.init` to install HorizonOps scripts.
+- Added .ssh/environment file to store environment variables for ssh connections.
+- Added --verbose option on bsd_install.sh (similar to debug)
 - Added docs for Horizon Ops scripts.
 - Added docs for Proxmox setup.
 - Added docs for FreeBSD Install
 - Added docs for Hetzner Cloud setup
 - Added sample config files for hosts, e.g. [build, web, pg, backup]
-- Added --verbose option on bsd_install.sh (similar to debug)
-
 
 ### Changed
-- Moved last two arguments to ops in NginxConfig.send/4
+- Moved last two arguments of NginxConfig.send/4 to opts
 - Changed log_duration to `off` in postgresql.conf to save space.
 - Changed log_statement to `ddl` in postgresql.conf to save space.
 - Changed `mix horizon.init` to only install project specific deploy scripts.
