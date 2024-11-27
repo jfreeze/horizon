@@ -5,56 +5,56 @@ An example configuration to create a VM for FreeBSD in Proxmox.
 This guide is not intended to be a tutorial for Proxmox, but rather a reference for creating a VM for FreeBSD on Proxmox.
 
 ## Name Your Virtual Machine
-![Name Your Virtual Machine](../docs/proxmox-create-vm/proxmox-create-vm-010.avif)
+![Name Your Virtual Machine](proxmox-create-vm/proxmox-create-vm-010.avif)
 
 ## Select the ISO
 
 If not already added, you can add a FreeBSD ISO by clicking on a host under the Datacenter (`pve` by default) and selecting `local` and then `Download from URL` to add an `ISO Image`.
 FreeBSD ISO's can be found at [FreeBSD ISO Images](https://download.freebsd.org/ftp/releases/ISO-IMAGES/).
 
-![Select the ISO](../docs/proxmox-create-vm/proxmox-create-vm-021.avif)
+![Select the ISO](proxmox-create-vm/proxmox-create-vm-021.avif)
 
 Pasting the 14.1 link `https://download.freebsd.org/ftp/releases/ISO-IMAGES/14.1/FreeBSD-14.1-RELEASE-amd64-disc1.iso` into the URL section and clicking Query URL will validate the link to the ISO.
-![Select the ISO](../docs/proxmox-create-vm/proxmox-create-vm-022.avif)
+![Select the ISO](proxmox-create-vm/proxmox-create-vm-022.avif)
 
 Back at your VM creation, select the ISO you just added.
-![Select the ISO](../docs/proxmox-create-vm/proxmox-create-vm-020.avif)
+![Select the ISO](proxmox-create-vm/proxmox-create-vm-020.avif)
 
 ## Set the OS Type
 
 Set the OS type to "other".
 
-![Set the OS Type](../docs/proxmox-create-vm/proxmox-create-vm-030.avif)
+![Set the OS Type](proxmox-create-vm/proxmox-create-vm-030.avif)
 
 ## System Configuration
 
 Set the Graphics card to `VirtIO-GPU` and the Machine to `q35`.
 Optionally enable the `Qemu Agent`.
 
-![System Configuration](../docs/proxmox-create-vm/proxmox-create-vm-040.avif)
+![System Configuration](proxmox-create-vm/proxmox-create-vm-040.avif)
 
 ## Disk Configuration
 
 Use the `VirtIO Block` for the `Bus/Device`.
-![Disk Configuration](../docs/proxmox-create-vm/proxmox-create-vm-050.avif)
+![Disk Configuration](proxmox-create-vm/proxmox-create-vm-050.avif)
 
 ## CPU Configuration
 
 Select the number of CPU's you want to allocate to the VM.
 Enable `AES` instruction set and 1GB page sizes.
 
-![CPU Configuration](../docs/proxmox-create-vm/proxmox-create-vm-060.avif)
+![CPU Configuration](proxmox-create-vm/proxmox-create-vm-060.avif)
 
 ## Allocate Memory
-![Allocate Memory](../docs/proxmox-create-vm/proxmox-create-vm-070.avif)
+![Allocate Memory](proxmox-create-vm/proxmox-create-vm-070.avif)
 
 ## Network Configuration
 
 Use the `VirtIO (paravirtualized)` network card.
-![Network Configuration](../docs/proxmox-create-vm/proxmox-create-vm-080.avif)
+![Network Configuration](proxmox-create-vm/proxmox-create-vm-080.avif)
 
 ## Confirm
-![Confirm](../docs/proxmox-create-vm/proxmox-create-vm-090.avif)
+![Confirm](proxmox-create-vm/proxmox-create-vm-090.avif)
 
 ## Proxmox Configuration File
 

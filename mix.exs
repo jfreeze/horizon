@@ -10,6 +10,12 @@ defmodule Horizon.MixProject do
       deps: deps(),
       docs: [
         main: "readme",
+        assets: %{
+          "docs/freebsd-install" => "freebsd-install",
+          "docs/hetzner-cloud" => "hetzner-cloud",
+          "docs/hetzner-template-install" => "hetzner-template-install",
+          "docs/proxmox-create-vm" => "proxmox-create-vm"
+        },
         extras: [
           "README.md",
           "docs/Deploying-with-Horizon.md",

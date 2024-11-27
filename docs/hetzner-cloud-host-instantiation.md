@@ -6,15 +6,15 @@ a horizontally scalable infrastructure.
 ## Select a host Image
 In the Image section, click on the `Snapshots` tab and select the snapshot you created in the previous guide.
 
-![Select Snapshot](../docs/hetzner-template-install/hetzner-cloud-template-010.avif)
+![Select Snapshot](hetzner-template-install/hetzner-cloud-template-010.avif)
 
 ## Name the Hosts
 For the scalable infrastructure, we'll create multiple hosts from the snapshot.
 Add four servers to the list and name them `web2`, `pg1`, `pg2`, and `build`.
-![Name the Servers](../docs/hetzner-template-install/hetzner-cloud-template-050.avif)
+![Name the Servers](hetzner-template-install/hetzner-cloud-template-050.avif)
 
 ## Create the Hosts
 Create the hosts and note the IP addresses, both public and private.
-![Server Summary](../docs/hetzner-template-install/hetzner-cloud-template-060.avif)
+![Server Summary](hetzner-template-install/hetzner-cloud-template-060.avif)
 
 
