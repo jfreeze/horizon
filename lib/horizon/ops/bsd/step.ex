@@ -20,7 +20,6 @@ defmodule Horizon.Ops.BSD.Step do
       |> merge_defaults()
       |> setup_rcd()
 
-    IO.inspect(Process.info(self(), :current_stacktrace), label: "STACKTRACE")
     release
   end
 
@@ -61,10 +60,8 @@ defmodule Horizon.Ops.BSD.Step do
 
     rel_template_path = get_rel_template_path(release)
     dir = Path.join(rel_template_path, "rc_d")
-    IO.puts("#{IO.ANSI.red()}[DDEEBBUUGG] Creating dir #{dir}#{IO.ANSI.reset()}")
     File.mkdir_p(dir)
     file = Path.join(dir, "#{name}")
-    IO.puts("#{IO.ANSI.red()}[DDEEBBUUGG] file #{file}#{IO.ANSI.reset()}")
 
     Horizon.Ops.Utils.create_file_from_template(
       Horizon.Ops.BSD.Utils.get_src_tgt(:rc_d, name),
@@ -75,9 +72,6 @@ defmodule Horizon.Ops.BSD.Step do
       &Horizon.Ops.BSD.Utils.assigns/2,
       fn _app, _opts -> file end
     )
-
-    IO.puts("#{IO.ANSI.red()}[MADEIT]#{IO.ANSI.reset()}")
-    IO.inspect(Process.info(self(), :current_stacktrace), label: "STACKTRACE")
 
     release
   end
