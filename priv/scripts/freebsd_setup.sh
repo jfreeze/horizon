@@ -149,9 +149,8 @@ fi
 
 # Final messages
 info "Initial setup complete."
-alert "Please reboot your system and run the following commands after rebooting:"
-alert "  doas pkg upgrade -y"
-alert "  doas zfs snapshot zroot/ROOT/default@initial-setup"
+alert "Please reboot your system and run the following command after rebooting:"
+alert "  ssh $HOST 'doas pkg upgrade -y; doas zfs snapshot zroot/ROOT/default@initial-setup'"
 
 EOF
 
