@@ -615,7 +615,7 @@ EOF
 # Description:
 #
 #   Updates the PATH environment variable by adding the binary path of specified packages.
-#   The update is also appended to the .shrc file to persist across sessions.
+#   The update is also appended to the .shrc file and to .ssh/environment to persist across sessions.
 #   Supports both exact and partial package name matching.
 #
 # Usage:
@@ -628,6 +628,7 @@ EOF
 update_path() {
 	# Define the shell RC file (modify if using a different shell)
 	RC_FILE="$HOME/.shrc"
+	SSH_ENV_FILE="$HOME/.ssh/environment"
 
 	# Ensure the RC file exists; create it if it doesn't
 	if [ ! -f "$RC_FILE" ]; then
@@ -635,6 +636,15 @@ update_path() {
 			echo "❌  Failed to create $RC_FILE"
 			return 1
 		}
+	fi
+
+	# Ensure the SSH_ENV file exists; create it if it doesn't
+	if [ ! -f "$SSH_ENV_FILE" ]; then
+		touch "$SSH_ENV_FILE" || {
+			echo "❌  Failed to create $RC_FILE"
+			return 1
+		}
+		chmod 600 "$SSH_ENV_FILE"
 	fi
 
 	# Iterate over all provided package names
@@ -750,6 +760,21 @@ update_path() {
 				else
 					puts "info" "PATH update already exists in $RC_FILE"
 				fi
+
+				# Prepare the path line for the SSH_ENV file
+				default_path=$(awk '/^default/,/^$/' /etc/login.conf | grep 'path=' | head -n 1 | cut -d '=' -f 2 | tr ' ' ':' | sed 's|~|'$HOME'|' | sed 's|[:\\]*$||')
+				path_line="PATH=$trimmed_path:$default_path"
+
+				# Check if the path line already exists in the SSH_ENV file
+				grep -Fxq "$path_line" "$SSH_ENV_FILE"
+				if [ $? -ne 0 ]; then
+					# Append the path line to the SSH_ENV file
+					echo "$path_line" >>"$SSH_ENV_FILE" &&
+						puts "info" "Added PATH update to $SSH_ENV_FILE"
+				else
+					puts "info" "PATH update already exists in $SSH_ENV_FILE"
+				fi
+
 			else
 				puts "error" "❌  Failed to extract path for package: $selected_pkg"
 			fi
@@ -778,6 +803,7 @@ for CMD in $COMMANDS; do
 				exit 1
 			fi
 		fi
+		echo "Updating PATH for $APP"
 		update_path $APP
 		;;
 	service:*)

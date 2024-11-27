@@ -98,6 +98,7 @@ info "Configuring sshd..."
 SSHD_CONFIG="/etc/ssh/sshd_config"
 if ! grep -Fq "ChallengeResponseAuthentication no" "$SSHD_CONFIG"; then
   doas sh -c "cat <<EOF >> $SSHD_CONFIG
+PermitUserEnvironment yes
 PasswordAuthentication no
 ChallengeResponseAuthentication no
 PermitRootLogin no
