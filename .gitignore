@@ -39,3 +39,6 @@ horizon-*.tar
 /ops/
 /backups/
 /demo/
+
+# Ignore local image store
+/png_images
