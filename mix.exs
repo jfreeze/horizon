@@ -87,7 +87,10 @@ defmodule Horizon.MixProject do
         "LICENSE.md",
         "CHANGELOG.md"
       ],
-      links: %{"GitHub" => "https://github.com/jfreeze/horizon"}
+      links: %{
+        "GitHub" => "https://github.com/jfreeze/horizon",
+        "Changelog" => "https://github.com/jfreeze/horizon/blob/main/CHANGELOG.md"
+      }
     ]
   end
 
