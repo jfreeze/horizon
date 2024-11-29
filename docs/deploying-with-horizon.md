@@ -681,7 +681,7 @@ With server
           include_executables_for: [:unix],
           steps: [&Horizon.Ops.BSD.Step.setup/1, :assemble, :tar],
           build_host_ssh: "admin@demo-build",
-          deploy_hosts_ssh: ["admin@demo-web1", "admin@demo-web2]
+          deploy_hosts_ssh: ["admin@demo-web1", "admin@demo-web2"]
         ],
       ]
     ]
