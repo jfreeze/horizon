@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [0.2.3]
 ### Added
 - Added proxmox VM creation guide.
-- Added CHNAGELOG.md to Hex page.
+- Added CHANGELOG.md to Hex page.
 
 
 
