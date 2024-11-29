@@ -10,7 +10,7 @@ For convenience, we start with defining a host alias in `/etc/hosts` for the exi
 In this example our hosts are configured on Hetzner Cloud.
 
 Get the public IP of the server from your provider console.
-![Server Public IP](hetzner-cloud/hetzner-cloud-330.avif)
+![Server Public IP](images/hetzner-cloud-330.avif)
 
 ## Add DNS to `/etc/hosts`
 Add the remote server IP to `/etc/hosts`.
@@ -180,10 +180,10 @@ System shutdown time has arrived
 
 ## Create a Snapshot
 Go to the Snapshot tab.
-![Select Snapshot Tab](hetzner-cloud/hetzner-cloud-340.avif)
+![Select Snapshot Tab](images/hetzner-cloud-340.avif)
 
 Create a snapshot of the server.
-![Create a Snapshot](hetzner-cloud/hetzner-cloud-350.avif)
+![Create a Snapshot](images/hetzner-cloud-350.avif)
 
 You now have a snapshot of the server that can be used to create new servers.
-![Template Snapshot](hetzner-cloud/hetzner-cloud-360.avif)
+![Template Snapshot](images/hetzner-cloud-360.avif)

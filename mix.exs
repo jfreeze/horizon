@@ -11,10 +11,7 @@ defmodule Horizon.MixProject do
       docs: [
         main: "readme",
         assets: %{
-          "docs/freebsd-install" => "freebsd-install",
-          "docs/hetzner-cloud" => "hetzner-cloud",
-          "docs/hetzner-template-install" => "hetzner-template-install",
-          "docs/proxmox-create-vm" => "proxmox-create-vm"
+          "docs/images" => "images"
         },
         extras: [
           "README.md",
