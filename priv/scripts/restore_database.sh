@@ -3,6 +3,7 @@
 # Default values
 PGPORT="5432"
 PGUSER="postgres"
+NO_OWNER="false"
 
 # Colors
 GREEN='\033[0;32m'
@@ -12,12 +13,13 @@ RESET='\033[0m'
 
 # Function to display usage
 usage() {
-  echo "Usage: $0 [-p port] [-U user] [-d database] backup_file host"
+  echo "Usage: $0 [-p port] [-U user] [-d database] [--no-owner] backup_file host"
   echo
   echo "Options:"
   echo "  -p port         PostgreSQL server port (default: 5432)"
   echo "  -U user         PostgreSQL user (default: postgres)"
   echo "  -d database     Database name to restore into"
+  echo "  -n              Do not set ownership of objects to original owner"
   echo
   echo "Arguments:"
   echo "  backup_file     Path to the backup file (required)"
@@ -26,7 +28,7 @@ usage() {
 }
 
 # Parse options
-while getopts ":p:U:d:" opt; do
+while getopts ":p:U:d:n" opt; do
   case $opt in
   p)
     PGPORT=$OPTARG
@@ -36,6 +38,9 @@ while getopts ":p:U:d:" opt; do
     ;;
   d)
     DATABASE=$OPTARG
+    ;;
+  n)
+    NO_OWNER="true"
     ;;
   \?)
     printf "${RED}Invalid option: -$OPTARG${RESET}\n" >&2
@@ -106,13 +111,20 @@ if [ $? -ne 0 ]; then
   echo "Proceeding with the restore..."
 fi
 
+if [ "$NO_OWNER" = "true" ]; then
+  PG_RESTORE_CMD="pg_restore -h \"$PGHOST\" -p \"$PGPORT\" -U \"$PGUSER\" -d \"$DATABASE\" --no-owner -v \"$BACKUP_FILE\""
+else
+  PG_RESTORE_CMD="pg_restore -h \"$PGHOST\" -p \"$PGPORT\" -U \"$PGUSER\" -d \"$DATABASE\" -v \"$BACKUP_FILE\""
+fi
+# Other options
+# --schema-only
+# --datda-only
+
 # Restore the database
 echo "Restoring database '$DATABASE' from backup file '$BACKUP_FILE'..."
-echo " cmd: pg_restore -h \"$PGHOST\" -p \"$PGPORT\" -U \"$PGUSER\" -d \"$DATABASE\" -v \"$BACKUP_FILE\""
+echo " cmd: $PG_RESTORE_CMD"
 
-pg_restore -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$DATABASE" -v "$BACKUP_FILE"
-# pg_restore -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$DATABASE" -v --schema-only "$BACKUP_FILE"
-# pg_restore -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$DATABASE" -v --data-only "$BACKUP_FILE"
+eval $PG_RESTORE_CMD
 
 if [ $? -eq 0 ]; then
   printf "${GREEN}Database '$DATABASE' restored successfully!${RESET}\n"
