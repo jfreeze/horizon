@@ -515,7 +515,7 @@ iex> projects =[%Horizon.Project{
     #acme_challenge_path: "custom_path",
     servers: [
       # Verify PORT is same as in runtime.exs or env.sh.eex
-      %Horizon.Server{internal_ip: "127.0.0.1", port: 4000},
+      %Horizon.Server{internal_ip: "10.0.0.2", port: 4000},
       %Horizon.Server{internal_ip: "10.0.0.5", port: 4000}
     ]
   }]

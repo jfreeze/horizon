@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.2.5]
+### Added
+- Added `-n` option to `restore_database.sh` to activate the `--no-owner` option on `pg_restore`.
+
 
 
 ## [0.2.4] - 2024-12-02
@@ -101,4 +105,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 [0.1.3]: https://github.com/jfreeze/horizon/tree/0.1.3
 [0.2.3]: https://github.com/jfreeze/horizon/tree/0.2.3
 [0.2.4]: https://github.com/jfreeze/horizon/tree/0.2.4
-
+[0.2.5]: https://github.com/jfreeze/horizon/tree/0.2.5

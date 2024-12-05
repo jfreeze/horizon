@@ -1,7 +1,7 @@
 # Horizon
 
 Welcome to **Horizon**, an ops library for **deploying Elixir/Phoenix
-projects** to FreeBSD hosts. 
+projects** to FreeBSD hosts.
 
 ## Features
 - Only SSH access is required for administration
@@ -112,7 +112,7 @@ and to create the run control script](Horizon.Ops.BSD.Step.html) in the `rel/ove
 
 ### Configure Runtime.exs for IPv4
 
-If you are using a default `config/runtime.exs` file, it ships with a default IPv6 listen address.
+If you are using a default `config/runtime.exs` file, it may ship with a default IPv6 listen address.
 For the examples in this guide you will need to configure it for IPv4.
 
 ```elixir
@@ -159,21 +159,20 @@ This is resolved by passing a URL to `tailwind.install` from which to download t
 
 **Add the `"assets.setup.freebsd"` mix alias to your `mix.exs` file.**
 
-```
-@tailwindcss_freebsd_x64 "https://people.freebsd.org/~dch/pub/tailwind/v$version/tailwindcss-$target"
-
-...
-defp aliases do
-  [
-    ...
-    "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-    "assets.setup.freebsd": [
-      "tailwind.install #{@tailwindcss_freebsd_x64}",
-      "esbuild.install --if-missing"
-    ],
-    ...
-  ]
-end
+```diff
++  @tailwindcss_freebsd_x64 "https://people.freebsd.org/~dch/pub/tailwind/v$version/tailwindcss-$target"
+  ...
+  defp aliases do
+    [
+      ...
+      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
++      "assets.setup.freebsd": [
++        "tailwind.install #{@tailwindcss_freebsd_x64}",
++        "esbuild.install --if-missing"
++      ],
+      ...
+    ]
+  end
 ```
 
 ## Horizon Script Generation

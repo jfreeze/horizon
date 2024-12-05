@@ -583,7 +583,7 @@ create_db() {
 	if run_cmd doas -u postgres psql -c "$create_user_sql"; then
 		puts "success" "User ${username} created successfully."
 	else
-		puts "error" "Failed to create user '${username}'i."
+		puts "error" "Failed to create user '${username}'."
 		exit_message
 		exit 1
 	fi
