@@ -6,7 +6,7 @@ projects** to FreeBSD hosts.
 ## Features
 - Only SSH access is required for administration
 - Uses install files so you can version manage host configuration
-- Installs Elixir, Erlang, Postgres and Postgres databases
+- Installs Elixir, Erlang, Postgres and creates Postgres databases
 - Full Postgres install with a single command
 - Tools to setup Postgres backup server
 - Simplifies FreeBSD management on ZFS file systems
