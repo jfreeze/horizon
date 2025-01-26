@@ -45,8 +45,8 @@ defmodule Horizon.NginxConfigTest do
 
     expected_output = """
     server {
-      listen 80;
-      server_name project1, project2;
+        listen 80;
+        server_name project1, project2;
     }
     """
 
@@ -64,7 +64,7 @@ defmodule Horizon.NginxConfigTest do
     ]
 
     expected_output =
-      "server {\n  listen 80;\n  server_names ;\n  \n\n}server {\n  listen 80;\n  server_names ;\n  \n\n}\n"
+      "server {\n    listen 80;\n    server_names ;\n\n}server {\n\n    listen 80;\n    server_names ;\n}\n"
 
     output = NginxConfig.generate(projects)
 
@@ -80,7 +80,7 @@ defmodule Horizon.NginxConfigTest do
     ]
 
     expected_output =
-      "server {\n  listen 80;\n  server_names a;\n  \n\n}server {\n  listen 80;\n  server_names b;\n  \nlocation /.well-known/acme-challenge/ {\n    root /var/www/acme;\n  }\n}\n"
+      "server {\n    listen 80;\n    server_names a;\n\n}server {\n\n    listen 80;\n    server_names b;\n\n    location /.well-known/acme-challenge/ {\n        root /var/www/acme;\n    }\n}\n"
 
     output = NginxConfig.generate(projects)
 
@@ -101,10 +101,9 @@ defmodule Horizon.NginxConfigTest do
 
     expected_output = """
     server {
-      listen 80;
-      server_names server1,server2;
-      http_only;
-
+        listen 80;
+        server_names server1,server2;
+        http_only;
     }
     """
 
@@ -122,7 +121,7 @@ defmodule Horizon.NginxConfigTest do
     ]
 
     expected_output =
-      "server {\n  listen 80;\n  server_names ;\n  \n\n}server {\n  listen 80;\n  server_names ;\n  \n\n}\n"
+      "server {\n    listen 80;\n    server_names ;\n\n}server {\n\n    listen 80;\n    server_names ;\n}\n"
 
     output = NginxConfig.generate(projects)
     assert output == expected_output
