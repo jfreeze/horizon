@@ -1,0 +1,6 @@
+upstream backend_<%= project.name %> {
+  ip_hash;
+  <%= for server <- project.servers do %>
+    server <%= server.internal_ip %>:<%= server.port %>;
+  <% end %>
+}

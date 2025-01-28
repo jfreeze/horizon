@@ -1,0 +1,41 @@
+server {
+  listen 80;
+  server_name <%= Enum.join(project.server_names, " ") %>;
+
+  <%= if project.acme_challenge_path do %>
+    location ^~ /.well-known/acme-challenge/ {
+      alias <%= project.acme_challenge_path %>/.well-known/acme-challenge/;
+    }
+
+    location = /.well-known/acme-challenge/ {
+      return 404;
+    }
+  <% end %>
+
+  <%= if project.root_path do %>
+    root <%= project.root_path %>;
+    index <%= project.index %>;
+
+    location / {
+      try_files $uri /index.html;
+    }
+  <% else %>
+    <%= if project.http_only do %>
+      # HTTP only. Route traffic to proxy.
+      location / {
+        proxy_pass http://backend_<%= project.name %>;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      }
+    <% else %>
+      # Serving HTTPS, so redirect from HTTP to HTTPS.
+      location / {
+        return 301 https://$host$request_uri;
+      }
+    <% end %>
+  <% end %>
+}
