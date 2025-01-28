@@ -2,7 +2,7 @@ server {
   listen 80;
   server_name <%= Enum.join(project.server_names, " ") %>;
 
-  <%= if project.acme_challenge_path do %>
+  <%= if not is_nil(project.acme_challenge_path) do %>
     location ^~ /.well-known/acme-challenge/ {
       alias <%= project.acme_challenge_path %>/.well-known/acme-challenge/;
     }
