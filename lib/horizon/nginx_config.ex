@@ -41,10 +41,14 @@ defmodule Horizon.NginxConfig do
 
   require Logger
 
-  @template_path "../../priv/templates/nginx/nginx.conf.eex"
-  @default_template_path [__DIR__, @template_path]
-                         |> Path.join()
-                         |> Path.expand()
+  @template_root "../../priv/templates/nginx"
+  @project_root "priv/horizon/templates"
+  @templates %{
+    :nginx => "nginx.conf.eex",
+    :upstream => "_upstream.eex",
+    :server_http => "_server_http.eex",
+    :server_https => "_server_https.eex"
+  }
 
   @doc """
   Generates an Nginx configuration file using a templating system.
@@ -69,18 +73,31 @@ defmodule Horizon.NginxConfig do
   def generate([]), do: ""
 
   def generate(projects) when is_list(projects) do
-    project_template_path = "priv/horizon/templates/nginx.conf.eex"
-
-    template_path =
-      if File.exists?(project_template_path) do
-        project_template_path
-      else
-        @default_template_path
-      end
-
-    template_path
+    :nginx
+    |> template_path()
     |> File.read!()
     |> EEx.eval_string(projects: projects)
+    |> Horizon.SimpleNginxFormatter.format()
+  end
+
+  defp template_path(key) do
+    file = @templates[key]
+
+    template =
+      [__DIR__, Path.join(@template_root, file)]
+      |> Path.join()
+      |> Path.expand()
+
+    project_template =
+      [@project_root, file]
+      |> Path.join()
+      |> Path.expand()
+
+    if File.exists?(project_template) do
+      project_template
+    else
+      template
+    end
   end
 
   @doc """
@@ -110,6 +127,8 @@ defmodule Horizon.NginxConfig do
   end
 
   def cert_path(%Horizon.Project{certificate: :self, cert_path: path}), do: path
+
+  def cert_path(%Horizon.Project{}), do: nil
 
   @doc """
   Returns the path for the certificate
@@ -141,6 +160,8 @@ defmodule Horizon.NginxConfig do
   end
 
   def cert_key_path(%Horizon.Project{certificate: :self, cert_key_path: path}), do: path
+
+  def cert_key_path(%Horizon.Project{}), do: nil
 
   @nginxconf_path "/usr/local/etc/nginx/nginx.conf"
 
@@ -185,5 +206,11 @@ defmodule Horizon.NginxConfig do
 
         {:error, exit_code, result}
     end
+  end
+
+  @spec render_partial(String.t(), map()) :: String.t()
+  def render_partial(partial_name, assigns) do
+    partial_path = template_path(partial_name)
+    EEx.eval_file(partial_path, assigns)
   end
 end

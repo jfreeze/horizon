@@ -3,127 +3,421 @@ defmodule Horizon.NginxConfigTest do
 
   alias Horizon.NginxConfig
 
-  @sample_template """
-  server {
-    listen 80;
-    server_name <%= Enum.map(projects, & &1.name) |> Enum.join(", ") %>;
-  }
-  """
-  @sample_template_with_http_only """
-  <%= for project <- projects do %>server {
-    listen 80;
-    server_names <%= project.server_names %>;
-    <%= if project.http_only do %>http_only;<% end %>
-  <%= if project.acme_challenge_path do %>location /.well-known/acme-challenge/ {
-      root <%= project.acme_challenge_path %>;
-    }<% end %>
-  }<% end %>
-  """
-
   @sample_projects [
-    %Horizon.Project{name: "project1"},
-    %Horizon.Project{name: "project2"}
+    Horizon.Project.new(name: "project1", server_names: ["www.foo.com", "foo.com"]),
+    Horizon.Project.new(name: "project2")
   ]
 
-  setup do
-    # Ensure the file is cleaned up after the test
-    on_exit(fn ->
-      File.rm!("priv/horizon/templates/nginx.conf.eex")
+  @template_override """
+  # Overridden template
+  <%= for project <- projects do %>
+    <%= Horizon.NginxConfig.render_partial(:upstream, project: project) %>
+    <%= Horizon.NginxConfig.render_partial(:server_http, project: project) %>
+    <%= Horizon.NginxConfig.render_partial(:server_https, project: project) %>
+  <% end %>
+  """
+
+  describe "Overriding template files with NginxConf.generate/1" do
+    setup do
+      # Create override directory
+      root = "priv/horizon/templates"
+      File.mkdir_p!("#{root}")
+
+      override_template(root)
+      File.write!("#{root}/_upstream.eex", "upstream <%= project.name %>")
+
+      File.write!(
+        "#{root}/_server_http.eex",
+        "server_http <%= project.name %>"
+      )
+
+      File.write!(
+        "#{root}/_server_https.eex",
+        "server_https <%= project.name %>"
+      )
+
+      # Ensure files are cleaned up after the test
+      on_exit(fn ->
+        File.rm_rf!("priv/horizon")
+      end)
+
+      :ok
+    end
+
+    defp override_template(root) do
+      # Write the overridden main template
+      File.write!("#{root}/nginx.conf.eex", @template_override)
+    end
+
+    test "outputs the correct nginx config" do
+      config = NginxConfig.generate(@sample_projects)
+      # Assert the config contains expected content from override
+      assert config_matches?(config, [
+               "# Overridden template",
+               "upstream project1",
+               "server_http project1",
+               "server_https project1",
+               "upstream project2",
+               "server_http project2",
+               "server_https project2"
+             ])
+    end
+  end
+
+  describe "NginxConf.generate/1" do
+    test "with multiple servers, http_only: true" do
+      projects = [
+        %Horizon.Project{
+          name: "project1",
+          server_names: ["server1", "server2"],
+          http_only: true,
+          servers: [
+            %Horizon.Server{internal_ip: "1.2.3.4", port: 4321},
+            %Horizon.Server{internal_ip: "4.3.2.1", port: 4321}
+          ]
+        }
+      ]
+
+      upstream_block = [
+        "upstream backend_project1 {",
+        "ip_hash;",
+        "server 1.2.3.4:4321;",
+        "server 4.3.2.1:4321;"
+      ]
+
+      http_block = [
+        "server {",
+        "listen 80;",
+        "server_name server1 server2;",
+        "location / {",
+        "proxy_pass http://backend_project1;",
+        "proxy_http_version 1.1;",
+        "proxy_set_header Upgrade $http_upgrade;",
+        "proxy_set_header Connection $connection_upgrade;",
+        "proxy_set_header Host $host;",
+        "proxy_set_header X-Real-IP $remote_addr;",
+        "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;"
+      ]
+
+      config = NginxConfig.generate(projects)
+
+      assert config_matches?(config, upstream_block)
+      assert config_matches?(config, http_block)
+      refute config =~ "listen 443 ssl;"
+    end
+
+    test "with multiple servers and acme_challenge_path" do
+      projects = [
+        %Horizon.Project{
+          name: "project1",
+          server_names: ["server1", "server2"],
+          certificate: :letsencrypt,
+          acme_challenge_path: "/usr/local/project1",
+          servers: [
+            %Horizon.Server{internal_ip: "1.2.3.4", port: 4321},
+            %Horizon.Server{internal_ip: "4.3.2.1", port: 4321}
+          ]
+        }
+      ]
+
+      upstream_block = [
+        "upstream backend_project1 {",
+        "ip_hash;",
+        "server 1.2.3.4:4321;",
+        "server 4.3.2.1:4321;"
+      ]
+
+      http_block = [
+        "server {",
+        "listen 80;",
+        "server_name server1 server2;",
+        "location / {",
+        "proxy_pass http://backend_project1;",
+        "proxy_http_version 1.1;",
+        "proxy_set_header Upgrade $http_upgrade;",
+        "proxy_set_header Connection $connection_upgrade;",
+        "proxy_set_header Host $host;",
+        "proxy_set_header X-Real-IP $remote_addr;",
+        "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;"
+      ]
+
+      https_block = [
+        "server {",
+        "listen 443 ssl;",
+        "server_name server1 server2;",
+        "ssl_protocols TLSv1.2 TLSv1.3;",
+        "ssl_ciphers HIGH:!aNULL:!MD5;",
+        "ssl_certificate ;",
+        "ssl_certificate_key ;",
+        "location / {",
+        "proxy_pass http://backend_project1;",
+        "proxy_http_version 1.1;",
+        "proxy_set_header Upgrade $http_upgrade;",
+        "proxy_set_header Connection $connection_upgrade;",
+        "proxy_set_header Host $host;",
+        "proxy_set_header X-Real-IP $remote_addr;",
+        "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;"
+      ]
+
+      config = NginxConfig.generate(projects)
+      assert config_matches?(config, upstream_block)
+      assert config_matches?(config, http_block)
+      assert config_matches?(config, https_block)
+    end
+
+    test "properly formats http only project" do
+      project =
+        Horizon.Project.new(
+          name: "my_project",
+          server_names: ["my-domain.com", "also-mine.io"],
+          http_only: true,
+          servers: [
+            %Horizon.Server{internal_ip: "127.0.0.1", port: 4000}
+          ]
+        )
+
+      upstream_block = [
+        "upstream backend_my_project {",
+        "ip_hash;",
+        "server 127.0.0.1:4000;"
+      ]
+
+      http_block = [
+        "server {",
+        "listen 80;",
+        "server_name my-domain.com also-mine.io;",
+        "# HTTP only. Route traffic to proxy.",
+        "location / {",
+        "proxy_pass http://backend_my_project;",
+        "proxy_http_version 1.1;",
+        "proxy_set_header Upgrade $http_upgrade;",
+        "proxy_set_header Connection $connection_upgrade;",
+        "proxy_set_header Host $host;",
+        "proxy_set_header X-Real-IP $remote_addr;",
+        "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;",
+        "}",
+        "}"
+      ]
+
+      config = NginxConfig.generate([project])
+
+      assert config_matches?(config, upstream_block)
+      assert config_matches?(config, http_block)
+      refute config =~ "listen 443 ssl;"
+    end
+
+    test "properly formats letsencrypt challenge configuration" do
+      project =
+        Horizon.Project.new(
+          name: "my_project",
+          server_names: ["my-domain.com"],
+          http_only: false,
+          acme_challenge_path: "/var/www/acme",
+          certificate: :letsencrypt,
+          letsencrypt_domain: "my-domain.com"
+        )
+
+      config = NginxConfig.generate([project])
+
+      http_block = [
+        "server {",
+        "listen 80;",
+        "server_name my-domain.com;",
+        "location ^~ /.well-known/acme-challenge/ {",
+        "alias /var/www/acme/.well-known/acme-challenge/;",
+        "}",
+        "location = /.well-known/acme-challenge/ {",
+        "return 404;",
+        "}",
+        "# Serving HTTPS, so redirect from HTTP to HTTPS.",
+        "location / {",
+        "return 301 https://$host$request_uri;",
+        "}",
+        "}"
+      ]
+
+      assert config_matches?(config, http_block)
+    end
+
+    test "properly formats static index for project" do
+      project =
+        Horizon.Project.new(
+          name: "static_site",
+          server_names: ["static.example.com"],
+          static_index_root: "/var/www/static",
+          static_index: "index.html"
+        )
+
+      config = NginxConfig.generate([project])
+
+      https_block = [
+        "server {",
+        "listen 443 ssl;",
+        "server_name static.example.com;",
+        "ssl_protocols TLSv1.2 TLSv1.3;",
+        "ssl_ciphers HIGH:!aNULL:!MD5;",
+        "root /var/www/static;",
+        "index index.html;",
+        "location / {",
+        "try_files $uri /index.html;",
+        "}"
+      ]
+
+      assert config_matches?(config, https_block)
+    end
+
+    test "properly formats static index for http project" do
+      project =
+        Horizon.Project.new(
+          name: "static_site",
+          server_names: ["static.example.com"],
+          http_only: true,
+          static_index_root: "/var/www/static",
+          static_index: "index.html"
+        )
+
+      config = NginxConfig.generate([project])
+
+      http_block = [
+        "server {",
+        "listen 80;",
+        "server_name static.example.com;",
+        "root /var/www/static;",
+        "index index.html;",
+        "location / {",
+        "try_files $uri /index.html;",
+        "}",
+        "}"
+      ]
+
+      assert config_matches?(config, http_block)
+    end
+
+    test "properly formats http/https project" do
+      project =
+        Horizon.Project.new(
+          name: "secure_app",
+          server_names: ["secure.example.com"],
+          http_only: false,
+          certificate: :self,
+          cert_path: "/etc/certs/secure.pem",
+          cert_key_path: "/etc/certs/secure.key",
+          servers: [
+            %Horizon.Server{internal_ip: "127.0.0.1", port: 4000}
+          ]
+        )
+
+      config = NginxConfig.generate([project])
+
+      upstream_block = [
+        "ip_hash;",
+        "server 127.0.0.1:4000;"
+      ]
+
+      http_block = [
+        "listen 80;",
+        "server_name secure.example.com;",
+        "# Serving HTTPS, so redirect from HTTP to HTTPS.",
+        "location / {",
+        "return 301 https://$host$request_uri;"
+      ]
+
+      https_block = [
+        "listen 443 ssl;",
+        "server_name secure.example.com;",
+        "ssl_protocols TLSv1.2 TLSv1.3;",
+        "ssl_ciphers HIGH:!aNULL:!MD5;",
+        "ssl_certificate /etc/certs/secure.pem;",
+        "ssl_certificate_key /etc/certs/secure.key;",
+        "location / {",
+        "proxy_pass http://backend_secure_app;",
+        "proxy_http_version 1.1;",
+        "proxy_set_header Upgrade $http_upgrade;",
+        "proxy_set_header Connection $connection_upgrade;",
+        "proxy_set_header Host $host;",
+        "proxy_set_header X-Real-IP $remote_addr;",
+        "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;"
+      ]
+
+      config_matches?(config, upstream_block)
+      config_matches?(config, http_block)
+      config_matches?(config, https_block)
+    end
+  end
+
+  def config_matches?(config, expected_lines) do
+    config_lines =
+      config
+      |> String.split("\n")
+      |> Enum.map(&String.trim/1)
+      |> Enum.reject(&(&1 == ""))
+
+    # Find all occurrences of each line
+    line_positions =
+      expected_lines
+      |> Enum.map(fn expected ->
+        indices =
+          config_lines
+          |> Enum.with_index()
+          |> Enum.filter(fn {line, _idx} -> line == String.trim(expected) end)
+          |> Enum.map(fn {_line, idx} -> idx end)
+
+        {expected, indices}
+      end)
+
+    # Try to find a valid sequence
+    case find_ordered_sequence(line_positions) do
+      nil ->
+        missing_lines =
+          line_positions
+          |> Enum.filter(fn {_, indices} -> indices == [] end)
+          |> Enum.map(fn {line, _} -> "Line not found: #{line}" end)
+
+        flunk("""
+        Config matching failed:
+        #{Enum.join(missing_lines, "\n")}
+
+        Full config:
+        #{config}
+
+        Expected lines in order:
+        #{Enum.join(expected_lines, "\n")}
+        """)
+
+      _sequence ->
+        true
+    end
+  end
+
+  # Recursively try to find a valid sequence of increasing indices
+  defp find_ordered_sequence([]), do: []
+  defp find_ordered_sequence([{_line, []} | _]), do: nil
+
+  defp find_ordered_sequence([{_line, indices} | rest]) do
+    Enum.find_value(indices, fn idx ->
+      case find_ordered_sequence_from(rest, idx) do
+        nil -> nil
+        rest_sequence -> [idx | rest_sequence]
+      end
     end)
-
-    :ok
   end
 
-  defp write_sample_template(template) do
-    File.mkdir_p("priv/horizon/templates/")
-    # Mock the file reading to return the sample template
-    File.write!("priv/horizon/templates/nginx.conf.eex", template)
-  end
+  defp find_ordered_sequence_from([], _prev_idx), do: []
+  defp find_ordered_sequence_from([{_line, []} | _rest], _prev_idx), do: nil
 
-  test "generate/1 outputs the correct nginx config" do
-    write_sample_template(@sample_template)
+  defp find_ordered_sequence_from([{_line, indices} | rest], prev_idx) do
+    # Find the first valid index after prev_idx
+    valid_indices = Enum.filter(indices, &(&1 > prev_idx))
 
-    expected_output = """
-    server {
-        listen 80;
-        server_name project1, project2;
-    }
-    """
+    case valid_indices do
+      [] ->
+        nil
 
-    output = NginxConfig.generate(@sample_projects)
-
-    assert output == expected_output
-  end
-
-  test "generate/1 with multiple servers and http_only: true" do
-    write_sample_template(@sample_template_with_http_only)
-
-    projects = [
-      %Horizon.Project{name: "project1"},
-      %Horizon.Project{name: "project2"}
-    ]
-
-    expected_output =
-      "server {\n    listen 80;\n    server_names ;\n\n}server {\n\n    listen 80;\n    server_names ;\n}\n"
-
-    output = NginxConfig.generate(projects)
-
-    assert output == expected_output
-  end
-
-  test "generate/1 with multiple servers and acme_challenge_path" do
-    write_sample_template(@sample_template_with_http_only)
-
-    projects = [
-      %Horizon.Project{name: "project1", server_names: "a"},
-      %Horizon.Project{name: "project2", server_names: "b", acme_challenge_path: "/var/www/acme"}
-    ]
-
-    expected_output =
-      "server {\n    listen 80;\n    server_names a;\n\n}server {\n\n    listen 80;\n    server_names b;\n\n    location /.well-known/acme-challenge/ {\n        root /var/www/acme;\n    }\n}\n"
-
-    output = NginxConfig.generate(projects)
-
-    assert output == expected_output
-  end
-
-  test "generate/1 with multiple servers, http_only: true, and acme_challenge_path" do
-    write_sample_template(@sample_template_with_http_only)
-
-    projects = [
-      %Horizon.Project{
-        name: "project1",
-        server_names: "server1,server2",
-        http_only: true,
-        servers: [%Horizon.Server{}, %Horizon.Server{}]
-      }
-    ]
-
-    expected_output = """
-    server {
-        listen 80;
-        server_names server1,server2;
-        http_only;
-    }
-    """
-
-    output = NginxConfig.generate(projects)
-
-    assert output == expected_output
-  end
-
-  test "generate/1 with multiple servers and no optional fields" do
-    write_sample_template(@sample_template_with_http_only)
-
-    projects = [
-      %Horizon.Project{name: "project1"},
-      %Horizon.Project{name: "project2"}
-    ]
-
-    expected_output =
-      "server {\n    listen 80;\n    server_names ;\n\n}server {\n\n    listen 80;\n    server_names ;\n}\n"
-
-    output = NginxConfig.generate(projects)
-    assert output == expected_output
+      [next_idx | _] ->
+        case find_ordered_sequence_from(rest, next_idx) do
+          nil -> nil
+          rest_sequence -> [next_idx | rest_sequence]
+        end
+    end
   end
 end
