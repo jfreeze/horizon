@@ -8,9 +8,9 @@
     ssl_certificate <%= Horizon.NginxConfig.cert_path(project) %>;
     ssl_certificate_key <%= Horizon.NginxConfig.cert_key_path(project) %>;
 
-    <%= if project.root_path do %>
-      root <%= project.root_path %>;
-      index <%= project.index %>;
+    <%= if not is_nil(project.static_index_root) do %>
+      root <%= project.static_index_root %>;
+      index <%= project.static_index %>;
 
       location / {
         try_files $uri /index.html;

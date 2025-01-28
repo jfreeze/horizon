@@ -12,9 +12,9 @@ server {
     }
   <% end %>
 
-  <%= if project.root_path do %>
-    root <%= project.root_path %>;
-    index <%= project.index %>;
+  <%= if not is_nil(project.static_index_root) do %>
+    root <%= project.static_index_root %>;
+    index <%= project.static_index %>;
 
     location / {
       try_files $uri /index.html;
