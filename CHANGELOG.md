@@ -19,10 +19,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Fixed
 - Fixed issue in bsd_install.sh where the last line of the config was not being processed if it did not end with a newline.
 - Fixed bug in `Horizon.NginxConfig` where an empty server list does not add an `upstream` block to the config file.
+- Fixed issue with `bsd_install.sh` that installed head of elixir instead of the requested version.
 
 ### Changed
 - Updated `README.md` documentation.
-
+- Updated `proxy-conf.livemd` sample.
 
 
 ## [0.2.5] - 2024-12-05
