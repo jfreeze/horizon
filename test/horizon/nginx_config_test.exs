@@ -17,7 +17,7 @@ defmodule Horizon.NginxConfigTest do
   <% end %>
   """
 
-  describe "Overriding template files with NginxConf.generate/1" do
+  describe "Overriding template files with NginxConf.generate/2" do
     setup do
       # Create override directory
       root = "priv/horizon/templates"
@@ -64,7 +64,67 @@ defmodule Horizon.NginxConfigTest do
     end
   end
 
-  describe "NginxConf.generate/1" do
+  describe "NginxConf.generate/2" do
+    test "uses default options when none provided" do
+      project = Horizon.Project.new(name: "test_project")
+      config = NginxConfig.generate([project])
+
+      assert config_matches?(config, [
+               "worker_connections 1024;",
+               "client_max_body_size 6M;",
+               "sendfile on;",
+               "keepalive_timeout 65;",
+               "gzip on;",
+               "access_log on;",
+               "access_log /var/log/nginx/access.log;"
+             ])
+    end
+
+    test "accepts custom options" do
+      project = Horizon.Project.new(name: "test_project")
+
+      config =
+        NginxConfig.generate([project],
+          client_max_body_size: "20M",
+          sendfile: false,
+          keepalive_timeout: 120,
+          gzip: false,
+          access_log: false,
+          worker_connections: 2048
+        )
+
+      assert config_matches?(config, [
+               "worker_connections 2048;",
+               "client_max_body_size 20M;",
+               "sendfile off;",
+               "keepalive_timeout 120;",
+               "gzip off;",
+               "access_log off;"
+             ])
+
+      refute config =~ "access_log /var/log/nginx/access.log"
+    end
+
+    test "merges partial options with defaults" do
+      project = Horizon.Project.new(name: "test_project")
+
+      config =
+        NginxConfig.generate([project],
+          client_max_body_size: "15M",
+          gzip: false
+        )
+
+      assert config_matches?(config, [
+               "worker_connections 1024;",
+               "client_max_body_size 15M;",
+               "sendfile on;",
+               "keepalive_timeout 65;",
+               "gzip off;",
+               "access_log on;",
+               "access_log /var/log/nginx/access.log;"
+             ])
+    end
+
     test "with multiple servers, http_only: true" do
       projects = [
         %Horizon.Project{

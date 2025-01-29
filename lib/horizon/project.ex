@@ -11,7 +11,7 @@ defmodule Horizon.Project do
     - `acme_challenge_path` - The root path to the acme challenge directory.
     - `http_only` - If true, only the http clause will be defined.
     - `servers` - List of servers to proxy to.
-    - `index` - The index file to use for the project when serving a static file from the nginx server.
+    - `static_index` - The index file to use for the project when serving a static file from the nginx server.
     - `static_index_root` - The root path for the project. Only used with `index`. Defaults to `/usr/local/<project_name>`.
 
     ## Examples

@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+
+
+## [0.3.0]
+
+### Added
+- Horizon.Project.static_index is available to to set a static index file. Useful for maintenance periods.
+- Option Horizon.Project.static_index_root is available to set the root directory for the static index file.
+- Horizon.NginxConfig.generate/2 now accepts a list of options. See `Horizon.NginxConfig`
+- Horizon.NginxConfig.send/4 now accepts a list of options. See `Horizon.NginxConfig`
+
+
 ### Changed
 - Updated README.md documentation.
 
