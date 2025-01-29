@@ -16,5 +16,5 @@ pkg:erlang-runtime27
 path:/usr/local/lib/erlang27/bin
 
 # The `elixir` option pulls the specified version of Elixir from github and builds Elixir from source
-elixir:1.17.3
+elixir:1.18.2
 ```
