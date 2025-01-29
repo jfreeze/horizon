@@ -17,7 +17,7 @@ INSTALL_SCRIPT="./install_script.sh"
 
 ARGS=""
 
-while IFS= read -r line; do
+while IFS= read -r line || [ -n "$line" ]; do
   # Remove comments starting with '#' and trim whitespace
   line="${line%%\#*}"    # Remove comments
   line="$(echo "$line")" # Remove leading and trailing whitespace
