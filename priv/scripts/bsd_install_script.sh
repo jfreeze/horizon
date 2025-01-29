@@ -312,10 +312,25 @@ install_elixir() {
 	}
 
 	# Fetch tags and checkout the desired version
-	if ! run_cmd git fetch --tags && run_cmd git checkout "v$ELIXIR_VERSION"; then
-		puts "error" "Failed to checkout Elixir version v$ELIXIR_VERSION."
+	if ! run_cmd git fetch --tags; then
+		puts "error" "Failed to fetch tags"
 		cd ..
 		return 1
+	fi
+
+	if ! run_cmd git checkout "v$ELIXIR_VERSION"; then
+		puts "error" "Git checkout command failed for v$ELIXIR_VERSION"
+		cd ..
+		return 1
+	else
+		current_tag=$(git describe --tags --abbrev=0)
+		if [ "$current_tag" = "v$ELIXIR_VERSION" ]; then
+			puts "success" "Successfully checked out Elixir version: $current_tag"
+		else
+			puts "error" "Failed to checkout correct version. Requested v$ELIXIR_VERSION but got: $current_tag"
+			cd ..
+			return 1
+		fi
 	fi
 
 	# Compile Elixir
