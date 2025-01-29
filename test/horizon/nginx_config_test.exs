@@ -368,6 +368,68 @@ defmodule Horizon.NginxConfigTest do
       assert config_matches?(config, http_block)
     end
 
+    test "properly configures self-signed certificates on static pages" do
+      project =
+        Horizon.Project.new(
+          name: "self_signed_app",
+          server_names: ["secure.example.com"],
+          certificate: :self,
+          cert_path: "/path/to/cert.pem",
+          cert_key_path: "/path/to/key.pem",
+          static_index_root: "/var/www/static",
+          static_index: "index.html"
+        )
+
+      config = NginxConfig.generate([project])
+
+      https_block = [
+        "server {",
+        "listen 443 ssl;",
+        "server_name secure.example.com;",
+        "ssl_protocols TLSv1.2 TLSv1.3;",
+        "ssl_ciphers HIGH:!aNULL:!MD5;",
+        "ssl_certificate /path/to/cert.pem;",
+        "ssl_certificate_key /path/to/key.pem;",
+        "root /var/www/static;",
+        "index index.html;",
+        "location / {",
+        "try_files $uri /index.html;",
+        "}",
+        "}"
+      ]
+
+      assert config_matches?(config, https_block)
+    end
+
+    test "properly configures self-signed certificates" do
+      project =
+        Horizon.Project.new(
+          name: "self_signed_app",
+          server_names: ["secure.example.com"],
+          certificate: :self,
+          cert_path: "/path/to/cert.pem",
+          cert_key_path: "/path/to/key.pem",
+          servers: [
+            %Horizon.Server{internal_ip: "127.0.0.1", port: 4000}
+          ]
+        )
+
+      config = NginxConfig.generate([project])
+
+      https_block = [
+        "server {",
+        "listen 443 ssl;",
+        "server_name secure.example.com;",
+        "ssl_protocols TLSv1.2 TLSv1.3;",
+        "ssl_ciphers HIGH:!aNULL:!MD5;",
+        "ssl_certificate /path/to/cert.pem;",
+        "ssl_certificate_key /path/to/key.pem;",
+        "}"
+      ]
+
+      assert config_matches?(config, https_block)
+    end
+
     test "properly formats http/https project" do
       project =
         Horizon.Project.new(

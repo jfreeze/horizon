@@ -10,6 +10,18 @@ Mix.install([
 
 ## Section
 
+When managing multiple websites with Nginx you can use `Horizon.NginxConf` to create and upload your `nginx.conf` file.
+
+<!-- livebook:{"break_markdown":true} -->
+
+You only need to define:
+
+* host user
+* host name
+* list of projects for nginx
+
+and run `Horizon.NginxConf.generate/2` or `Horizon.NginxConf.send/4`.
+
 ```elixir
 user = "admin"
 host = "demo-web1"
@@ -81,7 +93,7 @@ http {
     default upgrade;
     ''      close;
   }
-
+  
   # Define upstream servers (local or remote)
   upstream backend_my_app1 {
     ip_hash;
@@ -122,7 +134,6 @@ http {
 ```
 
 11:09:45.483 [info] Nginx configuration sent to demo-web1
-
 ```
 
 <!-- livebook:{"output":true} -->
@@ -130,4 +141,8 @@ http {
 ```
 {:ok,
  "Performing sanity check on nginx configuration:\nStopping nginx.\nWaiting for PIDS: 75496.\nPerforming sanity check on nginx configuration:\nStarting nginx.\n"}
+```
+
+```elixir
+
 ```
