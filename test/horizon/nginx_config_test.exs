@@ -225,6 +225,21 @@ defmodule Horizon.NginxConfigTest do
       assert config_matches?(config, https_block)
     end
 
+    test "skips upstream block when servers list is empty" do
+      project =
+        Horizon.Project.new(
+          name: "no_servers",
+          server_names: ["example.com"],
+          http_only: true
+        )
+
+      config = NginxConfig.generate([project])
+
+      refute config =~ "upstream backend_no_servers"
+      refute config =~ "ip_hash;"
+      assert config =~ "server_name example.com;"
+    end
+
     test "properly formats http only project" do
       project =
         Horizon.Project.new(
