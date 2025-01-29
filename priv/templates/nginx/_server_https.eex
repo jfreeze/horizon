@@ -1,0 +1,30 @@
+<%= if not project.http_only do %>
+  server {
+    listen 443 ssl;
+    server_name <%= Enum.join(project.server_names, " ") %>;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_certificate <%= Horizon.NginxConfig.cert_path(project) %>;
+    ssl_certificate_key <%= Horizon.NginxConfig.cert_key_path(project) %>;
+
+    <%= if not is_nil(project.static_index_root) do %>
+      root <%= project.static_index_root %>;
+      index <%= project.static_index %>;
+
+      location / {
+        try_files $uri /index.html;
+      }
+    <% else %>
+      location / {
+        proxy_pass http://backend_<%= project.name %>;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      }
+    <% end %>
+  }
+<% end %>

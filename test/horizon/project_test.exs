@@ -21,11 +21,36 @@ defmodule Horizon.ProjectTest do
 
       assert %Project{
                name: nil,
-               server_names: nil,
+               server_names: [],
                acme_challenge_path: nil,
                http_only: false,
                servers: []
              } = project
     end
+  end
+
+  test "sets the static_index_root when given an index" do
+    project = Project.new(name: "my_project", static_index: "index.html")
+
+    assert %Project{
+             name: "my_project",
+             static_index_root: "/usr/local/my_project",
+             static_index: "index.html"
+           } = project
+  end
+
+  test "does not override the static_index_root when given an index" do
+    project =
+      Project.new(
+        name: "my_project",
+        static_index: "index.html",
+        static_index_root: "/my_project"
+      )
+
+    assert %Project{
+             name: "my_project",
+             static_index_root: "/my_project",
+             static_index: "index.html"
+           } = project
   end
 end

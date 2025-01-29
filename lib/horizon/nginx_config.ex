@@ -2,7 +2,7 @@ defmodule Horizon.NginxConfig do
   @moduledoc ~S"""
   This module generates an Nginx configuration file using a templating system.
   Allows for template overrides in the current project.
-  The configuration is based on Horizon.Project and Horizon.Server.
+  The configuration is based on `Horizon.Project` and `Horizon.Server`.
 
   ## Customizing the Nginx configuration template
 
@@ -11,9 +11,45 @@ defmodule Horizon.NginxConfig do
       $ mkdir -p priv/horizon/templates
       $ cp deps/horizon/priv/templates/nginx/nginx.conf.eex priv/horizon/templates/nginx.conf.eex
 
-  ## Running the generator from iex
+  You can also customize individual blocks of the configuration file:
+
+      $ cp deps/horizon/priv/templates/nginx/_upstream.eex priv/horizon/templates/_upstream.eex
+      $ cp deps/horizon/priv/templates/nginx/_server_http.eex priv/horizon/templates/_server_http.eex
+      $ cp deps/horizon/priv/templates/nginx/_server_https.eex priv/horizon/templates/_server_https.eex
+
+  ## Nginx Header Options
+
+      * `:client_max_body_size` - Maximum allowed size of the client request body (default: "6M")
+      * `:sendfile` - Enable or disable sendfile usage (default: true)
+      * `:keepalive_timeout` - Timeout during which a keep-alive client connection will stay open (default: 65)
+      * `:gzip` - Enable or disable gzip compression (default: true)
+      * `:access_log` - Enable or disable access logging (default: true)
+      * `:access_log_path` - Path to the access log file (default: "/var/log/nginx/access.log")
+      * `:worker_connections` - Maximum number of simultaneous connections that can be opened by a worker process (default: 1024)
 
   ## Examples
+
+      iex> project = %Horizon.Project{
+      ...>   name: "example_project",
+      ...>   server_names: ["example.com", "www.example.com"],
+      ...>   letsencrypt_live: "mydomain.com",
+      ...>   acme_challenge_path: "/apps/challenge/mydomain.com",
+      ...>   http_only: false,
+      ...>   servers: [
+      ...>     %Horizon.Server{internal_ip: "10.0.0.1", port: 4000},
+      ...>     %Horizon.Server{internal_ip: "10.0.0.2", port: 4001}
+      ...>   ]
+      ...> }
+      iex> Horizon.NginxConfig.generate([project])
+
+  With custom options:
+
+      iex> Horizon.NginxConfig.generate([project],
+      ...>   client_max_body_size: "20M",
+      ...>   worker_connections: 2048,
+      ...>   gzip: false
+      ...> )
+
 
   ```elixir
   user = "username"
@@ -32,55 +68,74 @@ defmodule Horizon.NginxConfig do
     }
   ]
 
-  config_output = Horizon.NginxConfig.generate(projects)
-  encoded_content = :base64.encode(config_output)
-  command = "echo #{encoded_content} | ssh #{user}@#{host} 'base64 -d | doas tee #{remote_path} > /dev/null && doas service nginx reload'"
-  {result, exit_code} = System.cmd("sh", ["-c", command])
+  config_output = Horizon.NginxConfig.send(projects)
   ```
   """
 
   require Logger
 
-  @template_path "../../priv/templates/nginx/nginx.conf.eex"
-  @default_template_path [__DIR__, @template_path]
-                         |> Path.join()
-                         |> Path.expand()
+  @template_root "../../priv/templates/nginx"
+  @project_root "priv/horizon/templates"
+  @templates %{
+    :nginx => "nginx.conf.eex",
+    :upstream => "_upstream.eex",
+    :server_http => "_server_http.eex",
+    :server_https => "_server_https.eex"
+  }
 
-  @doc """
-  Generates an Nginx configuration file using a templating system.
-
-  ## Examples
-
-      iex> project = %Horizon.Project{
-        name: "example_project",
-        server_names: ["example.com", "www.example.com"],
-        letsencrypt_live: "mydomain.com",
-        acme_challenge_path: "/apps/challenge/mydomain.com",
-        http_only: false,
-        servers: [
-          %Horizon.Server{internal_ip: "10.0.0.1", port: 4000},
-          %Horizon.Server{internal_ip: "10.0.0.2", port: 4001}
+  @type nginx_options :: [
+          client_max_body_size: String.t(),
+          sendfile: boolean(),
+          keepalive_timeout: integer(),
+          gzip: boolean(),
+          access_log: boolean(),
+          access_log_path: String.t(),
+          worker_connections: integer()
         ]
-      }
-      iex> Horizon.NginxConfig.generate([project])
 
-  """
-  @spec generate([Horizon.Project.t()]) :: String.t()
-  def generate([]), do: ""
+  @default_options [
+    client_max_body_size: "6M",
+    sendfile: true,
+    keepalive_timeout: 65,
+    gzip: true,
+    access_log: true,
+    access_log_path: "/var/log/nginx/access.log",
+    worker_connections: 1024
+  ]
 
-  def generate(projects) when is_list(projects) do
-    project_template_path = "priv/horizon/templates/nginx.conf.eex"
+  @spec generate([Horizon.Project.t()], nginx_options()) :: String.t()
+  def generate(projects, opts \\ [])
 
-    template_path =
-      if File.exists?(project_template_path) do
-        project_template_path
-      else
-        @default_template_path
-      end
+  def generate([], _opts), do: ""
 
-    template_path
+  def generate(projects, opts) when is_list(projects) do
+    opts = Keyword.merge(@default_options, opts)
+
+    :nginx
+    |> template_path()
     |> File.read!()
-    |> EEx.eval_string(projects: projects)
+    |> EEx.eval_string(projects: projects, opts: opts)
+    |> Horizon.SimpleNginxFormatter.format()
+  end
+
+  defp template_path(key) do
+    file = @templates[key]
+
+    template =
+      [__DIR__, Path.join(@template_root, file)]
+      |> Path.join()
+      |> Path.expand()
+
+    project_template =
+      [@project_root, file]
+      |> Path.join()
+      |> Path.expand()
+
+    if File.exists?(project_template) do
+      project_template
+    else
+      template
+    end
   end
 
   @doc """
@@ -110,6 +165,8 @@ defmodule Horizon.NginxConfig do
   end
 
   def cert_path(%Horizon.Project{certificate: :self, cert_path: path}), do: path
+
+  def cert_path(%Horizon.Project{}), do: nil
 
   @doc """
   Returns the path for the certificate
@@ -142,18 +199,39 @@ defmodule Horizon.NginxConfig do
 
   def cert_key_path(%Horizon.Project{certificate: :self, cert_key_path: path}), do: path
 
+  def cert_key_path(%Horizon.Project{}), do: nil
+
   @nginxconf_path "/usr/local/etc/nginx/nginx.conf"
 
   @doc """
   Sends the Nginx configuration to a remote host and reloads the Nginx service.
 
-  ## Example
+  ## Options
+
+  * `:nginxconf_path` - Path to nginx.conf on the remote host (default: "/usr/local/etc/nginx/nginx.conf")
+  * `:action` - Action to take on the remote host after updating config (:reload or :restart) (default: :reload)
+  * `:nginx` - Nginx configuration options (see `generate/2` for available options)
+
+  ## Examples
 
       iex> user = "me"
       ...> host = "myhost"
       ...> projects = [%Horizon.Project{name: "my project", ...}]
       ...> NginxConfig.send(projects, user, host)
-      ...> NginxConfig.send(projects, user, host, nginxconf_path: "/usr/nginx/nginx.conf", action: :restart)
+
+      # With custom nginx.conf path and restart action
+      iex> NginxConfig.send(projects, user, host,
+      ...>   nginxconf_path: "/usr/nginx/nginx.conf",
+      ...>   action: :restart
+      ...> )
+
+      # With custom nginx options
+      iex> NginxConfig.send(projects, user, host,
+      ...>   nginx: [
+      ...>     client_max_body_size: "20M",
+      ...>     worker_connections: 2048
+      ...>   ]
+      ...> )
 
   """
   @spec send([Horizon.Project.t()], String.t(), String.t(), keyword()) ::
@@ -166,10 +244,11 @@ defmodule Horizon.NginxConfig do
       ) do
     nginxconf_path = Keyword.get(opts, :nginxconf_path, @nginxconf_path)
     action = Keyword.get(opts, :action, :reload)
+    nginx_opts = Keyword.get(opts, :nginx, [])
 
     encoded_content =
       projects
-      |> Horizon.NginxConfig.generate()
+      |> Horizon.NginxConfig.generate(nginx_opts)
       |> :base64.encode()
 
     command =
@@ -185,5 +264,11 @@ defmodule Horizon.NginxConfig do
 
         {:error, exit_code, result}
     end
+  end
+
+  @spec render_partial(String.t(), map()) :: String.t()
+  def render_partial(partial_name, assigns) do
+    partial_path = template_path(partial_name)
+    EEx.eval_file(partial_path, assigns)
   end
 end

@@ -11,6 +11,8 @@ defmodule Horizon.Project do
     - `acme_challenge_path` - The root path to the acme challenge directory.
     - `http_only` - If true, only the http clause will be defined.
     - `servers` - List of servers to proxy to.
+    - `static_index` - The index file to use for the project when serving a static file from the nginx server.
+    - `static_index_root` - The root path for the project. Only used with `index`. Defaults to `/usr/local/<project_name>`.
 
     ## Examples
 
@@ -44,7 +46,7 @@ defmodule Horizon.Project do
   @type cert :: nil | :self | :letsencrypt
 
   defstruct name: nil,
-            server_names: nil,
+            server_names: [],
             certificate: nil,
             authenticator: nil,
             cert_path: nil,
@@ -52,7 +54,9 @@ defmodule Horizon.Project do
             letsencrypt_domain: nil,
             acme_challenge_path: nil,
             http_only: false,
-            servers: []
+            servers: [],
+            static_index_root: nil,
+            static_index: nil
 
   @type t :: %__MODULE__{
           name: String.t(),
@@ -64,7 +68,9 @@ defmodule Horizon.Project do
           letsencrypt_domain: String.t() | nil,
           acme_challenge_path: String.t() | nil,
           http_only: boolean(),
-          servers: [Horizon.Server.t()]
+          servers: [Horizon.Server.t()],
+          static_index_root: String.t() | nil,
+          static_index: String.t() | nil
         }
 
   @doc """
@@ -85,6 +91,17 @@ defmodule Horizon.Project do
   """
   @spec new(list()) :: t
   def new(opts \\ []) do
-    struct(__MODULE__, opts)
+    __MODULE__
+    |> struct(opts)
+    |> set_static_index_root_default()
   end
+
+  defp set_static_index_root_default(
+         %{name: name, static_index_root: nil, static_index: static_index} = project
+       )
+       when is_binary(name) and not is_nil(static_index) do
+    Map.put(project, :static_index_root, "/usr/local/#{name}")
+  end
+
+  defp set_static_index_root_default(project), do: project
 end
