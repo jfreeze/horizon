@@ -8,7 +8,7 @@ Using these sample files you can build the host collateral that you need to depl
 We start with a sample config file for a build host. 
 The only expectation for this host is to build a release but not run the application.
 
-This config file uses the current pkg version of erlang `erlang-runtime27` and builds Elixir 1.17.3 from source.
+This config file uses the current pkg version of erlang `erlang-runtime27` and builds Elixir 1.18.2 from source.
 
 The `path` is set to the erlang bin directory and must precede the Elixir install.
 This dynamically sets the path so the Elixir installer knows where to find Erlang.
@@ -23,10 +23,13 @@ pkg:gmake
 pkg:git
 pkg:erlang-runtime27
 
-# Set the path to erlang so we can install elixir
+# Store the path to erlang for builds via bsd_install.sh
+dot-path:/usr/local/lib/erlang27/bin
+
+# Set the path to erlang (on the fly) so we can install elixir
 path:/usr/local/lib/erlang27/bin
 
-elixir:1.17.3
+elixir:1.18.2
 ```
 
 You can now configure the `demo-build` build host with:

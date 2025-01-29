@@ -329,10 +329,13 @@ pkg:gmake
 pkg:git
 pkg:erlang-runtime27
 
-# Set the path to erlang so we can install elixir
+# Store the path to erlang for builds via bsd_install.sh
+dot-path:/usr/local/lib/erlang27/bin
+
+# Set the path to erlang (on the fly) so we can install elixir
 path:/usr/local/lib/erlang27/bin
 
-elixir:1.17.3
+elixir:1.18.2
 ```
 
 To install the necessary packages and configure the host, run:
