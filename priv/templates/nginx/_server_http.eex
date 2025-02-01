@@ -13,12 +13,19 @@ server {
   <% end %>
 
   <%= if not is_nil(project.static_index_root) do %>
-    root <%= project.static_index_root %>;
-    index <%= project.static_index %>;
+    <%= if project.http_only do %>
+      root <%= project.static_index_root %>;
+      index <%= project.static_index %>;
 
-    location / {
-      try_files $uri /index.html;
-    }
+      location / {
+        try_files $uri /index.html;
+      }
+    <% else %>
+      # Serving HTTPS, so redirect from HTTP to HTTPS.
+      location / {
+        return 301 https://$host$request_uri;
+      }
+    <% end %>
   <% else %>
     <%= if project.http_only do %>
       # HTTP only. Route traffic to proxy.

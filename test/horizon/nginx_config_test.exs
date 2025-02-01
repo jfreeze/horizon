@@ -314,7 +314,7 @@ defmodule Horizon.NginxConfigTest do
       assert config_matches?(config, http_block)
     end
 
-    test "properly formats static index for project" do
+    test "properly formats static index for project for https project" do
       project =
         Horizon.Project.new(
           name: "static_site",
@@ -324,6 +324,15 @@ defmodule Horizon.NginxConfigTest do
         )
 
       config = NginxConfig.generate([project])
+
+      http_block = [
+        "server {",
+        "listen 80;",
+        "server_name static.example.com;",
+        "# Serving HTTPS, so redirect from HTTP to HTTPS.",
+        "location / {",
+        "return 301 https://$host$request_uri;"
+      ]
 
       https_block = [
         "server {",
@@ -338,6 +347,7 @@ defmodule Horizon.NginxConfigTest do
         "}"
       ]
 
+      assert config_matches?(config, http_block)
       assert config_matches?(config, https_block)
     end
 
