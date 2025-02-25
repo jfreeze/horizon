@@ -39,7 +39,7 @@ mix_assets_setup_freebsd() {
   puts "info" "Checking for tailwind-$(get_arch)"
   if [ ! -f "<%= @build_path %>/_build/tailwind-$(get_arch)" ]; then
     puts "info" "Installing Tailwind <%= @build_path %>/_build/tailwind-$(get_arch)"
-    MIX_ENV=prod  mix assets.setup.freebsd
+    MIX_ENV=prod mix assets.setup.freebsd
   else
     puts "info" "Tailwind installed <%= @build_path %>/_build/tailwind-$(get_arch)"
   fi
@@ -53,8 +53,8 @@ mix_phx_digest_clean() {
 }
 
 mix_assets_deploy() {
-  puts "info" "Running: mix assets.deploy"
-  MIX_ENV=prod mix assets.deploy
+  puts "info" "Running: mix assets.deploy.freebsd"
+  MIX_ENV=prod mix assets.deploy.freebsd
   echo ""
 }
 
