@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+- Combined user and host changing Horizon.NginxConf.send/4 to Horizon.NginxConf.send/3
+- Now require the mix alias `horizon.setup.freebsd` to accommodate TailwindCSS v3 and v4.
+
+
 ## [0.2.7] - 2025-02-01
 
 ### Fixed
@@ -18,7 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `Horizon.Project.static_index` is available to set a static index file. Useful for maintenance periods.
 - Option `Horizon.Project.static_index_root` is available to set the root directory for the static index file.
 - `Horizon.NginxConfig.generate/2` now accepts a list of options. See `Horizon.NginxConfig`
-- `Horizon.NginxConfig.send/4` now accepts a list of options. See `Horizon.NginxConfig`
+- `Horizon.NginxConfig.send/3` now accepts a list of options. See `Horizon.NginxConfig`
 
 ### Fixed
 - Fixed issue in bsd_install.sh where the last line of the config was not being processed if it did not end with a newline.
@@ -74,7 +79,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added sample config files for hosts, e.g. [build, web, pg, backup]
 
 ### Changed
-- Moved last two arguments of NginxConfig.send/4 to opts
+- Moved last two arguments of NginxConfig.send/3 to opts
 - Changed log_duration to `off` in postgresql.conf to save space.
 - Changed log_statement to `ddl` in postgresql.conf to save space.
 - Changed `mix horizon.init` to only install project specific deploy scripts.

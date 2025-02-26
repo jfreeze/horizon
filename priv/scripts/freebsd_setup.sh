@@ -150,9 +150,9 @@ fi
 # Final messages
 info "Initial setup complete."
 alert "Please reboot your system and run the following command after rebooting:"
-alert "  ssh $HOST 'doas pkg upgrade -y; doas zfs snapshot zroot/ROOT/default@initial-setup'"
+alert "  ssh ${HOST} 'doas pkg upgrade -y; doas zfs snapshot zroot/ROOT/default@initial-setup'"
 
 EOF
 
 info "Remote installs complete. Reboot, upgrade and snapshot remaining."
-printf "\033[0;33m  RUN:\033[0m ssh $HOST 'doas shutdown -r now'\n"
+printf "\033[0;33m  RUN:\033[0m ssh ${HOST} 'doas shutdown -r now'\n"

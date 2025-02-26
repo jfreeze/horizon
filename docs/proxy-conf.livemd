@@ -20,11 +20,10 @@ You only need to define:
 * host name
 * list of projects for nginx
 
-and run `Horizon.NginxConf.generate/2` or `Horizon.NginxConf.send/4`.
+and run `Horizon.NginxConf.generate/2` or `Horizon.NginxConf.send/3`.
 
 ```elixir
-user = "admin"
-host = "demo-web1"
+user_host = "admin@demo-web1"
 
 projects = [
   %Horizon.Project{

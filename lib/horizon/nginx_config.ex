@@ -32,7 +32,7 @@ defmodule Horizon.NginxConfig do
       iex> project = %Horizon.Project{
       ...>   name: "example_project",
       ...>   server_names: ["example.com", "www.example.com"],
-      ...>   letsencrypt_live: "mydomain.com",
+      ...>   letsencrypt_domain: "mydomain.com",
       ...>   acme_challenge_path: "/apps/challenge/mydomain.com",
       ...>   http_only: false,
       ...>   servers: [
