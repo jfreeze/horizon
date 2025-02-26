@@ -250,13 +250,13 @@ defmodule Horizon.NginxConfig do
       ...> NginxConfig.send(projects, user_host)
 
       # With custom nginx.conf path and restart action
-      iex> NginxConfig.send(projects, user, host,
+      iex> NginxConfig.send(projects, user_host,
       ...>   nginxconf_path: "/usr/nginx/nginx.conf",
       ...>   action: :restart
       ...> )
 
       # With custom nginx options
-      iex> NginxConfig.send(projects, user, host,
+      iex> NginxConfig.send(projects, user_host,
       ...>   nginx: [
       ...>     client_max_body_size: "20M",
       ...>     worker_connections: 2048
