@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 - Combined user and host changing Horizon.NginxConf.send/4 to Horizon.NginxConf.send/3
 - Now require the mix alias `horizon.setup.freebsd` to accommodate TailwindCSS v3 and v4.
+- Now require the mix alias `assets.deploy.freebsd` for asset deployment on FreeBSD with TailwindCSS v3 and v4 support.
 
 
 ## [0.2.7] - 2025-02-01
