@@ -103,6 +103,37 @@ defmodule Horizon.NginxConfig do
     worker_connections: 1024
   ]
 
+  @doc """
+  Generates an Nginx configuration file as a string based on the provided projects and options.
+
+  This function takes a list of `Horizon.Project.t()` structures and optional Nginx configuration
+  options, merges the provided options with defaults, and generates a formatted Nginx
+  configuration string using the appropriate template.
+
+  ## Parameters
+
+    * `projects` - A list of `Horizon.Project.t()` structures defining the applications to be configured
+    * `opts` - A keyword list of Nginx configuration options (see "Nginx Header Options" in module documentation)
+
+  ## Returns
+
+    * A formatted Nginx configuration as a string
+    * An empty string if the projects list is empty
+
+  ## Examples
+
+      iex> projects = [
+      ...>   %Horizon.Project{
+      ...>     name: "my_app",
+      ...>     server_names: ["example.com"],
+      ...>     servers: [%Horizon.Server{internal_ip: "127.0.0.1", port: 4000}]
+      ...>   }
+      ...> ]
+      iex> Horizon.NginxConfig.generate(projects)
+
+      # With custom options
+      iex> Horizon.NginxConfig.generate(projects, client_max_body_size: "20M", gzip: false)
+  """
   @spec generate([Horizon.Project.t()], nginx_options()) :: String.t()
   def generate(projects, opts \\ [])
 
@@ -214,10 +245,9 @@ defmodule Horizon.NginxConfig do
 
   ## Examples
 
-      iex> user = "me"
-      ...> host = "myhost"
+      iex> user_host = "me@myhost"
       ...> projects = [%Horizon.Project{name: "my project", ...}]
-      ...> NginxConfig.send(projects, user, host)
+      ...> NginxConfig.send(projects, user_host)
 
       # With custom nginx.conf path and restart action
       iex> NginxConfig.send(projects, user, host,
@@ -238,8 +268,7 @@ defmodule Horizon.NginxConfig do
           {:ok, any()} | {:error, non_neg_integer(), any()}
   def send(
         projects,
-        user,
-        host,
+        user_host,
         opts \\ []
       ) do
     nginxconf_path = Keyword.get(opts, :nginxconf_path, @nginxconf_path)
@@ -252,7 +281,7 @@ defmodule Horizon.NginxConfig do
       |> :base64.encode()
 
     command =
-      "echo #{encoded_content} | ssh #{user}@#{host} 'base64 -d | doas tee #{nginxconf_path} > /dev/null && doas service nginx #{action}'"
+      "echo #{encoded_content} | ssh #{user_host} 'base64 -d | doas tee #{nginxconf_path} > /dev/null && doas service nginx #{action}'"
 
     case System.cmd("sh", ["-c", command]) do
       {result, 0} ->
