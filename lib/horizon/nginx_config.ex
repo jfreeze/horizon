@@ -263,7 +263,7 @@ defmodule Horizon.NginxConfig do
       ...> )
 
   """
-  @spec send([Horizon.Project.t()], String.t(), String.t(), keyword()) ::
+  @spec send([Horizon.Project.t()], String.t(), keyword()) ::
           {:ok, any()} | {:error, non_neg_integer(), any()}
   def send(
         projects,
