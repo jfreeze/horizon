@@ -52,8 +52,7 @@ defmodule Horizon.NginxConfig do
 
 
   ```elixir
-  user = "username"
-  host = "host-address"
+  user_host = "username@host-address"
   remote_path = "/usr/local/etc/nginx/nginx.conf"
 
   projects = [
@@ -285,7 +284,7 @@ defmodule Horizon.NginxConfig do
 
     case System.cmd("sh", ["-c", command]) do
       {result, 0} ->
-        Logger.info("Nginx configuration sent to #{host}")
+        Logger.info("Nginx configuration sent to #{user_host}")
         {:ok, result}
 
       {result, exit_code} ->
