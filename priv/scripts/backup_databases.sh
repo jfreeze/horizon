@@ -1,4 +1,5 @@
 #!/bin/sh
+# Generated with Horizon Version: 0.3.0
 
 # Set the date format for the backup filenames
 DATE=$(date +%Y%m%d)
@@ -18,6 +19,8 @@ RESET='\033[0m'
 # Function to display usage
 usage() {
   echo "Usage: $0 [-p port] [-U user] [-o output_dir] host"
+  echo
+  echo "Horizon v0.3.0"
   echo
   echo "Options:"
   echo "  -p port         PostgreSQL server port (default: 5432)"
