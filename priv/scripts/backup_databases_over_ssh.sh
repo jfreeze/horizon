@@ -1,4 +1,5 @@
 #!/bin/sh
+# Generated with Horizon Version: 0.3.0
 
 # Default values
 LOCAL_BACKUP_DIR=$(pwd)
@@ -12,7 +13,7 @@ RESET='\033[0m'
 
 # Function to display usage
 usage() {
-  echo "Usage: $0 [-o output_dir] [user@]host"
+  echo "Usage: $0 [-o output_dir] [user@]host (Horizon v0.3.0)"
   exit 1
 }
 
