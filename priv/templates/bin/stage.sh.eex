@@ -99,6 +99,7 @@ generate_exclude_options() {
 
 # Function to display usage
 usage() {
+  echo -e "${GREEN}Version: <%= @version %>${RESET}"
   echo -e "${GREEN}Usage: $0 [--rsync | --tar] [--force]${RESET}"
   echo ""
   echo "To override host authentication:"
