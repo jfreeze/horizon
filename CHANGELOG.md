@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Now require the mix alias `assets.setup.freebsd` to accommodate TailwindCSS v3 and v4.
 - Now require the mix alias `assets.deploy.freebsd` for asset deployment on FreeBSD with TailwindCSS v3 and v4 support.
 
+### Added
+- Added `npm-node23` to `build.conf` samples.
+
 
 ## [0.2.7] - 2025-02-01
 
