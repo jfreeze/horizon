@@ -1,4 +1,5 @@
 #!/bin/sh
+# Generated with Horizon Version: 0.3.0
 
 # Exit immediately if a command exits with a non-zero status
 set -e
@@ -16,7 +17,7 @@ error() {
 
 # Check if the script is being run with a hostname argument
 if [ "$#" -ne 1 ]; then
-  error "Usage: $0 [user@]host"
+  error "Usage: $0 [user@]host (Horizon v0.3.0)"
 fi
 
 HOST="$1"
