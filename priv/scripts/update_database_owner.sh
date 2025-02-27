@@ -1,4 +1,5 @@
 #!/bin/sh
+# Generated with Horizon Version: 0.3.0
 
 # Default values for optional arguments
 PORT="5432"
@@ -15,7 +16,7 @@ while getopts "p:U:" opt; do
         ;;
     \?)
         echo "Invalid option: -$OPTARG" >&2
-        echo "Usage: $0 [-p port] [-U user] db_name target_user host"
+        echo "Usage: $0 [-p port] [-U user] db_name target_user host (Horizon v0.3.0)"
         exit 1
         ;;
     esac
@@ -27,7 +28,7 @@ shift $((OPTIND - 1))
 # Check for required positional arguments
 if [ $# -lt 3 ]; then
     echo "Error: Missing required arguments."
-    echo "Usage: $0 [-p port] [-U user] db_name target_user host"
+    echo "Usage: $0 [-p port] [-U user] db_name target_user host (Horizon v0.3.0)"
     exit 1
 fi
 
