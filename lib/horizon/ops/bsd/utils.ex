@@ -21,7 +21,8 @@ defmodule Horizon.Ops.BSD.Utils do
         deploy_hosts_ssh: hosts_ssh(opts[:deploy_hosts_ssh]),
         release_commands: opts[:release_commands] || [],
         releases_path: opts[:releases_path],
-        is_default?: opts[:is_default?] || false
+        is_default?: opts[:is_default?] || false,
+        version: Horizon.MixProject.version()
       ]
     ]
   end
