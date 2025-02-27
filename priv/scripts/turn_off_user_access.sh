@@ -1,10 +1,11 @@
 #!/bin/sh
+# Generated with Horizon Version: 0.3.0
 
 # Script to turn off PostgreSQL access for a specific user from external IPs with /0 netmask over SSH
 # Usage: ./turn_off_user_access.sh db_user [user@]remote_host
 
 if [ $# -lt 2 ]; then
-  echo "Usage: $0 db_user [user@]remote_host"
+  echo "Usage: $0 db_user [user@]remote_host (Horizon v0.3.0)"
   exit 1
 fi
 
