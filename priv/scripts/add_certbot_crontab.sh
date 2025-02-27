@@ -1,10 +1,11 @@
 #!/bin/sh
+# Generated with Horizon Version: 0.3.0
 
 # Script to add certbot renew command to crontab
 
 # Check arguments
 if [ $# -ne 1 ]; then
-  echo "Usage: $0 [user@]host"
+  echo "Usage: $0 [user@]host (Horizon v0.3.0)"
   exit 1
 fi
 
