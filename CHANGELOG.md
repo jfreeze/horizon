@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 - Combined user and host changing Horizon.NginxConf.send/4 to Horizon.NginxConf.send/3
-- Now require the mix alias `horizon.setup.freebsd` to accommodate TailwindCSS v3 and v4.
+- Now require the mix alias `assets.setup.freebsd` to accommodate TailwindCSS v3 and v4.
 - Now require the mix alias `assets.deploy.freebsd` for asset deployment on FreeBSD with TailwindCSS v3 and v4 support.
 
 
@@ -130,11 +130,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Basic support for PostgreSQL installation and configuration on FreeBSD.
 
 [Unreleased]: https://github.com/jfreeze/horizon/compare/v0.1.1...HEAD
-[0.1.1]: https://github.com/jfreeze/horizon/tree/0.1.1
-[0.1.2]: https://github.com/jfreeze/horizon/tree/0.1.2
-[0.1.3]: https://github.com/jfreeze/horizon/tree/0.1.3
-[0.2.3]: https://github.com/jfreeze/horizon/tree/0.2.3
-[0.2.4]: https://github.com/jfreeze/horizon/tree/0.2.4
-[0.2.5]: https://github.com/jfreeze/horizon/tree/0.2.5
-[0.2.6]: https://github.com/jfreeze/horizon/tree/0.2.6
+[0.3.0]: https://github.com/jfreeze/horizon/tree/0.3.0
 [0.2.7]: https://github.com/jfreeze/horizon/tree/0.2.7
+[0.2.6]: https://github.com/jfreeze/horizon/tree/0.2.6
+[0.2.5]: https://github.com/jfreeze/horizon/tree/0.2.5
+[0.2.4]: https://github.com/jfreeze/horizon/tree/0.2.4
+[0.2.3]: https://github.com/jfreeze/horizon/tree/0.2.3
+[0.1.3]: https://github.com/jfreeze/horizon/tree/0.1.3
+[0.1.2]: https://github.com/jfreeze/horizon/tree/0.1.2
+[0.1.1]: https://github.com/jfreeze/horizon/tree/0.1.1
