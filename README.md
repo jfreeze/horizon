@@ -232,6 +232,15 @@ Then configure your mix aliases to use npm for asset compilation:
   end
 ```
 
+Although not required, a more sophisticated alternative for `assets.setup.freebsd` is to check for `package-lock.json` and use `npm ci` for each build:
+
+```diff
++     "assets.setup.freebsd": [
++       "cmd --cd assets \"sh -c 'if [ -f package-lock.json ]; then npm ci; else npm install; fi'\"",
++       "esbuild.install --if-missing"
++     ],
+```
+
 ## Horizon Script Generation
 
 Running `mix horizon.init` creates scripts for each of the`releases` defined in your mix project. FreeBSD customary defaults are used for installation paths and are added when you include `&Horizon.Ops.BSD.Step.setup/1` as the first `step` of each release.
