@@ -101,13 +101,14 @@ generate_exclude_options() {
 # Function to display usage
 usage() {
   echo -e "${GREEN}Version: <%= @version %>${RESET}"
-  echo -e "${GREEN}Usage: $0 [--rsync | --tar] [--force] [--reset]${RESET}"
+  echo -e "${GREEN}Usage: $0 [--rsync | --tar] [--force] [--reset] [--help]${RESET}"
   echo ""
   echo "Options:"
   echo "  --rsync    Use rsync for staging"
   echo "  --tar      Use tar for staging"
   echo "  --force    Force staging with uncommitted changes"
   echo "  --reset    Reset the app by clearing _build/, assets/node_modules/, and assets/package-lock.json"
+  echo "  --help     Show this help message and exit"
   echo ""
   echo "To override host authentication:"
   echo ""
