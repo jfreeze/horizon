@@ -121,15 +121,6 @@ usage() {
 # Function to reset the app by clearing build directories and files
 reset_app() {
   echo -e "${YELLOW}Resetting the app...${RESET}"
-
-  # Ask for confirmation
-  read -p "This will remove _build/, assets/node_modules/, and assets/package-lock.json. Continue? (y/n) " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${GREEN}Reset cancelled.${RESET}"
-    return 1
-  fi
-
   echo -e "${GREEN}Removing _build/ directory...${RESET}"
   echo -e "${GREEN}Removing assets/node_modules/ directory...${RESET}"
   echo -e "${GREEN}Removing assets/package-lock.json file...${RESET}"
@@ -349,11 +340,6 @@ trap "rm -f $LOCK_FILE" EXIT
 # ==============================
 if [ "$RESET_APP" -eq 1 ]; then
   reset_app
-  # If only --reset was specified, exit after reset
-  if [ "$STAGING_METHOD" == "auto" ] && [ "$FORCE_STAGE" -eq 0 ]; then
-    echo -e "${GREEN}Reset operation completed. Exiting without staging.${RESET}"
-    exit 0
-  fi
 fi
 
 echo -e "${GREEN}Starting staging process...${RESET}"
