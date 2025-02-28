@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.0-Unreleased]
+## [0.3.0]
 
 ### Changed
 - Combined user and host changing Horizon.NginxConf.send/4 to Horizon.NginxConf.send/3
@@ -12,7 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Now require the mix alias `assets.deploy.freebsd` for asset deployment on FreeBSD with TailwindCSS v3 and v4 support.
 
 ### Added
+- Added ability to build assets with [TailwindCSS v4](README.md#for-tailwindcss-v4).
 - Added `npm-node23` to `build.conf` samples.
+- Added `--reset` option to `stage` script to clear build artifacts.
+- Added version stamp to all scripts to help in tracking source.
 
 
 ## [0.2.7] - 2025-02-01
