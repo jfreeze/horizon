@@ -13,9 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 - Added ability to build assets with [TailwindCSS v4](README.md#for-tailwindcss-v4).
-- Added `npm-node23` to `build.conf` samples.
+- Added `npm-node23` to `build.conf` samples for TailwindCSS v4.
 - Added `--reset` option to `stage` script to clear build artifacts.
-- Added version stamp to all scripts to help in tracking source.
+- Added version stamp to all scripts for improved source tracking.
 
 
 ## [0.2.7] - 2025-02-01
