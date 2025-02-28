@@ -1,4 +1,5 @@
 #!/bin/sh
+# Generated with Horizon Version: 0.3.0
 
 # This script automates the process of taking and managing ZFS snapshots
 # and sending them to a backup host. It handles both rolling and daily
@@ -7,7 +8,7 @@
 # THIS SCRIPT IS INTENDED TO BE RUN FROM THE BACKUP HOST
 #
 # Usage:
-#   ./zfs_snapshot.sh host
+#   ./zfs_snapshot.sh host (Horizon v0.3.0)
 #
 #   host: The host where PostgreSQL is running. Host is your full name for
 #         accessing via ssh. May or may not include the SSH user (e.g., user@host).
@@ -74,7 +75,7 @@ RESET='\033[0m'
 if ! zfs list "zroot" >/dev/null 2>&1; then
   printf "${RED}Error: The filesystem 'zroot' is not a ZFS filesystem.${RESET}\n"
   printf "${YELLOW}This script is intended to be run from the remote host backing up your postgres database.${RESET}\n\n"
-  printf "Usage: $0 host\n\n"
+  printf "Usage: $0 host (Horizon v0.3.0)\n\n"
   exit 1
 fi
 
@@ -82,7 +83,7 @@ fi
 while getopts "u:" opt; do
   case $opt in
   u) USER="$OPTARG" ;;
-  *) echo "Usage: $0 host" && exit 1 ;;
+  *) echo "Usage: $0 host (Horizon v0.3.0)" && exit 1 ;;
   esac
 done
 
@@ -92,7 +93,7 @@ shift $((OPTIND - 1))
 # Get the host argument (first remaining argument after options)
 HOST="$1"
 if [ -z "$HOST" ]; then
-  echo "Host is required. Usage: $0 host"
+  echo "Host is required. Usage: $0 host (Horizon v0.3.0)"
   exit 1
 fi
 

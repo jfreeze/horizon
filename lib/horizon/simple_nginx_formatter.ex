@@ -2,8 +2,9 @@ defmodule Horizon.SimpleNginxFormatter do
   @indent_size 2
 
   @doc """
-  Formats an nginx.conf-like string by:
+  Formats an nginx.conf-like string with proper indentation and spacing.
 
+  Formatting includes:
     - Indenting lines based on '{' and '}'.
     - Inserting a blank line before a line containing '{'
       unless the previous line is blank or a comment.

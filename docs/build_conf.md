@@ -11,6 +11,9 @@ pkg:gmake
 pkg:git
 pkg:erlang-runtime27
 
+# For Tailwind v4
+pkg:npm-node23
+
 # The `path` option sets a runtime path for the script
 # Set the path to erlang so we can install elixir
 path:/usr/local/lib/erlang27/bin

@@ -145,34 +145,100 @@ If you are running multiple applications in your Horizon setup, each application
 
 ## Configuring Tailwind for FreeBSD
 
-The default mix alias `assets.setup` is:
+The default `setup` and `deploy` mix aliases for assets in a Phoenix project are:
 
 ```
 "assets.setup": [
    "tailwind.install --if-missing",
    "esbuild.install --if-missing"
 ],
+"assets.deploy": ["tailwind default", "esbuild default", "phx.digest"]
 ```
 
 However, a tailwind download for FreeBSD is not currently provided by the Tailwind project.
-This is resolved by passing a URL to `tailwind.install` from which to download the tailwind executable.
+This is resolved by passing a URL to `tailwind.install` from which to download the tailwind executable and creating FreeBSD-specific deployment commands.
 
-**Add the `"assets.setup.freebsd"` mix alias to your `mix.exs` file.**
+**Two mix aliases are required for FreeBSD deployment:**
+
+1. `assets.setup.freebsd`: For installing the FreeBSD-compatible Tailwind binary
+2. `assets.deploy.freebsd`: For building and deploying assets on FreeBSD systems
+
+These aliases will be different depending on the version of TailwindCSS you are using.
+
+### For TailwindCSS v3
+
+With TailwindCSS v3, you can use the following configuration:
 
 ```diff
-+  @tailwindcss_freebsd_x64 "https://people.freebsd.org/~dch/pub/tailwind/v$version/tailwindcss-$target"
++ @tailwindcss_freebsd_x64 "https://github.com/jfreeze/tailwind-freebsd-builder/releases/download/$version/tailwindcss-$target"
+# or use files from dch
++ # @tailwindcss_freebsd_x64 "https://people.freebsd.org/~dch/pub/tailwind/v$version/tailwindcss-$target"
   ...
   defp aliases do
     [
       ...
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-+      "assets.setup.freebsd": [
-+        "tailwind.install #{@tailwindcss_freebsd_x64}",
-+        "esbuild.install --if-missing"
-+      ],
++     "assets.setup.freebsd": [
++       "tailwind.install #{@tailwindcss_freebsd_x64}",
++       "esbuild.install --if-missing"
++     ],
++     "assets.deploy.freebsd": [ "assets.deploy" ]
       ...
     ]
   end
+```
+Note: Since the `--if-missing` flag does not work with `tailwind.install` when passing in a download URL, the `build_script.sh` will check if `tailwindcss` is installed before downloading. If it exists, it will not check for the existence of `esbuild`.
+
+### For TailwindCSS v4
+
+Using TailwindCSS v4 requires the `npm-node` package on the build host and a `assets/package.json` file in your project. Create this file with the following structure and your choice of versions:
+
+```json
+{
+  "scripts": {
+    "build:css": "./node_modules/.bin/tailwindcss -i ./css/app.css -o ../priv/static/assets/app.css --minify",
+    "deploy:css": "NODE_ENV=production npm run build:css"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.0.8",
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.16",
+    "detect-libc": "1.0.3",
+    "enhanced-resolve": "^5.18.1"
+  }
+}
+```
+
+Then configure your mix aliases to use npm for asset compilation:
+
+```diff
+  ...
+  defp aliases do
+    [
+      ...
+      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
++     "assets.setup.freebsd": [
++       "cmd --cd assets npm install",
++       "esbuild.install --if-missing"
++     ],
++     "assets.deploy.freebsd": [
++       "cmd --cd assets npm run deploy:css",
++       "esbuild my_app --minify",
++       "phx.digest"
++     ],
+      ...
+    ]
+  end
+```
+
+Although not required, a more sophisticated alternative for `assets.setup.freebsd` is to check for `package-lock.json` and use `npm ci` for each build:
+
+```diff
++     "assets.setup.freebsd": [
++       "cmd --cd assets \"sh -c 'if [ -f package-lock.json ]; then npm ci; else npm install; fi'\"",
++       "esbuild.install --if-missing"
++     ],
 ```
 
 ## Horizon Script Generation

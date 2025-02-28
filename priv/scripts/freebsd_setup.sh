@@ -1,4 +1,5 @@
 #!/bin/sh
+# Generated with Horizon Version: 0.3.0
 
 # Exit immediately if a command exits with a non-zero status
 set -e
@@ -16,7 +17,7 @@ error() {
 
 # Check if the script is being run with a hostname argument
 if [ "$#" -ne 1 ]; then
-  error "Usage: $0 [user@]host"
+  error "Usage: $0 [user@]host (Horizon v0.3.0)"
 fi
 
 HOST="$1"
@@ -150,9 +151,9 @@ fi
 # Final messages
 info "Initial setup complete."
 alert "Please reboot your system and run the following command after rebooting:"
-alert "  ssh $HOST 'doas pkg upgrade -y; doas zfs snapshot zroot/ROOT/default@initial-setup'"
+alert "  ssh ${HOST} 'doas pkg upgrade -y; doas zfs snapshot zroot/ROOT/default@initial-setup'"
 
 EOF
 
 info "Remote installs complete. Reboot, upgrade and snapshot remaining."
-printf "\033[0;33m  RUN:\033[0m ssh $HOST 'doas shutdown -r now'\n"
+printf "\033[0;33m  RUN:\033[0m ssh ${HOST} 'doas shutdown -r now'\n"

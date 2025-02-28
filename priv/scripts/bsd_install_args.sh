@@ -1,15 +1,16 @@
 #!/bin/sh
+# Generated with Horizon Version: 0.3.0
 
 #
 # Parses a configuration file and generate arguments for the installation script
 #
-# Usage: bsd_install_args.sh <config_file>
+# Usage: bsd_install_args.sh <config_file> (Horizon v0.3.0)
 #
 
 CONFIG_FILE="$1"
 
 if [ -z "$CONFIG_FILE" ]; then
-  echo "Usage: installer.sh <config_file>"
+  echo "Usage: installer.sh <config_file> (Horizon v0.3.0)"
   exit 1
 fi
 

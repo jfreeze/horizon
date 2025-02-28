@@ -1,4 +1,5 @@
 #!/bin/sh
+# Generated with Horizon Version: 0.3.0
 
 # Default values
 PGPORT="5432"
@@ -14,6 +15,8 @@ RESET='\033[0m'
 # Function to display usage
 usage() {
   echo "Usage: $0 [-p port] [-U user] [-d database] [--no-owner] backup_file host"
+  echo
+  echo "Horizon v0.3.0"
   echo
   echo "Options:"
   echo "  -p port         PostgreSQL server port (default: 5432)"

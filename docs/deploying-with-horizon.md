@@ -329,6 +329,9 @@ pkg:gmake
 pkg:git
 pkg:erlang-runtime27
 
+# For Tailwind v4
+pkg:npm-node23
+
 # Store the path to erlang for builds via bsd_install.sh
 dot-path:/usr/local/lib/erlang27/bin
 
@@ -351,8 +354,7 @@ To Configure `nginx` we use `Horizon.NginxConfig` module to send the configurati
 In the following example, we configure the `nginx` server to proxy requests to the `my_app1` application running on `demo-web1`. 
 
 ```elixir
-user="admin"
-host="demo-web1"
+user_host="admin@demo-web1"
 
 projects = [
   %Horizon.Project{
@@ -368,10 +370,10 @@ projects = [
     ]
   }
 ]
-Horizon.NginxConfig.send(projects, user, host, action: :restart)
+Horizon.NginxConfig.send(projects, user_host, action: :restart)
 ```
 
-If you want to add a second application `my_app2` to the same application cluster, you can add it to the `projects` list and call `Horizon.NginxConfig.send/4` again.
+If you want to add a second application `my_app2` to the same application cluster, you can add it to the `projects` list and call `Horizon.NginxConfig.send/3` again.
 
 > When running multiple applications on the same host, ensure that the ports are unique for each application.
 
