@@ -15,7 +15,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added ability to build assets with [TailwindCSS v4](README.md#for-tailwindcss-v4).
 - Added `npm-node23` to `build.conf` samples for TailwindCSS v4.
 - Added `--reset` option to `stage` script to clear build artifacts.
+- Added `assets/node_modules` and `assets/package-lock.json` to the stage exclusion list.
 - Added version stamp to all scripts for improved source tracking.
+
+### Fixed
+- Fixed typo in documentation changing `letsencrypt_live` to `letsencrypt_domain`.
+- Fixed docs compilation issue.
+- Fixed incorrect env var override in stage script documentation. Corrected `BUILD_USER_SSH` to `BUILD_HOST_SSH`
 
 
 ## [0.2.7] - 2025-02-01
