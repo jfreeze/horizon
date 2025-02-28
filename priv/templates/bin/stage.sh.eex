@@ -131,13 +131,9 @@ reset_app() {
   fi
 
   echo -e "${GREEN}Removing _build/ directory...${RESET}"
-  ssh "$BUILD_HOST_SSH" "cd '$BUILD_PATH' && rm -rf '$SRC_REPO_DIR/_build'"
-
   echo -e "${GREEN}Removing assets/node_modules/ directory...${RESET}"
-  ssh "$BUILD_HOST_SSH" "cd '$BUILD_PATH' && rm -rf '$SRC_REPO_DIR/assets/node_modules'"
-
   echo -e "${GREEN}Removing assets/package-lock.json file...${RESET}"
-  ssh "$BUILD_HOST_SSH" "cd '$BUILD_PATH' && rm -f '$SRC_REPO_DIR/assets/package-lock.json'"
+  ssh "$BUILD_HOST_SSH" "cd '$BUILD_PATH' && rm -rf _build assets/node_modules assets/package-lock.json"
 
   echo -e "${GREEN}App reset complete.${RESET}"
   return 0
