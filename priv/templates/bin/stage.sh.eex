@@ -57,7 +57,7 @@ echo ""
 # ==============================
 # Exclude Patterns with type prefixes
 # ==============================
-EXCLUDE_PATTERNS="d:assets/node_modules d:.git d:deps d:.elixir_ls d:_build f:*.tmp f:._* f:.DS_Store"
+EXCLUDE_PATTERNS="d:assets/node_modules d:.git d:deps d:.elixir_ls d:_build f:*.tmp f:._* f:.DS_Store f:assets/package-lock.json"
 <%= if @releases_path not in [nil, ""] do %>
 EXCLUDE_PATTERNS="$EXCLUDE_PATTERNS d:<%= @releases_path %>"
 <% end %>
@@ -101,14 +101,45 @@ generate_exclude_options() {
 # Function to display usage
 usage() {
   echo -e "${GREEN}Version: <%= @version %>${RESET}"
-  echo -e "${GREEN}Usage: $0 [--rsync | --tar] [--force]${RESET}"
+  echo -e "${GREEN}Usage: $0 [--rsync | --tar] [--force] [--reset]${RESET}"
+  echo ""
+  echo "Options:"
+  echo "  --rsync    Use rsync for staging"
+  echo "  --tar      Use tar for staging"
+  echo "  --force    Force staging with uncommitted changes"
+  echo "  --reset    Reset the app by clearing _build/, assets/node_modules/, and assets/package-lock.json"
   echo ""
   echo "To override host authentication:"
   echo ""
-  echo -e "${GREEN}Usage: ${YELLOW}BUILD_USER_SSH=[user@]host${RESET} $0 [--rsync | --tar] [--force]"
+  echo -e "${GREEN}Usage: ${YELLOW}BUILD_HOST_SSH=[user@]host${RESET} $0 [--rsync | --tar] [--force]"
   echo ""
 
   exit 1
+}
+
+# Function to reset the app by clearing build directories and files
+reset_app() {
+  echo -e "${YELLOW}Resetting the app...${RESET}"
+
+  # Ask for confirmation
+  read -p "This will remove _build/, assets/node_modules/, and assets/package-lock.json. Continue? (y/n) " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo -e "${GREEN}Reset cancelled.${RESET}"
+    return 1
+  fi
+
+  echo -e "${GREEN}Removing _build/ directory...${RESET}"
+  rm -rf "$SRC_REPO_DIR/_build"
+
+  echo -e "${GREEN}Removing assets/node_modules/ directory...${RESET}"
+  rm -rf "$SRC_REPO_DIR/assets/node_modules"
+
+  echo -e "${GREEN}Removing assets/package-lock.json file...${RESET}"
+  rm -f "$SRC_REPO_DIR/assets/package-lock.json"
+
+  echo -e "${GREEN}App reset complete.${RESET}"
+  return 0
 }
 
 # Function to get the current commit hash
@@ -268,6 +299,7 @@ deploy_files() {
 # ==============================
 # Parse Command-Line Arguments
 # ==============================
+RESET_APP=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
   --rsync)
@@ -280,6 +312,10 @@ while [[ $# -gt 0 ]]; do
     ;;
   --force)
     FORCE_STAGE=1
+    shift
+    ;;
+  --reset)
+    RESET_APP=1
     shift
     ;;
   -h | --help)
@@ -310,6 +346,18 @@ trap "rm -f $LOCK_FILE" EXIT
 # ==============================
 # Main Deployment Steps
 # ==============================
+
+# ==============================
+# Reset App if Requested
+# ==============================
+if [ "$RESET_APP" -eq 1 ]; then
+  reset_app
+  # If only --reset was specified, exit after reset
+  if [ "$STAGING_METHOD" == "auto" ] && [ "$FORCE_STAGE" -eq 0 ]; then
+    echo -e "${GREEN}Reset operation completed. Exiting without staging.${RESET}"
+    exit 0
+  fi
+fi
 
 echo -e "${GREEN}Starting staging process...${RESET}"
 
