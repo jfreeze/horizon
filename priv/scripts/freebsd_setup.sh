@@ -30,7 +30,7 @@ fi
 
 # Run the script on the remote host
 info "Running setup script on remote host $HOST..."
-ssh "$HOST" /bin/sh <<'EOF'
+ssh "$HOST" HOST="$HOST" /bin/sh <<'EOF'
 
 # Exit immediately if a command exits with a non-zero status
 set -e
