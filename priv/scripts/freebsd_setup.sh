@@ -22,6 +22,14 @@ fi
 
 HOST="$1"
 
+info "This script updates the following on the target host:"
+info "  - verifies and corrects ~/.ssh/authorized_keys"
+info "  - updates /etc/ssh/sshd_config"
+info "  - updates /usr/local/etc/doas.con"
+info "  - configures ~/.shrc"
+info "  - configures /boot/loader.conf"
+info "  - runs freebsd-update"
+
 # Ensure doas is installed on the remote host
 info "Ensuring 'doas' is installed on the remote host..."
 if ! ssh "$HOST" command -v doas >/dev/null 2>&1; then
@@ -99,13 +107,36 @@ info "Configuring sshd..."
 SSHD_CONFIG="/etc/ssh/sshd_config"
 if ! grep -Fq "ChallengeResponseAuthentication no" "$SSHD_CONFIG"; then
   doas sh -c "cat <<EOF >> $SSHD_CONFIG
+# Added by Horizon v0.3.0
 PermitUserEnvironment yes
 PasswordAuthentication no
 ChallengeResponseAuthentication no
+KbdInteractiveAuthentication no
+PermitEmptyPasswords no
 PermitRootLogin no
 Protocol 2
 AllowUsers $USERNAME
+#Port 2222
+Ciphers aes256-ctr,aes192-ctr,aes128-ctr
+MACs hmac-sha2-512,hmac-sha2-256
+KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group16-sha512
+LoginGraceTime 30
+MaxAuthTries 3
+X11Forwarding no
+AllowTcpForwarding no
+ClientAliveInterval 300
+ClientAliveCountMax 2
+UseDNS no
 EOF"
+fi
+
+# Reload SSH service to apply changes
+info "Reloading sshd service..."
+if doas service sshd reload; then
+  info "sshd service reloaded successfully."
+else
+  info "sshd service reload failed. Attempting to restart..."
+  doas service sshd restart
 fi
 
 # Set SSH-related permissions
@@ -122,15 +153,6 @@ if ! grep -Fq "autoboot_delay=\"-1\"" "$LOADER_CONF"; then
   doas sh -c "printf '%b' '$LOADER_CONFIG' >> $LOADER_CONF"
 fi
 
-# Reload SSH service to apply changes
-info "Reloading sshd service..."
-if doas service sshd reload; then
-  info "sshd service reloaded successfully."
-else
-  info "sshd service reload failed. Attempting to restart..."
-  doas service sshd restart
-fi
-
 # Update the system non-interactively
 info "Updating the system..."
 
@@ -139,7 +161,6 @@ info "Updating the system..."
 # Suppress output except for errors
 export ASSUME_ALWAYS_YES=YES
 env PAGER=/bin/cat doas /usr/sbin/freebsd-update --not-running-from-cron fetch install
-unset ASSUME_ALWAYS_YES
 
 # Check if freebsd-update was successful
 if [ $? -eq 0 ]; then
@@ -147,6 +168,8 @@ if [ $? -eq 0 ]; then
 else
   error "No updates available."
 fi
+
+unset ASSUME_ALWAYS_YES
 
 # Final messages
 info "Initial setup complete."
