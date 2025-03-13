@@ -11,6 +11,8 @@ defmodule Horizon.Ops.BSD.Utils do
   """
   @spec assigns(atom(), keyword()) :: keyword()
   def assigns(app, opts) do
+    version = Application.get_env(:horizon, :version, "unknown")
+
     [
       assigns: [
         app: app,
@@ -22,7 +24,7 @@ defmodule Horizon.Ops.BSD.Utils do
         release_commands: opts[:release_commands] || [],
         releases_path: opts[:releases_path],
         is_default?: opts[:is_default?] || false,
-        version: Horizon.MixProject.version()
+        version: version
       ]
     ]
   end
