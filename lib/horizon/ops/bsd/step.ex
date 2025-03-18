@@ -7,17 +7,19 @@ defmodule Horizon.Ops.BSD.Step do
   - `echo/1` - Echo the release name and options to the console.
   - `merge_defaults/1` - Merges the Horizon.Ops defaults into the release options.
   - `setup_rcd/1` - Create the rc.d script for the release.
+  - `setup_env/2` - Configure the environment file path for the release.
 
   """
 
   @doc """
-  Run the merge and rcd release steps.
+  Run the merge, env, and rcd release steps.
   """
   @spec setup(Mix.Release.t()) :: Mix.Release.t()
   def setup(%Mix.Release{} = release) do
     release =
       release
       |> merge_defaults()
+      |> setup_env()
       |> setup_rcd()
 
     release
@@ -80,6 +82,39 @@ defmodule Horizon.Ops.BSD.Step do
     release.options
     |> Keyword.get(:rel_templates_path, "rel/overlays")
     |> get_path()
+  end
+
+  @doc """
+  Configure the environment file path for the release.
+
+  This function sets the environment file path in the release options.
+  The path is used in the build script to source environment variables
+  needed during compilation, especially when using Application.compile_env.
+
+  ## Parameters
+
+    * `release` - The release configuration
+    * `env_path` - The path to the environment file (default: "rel/overlays/.env")
+
+  ## Examples
+
+      steps: [
+        &Horizon.Ops.BSD.Step.setup/1,
+        &(&1 |> Horizon.Ops.BSD.Step.setup_env("path/to/custom/env")),
+        :assemble,
+        :tar
+      ]
+
+  """
+  @spec setup_env(Mix.Release.t(), String.t()) :: Mix.Release.t()
+  def setup_env(%Mix.Release{options: options} = release, env_path \\ "rel/overlays/.env") do
+    IO.puts(
+      "#{IO.ANSI.yellow()}[INFO] Setting environment file path to #{env_path}#{IO.ANSI.reset()}"
+    )
+
+    # Store the env_path in the release options
+    updated_options = Keyword.put(options, :env_path, env_path)
+    %{release | options: updated_options}
   end
 
   defp get_path([rel_template_path | _]), do: rel_template_path

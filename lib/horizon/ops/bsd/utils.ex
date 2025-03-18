@@ -24,7 +24,8 @@ defmodule Horizon.Ops.BSD.Utils do
         release_commands: opts[:release_commands] || [],
         releases_path: opts[:releases_path],
         is_default?: opts[:is_default?] || false,
-        version: version
+        version: version,
+        env_path: opts[:env_path]
       ]
     ]
   end
