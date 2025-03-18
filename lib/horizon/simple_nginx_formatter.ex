@@ -24,12 +24,12 @@ defmodule Horizon.SimpleNginxFormatter do
   end
 
   # When there's no more input lines, we're done.
-  defp do_format([], _current_indent, acc), do: Enum.reverse(acc)
+  defp do_format([], _current_indent, acc), do: acc
 
   # When there's exactly one line left, handle it (with no "look ahead").
   defp do_format([line], current_indent, acc) do
     {new_acc, _new_indent} = handle_line(line, current_indent, acc, nil)
-    Enum.reverse(new_acc)
+    new_acc
   end
 
   # When there's at least two lines, we can "look ahead" at `next_line`.

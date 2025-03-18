@@ -20,15 +20,7 @@ defmodule Horizon.Ops.BSD.Step do
       |> merge_defaults()
       |> setup_rcd()
 
-      release
-    rescue
-      e ->
-        IO.puts(
-          "#{IO.ANSI.red()}[ERROR] Failed to setup release: #{inspect(e)}#{IO.ANSI.reset()}"
-        )
-
-        release
-    end
+    release
   end
 
   @doc """
@@ -62,35 +54,26 @@ defmodule Horizon.Ops.BSD.Step do
   """
   @spec setup_rcd(Mix.Release.t()) :: Mix.Release.t()
   def setup_rcd(%Mix.Release{name: name, options: options} = release) do
-    try do
-      overwrite = Keyword.get(options, :overwrite, false)
+    overwrite = Keyword.get(options, :overwrite, false)
 
-      IO.puts("#{IO.ANSI.yellow()}[INFO] Creating rc.d script for #{name}#{IO.ANSI.reset()}")
+    IO.puts("#{IO.ANSI.yellow()}[INFO] Creating rc.d script for #{name}#{IO.ANSI.reset()}")
 
-      rel_template_path = get_rel_template_path(release)
-      dir = Path.join(rel_template_path, "rc_d")
-      File.mkdir_p(dir)
-      file = Path.join(dir, "#{name}")
+    rel_template_path = get_rel_template_path(release)
+    dir = Path.join(rel_template_path, "rc_d")
+    File.mkdir_p(dir)
+    file = Path.join(dir, "#{name}")
 
-      Horizon.Ops.Utils.create_file_from_template(
-        Horizon.Ops.BSD.Utils.get_src_tgt(:rc_d, name),
-        name,
-        overwrite,
-        true,
-        options,
-        &Horizon.Ops.BSD.Utils.assigns/2,
-        fn _app, _opts -> file end
-      )
+    Horizon.Ops.Utils.create_file_from_template(
+      Horizon.Ops.BSD.Utils.get_src_tgt(:rc_d, name),
+      name,
+      overwrite,
+      true,
+      options,
+      &Horizon.Ops.BSD.Utils.assigns/2,
+      fn _app, _opts -> file end
+    )
 
-      release
-    rescue
-      e ->
-        IO.puts(
-          "#{IO.ANSI.red()}[ERROR] Failed to setup rc.d script: #{inspect(e)}#{IO.ANSI.reset()}"
-        )
-
-        release
-    end
+    release
   end
 
   defp get_rel_template_path(release) do
