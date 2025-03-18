@@ -7,7 +7,6 @@ defmodule Horizon.Ops.BSD.Step do
   - `echo/1` - Echo the release name and options to the console.
   - `merge_defaults/1` - Merges the Horizon.Ops defaults into the release options.
   - `setup_rcd/1` - Create the rc.d script for the release.
-  - `setup_env/2` - Configure the environment file path for the release.
 
   """
 
@@ -19,7 +18,6 @@ defmodule Horizon.Ops.BSD.Step do
     release =
       release
       |> merge_defaults()
-      |> setup_env()
       |> setup_rcd()
 
     release
