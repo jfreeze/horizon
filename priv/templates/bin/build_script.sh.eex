@@ -25,7 +25,9 @@ printf "${GREEN}=== Starting Build Process ===${RESET}\n"
 puts "info" "Setting up assets"
 
 puts "info" "Install local.hex"
-. <%= @env_path %>
+if [ -f <%= @env_path %> ]; then
+  . <%= @env_path %>
+fi
 MIX_ENV=prod mix deps.clean <%= @app %> --build
 MIX_ENV=prod mix local.hex --force
 MIX_ENV=prod mix deps.get --only prod

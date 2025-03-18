@@ -111,5 +111,6 @@ This will configure the release to use the environment file at "path/to/custom/e
 - [x] Update module documentation
 - [x] Update `assigns/2` function in `Horizon.Ops.BSD.Utils` module
 - [x] Modify build script template
+- [x] Add file existence check before sourcing environment file in build script
 - [x] Update `setup/1` function
 - [x] Update documentation in `mix horizon.init` task
