@@ -25,7 +25,7 @@ printf "${GREEN}=== Starting Build Process ===${RESET}\n"
 puts "info" "Setting up assets"
 
 puts "info" "Install local.hex"
-. <%= @env_path || "rel/overlays/.env" %>
+. <%= @env_path %>
 MIX_ENV=prod mix deps.clean <%= @app %> --build
 MIX_ENV=prod mix local.hex --force
 MIX_ENV=prod mix deps.get --only prod

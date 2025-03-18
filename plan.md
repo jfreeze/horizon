@@ -52,7 +52,7 @@ def project do
         # ...
         steps: [
           &Horizon.Ops.BSD.Step.setup/1,
-          &(&1 |> Horizon.Ops.BSD.Step.setup_env("path/to/custom/env")),
+          &(Horizon.Ops.BSD.Step.setup_env(&1, "path/to/custom/env")),
           :assemble,
           :tar
         ]

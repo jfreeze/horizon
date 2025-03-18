@@ -100,7 +100,14 @@ defmodule Horizon.Ops.BSD.Step do
 
       steps: [
         &Horizon.Ops.BSD.Step.setup/1,
-        &(&1 |> Horizon.Ops.BSD.Step.setup_env("path/to/custom/env")),
+        &(Horizon.Ops.BSD.Step.setup_env(&1, "path/to/custom/env")),
+        :assemble,
+        :tar
+      ]
+
+    # or with the default path
+      steps: [
+        &Horizon.Ops.BSD.Step.setup/1,
         :assemble,
         :tar
       ]
