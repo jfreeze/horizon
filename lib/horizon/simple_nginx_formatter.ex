@@ -108,9 +108,6 @@ defmodule Horizon.SimpleNginxFormatter do
     end
   end
 
-  # Always insert a blank line if the last line isn't already blank.
-  defp maybe_insert_blank_line([]), do: [""]
-
   defp maybe_insert_blank_line(acc) do
     case List.last(acc) do
       "" -> acc

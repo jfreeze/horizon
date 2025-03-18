@@ -21,7 +21,8 @@ defmodule Horizon.Ops.BSD.StepTest do
           {:bin_path, "bin"},
           {:build_path, "/usr/local/opt/my_app/build"},
           {:releases_path, ".releases"},
-          {:build_host_ssh, "USER@HOSTUNKNOWN"}
+          {:build_host_ssh, "USER@HOSTUNKNOWN"},
+          {:env_path, nil}
         ]
       }
 
@@ -54,7 +55,8 @@ defmodule Horizon.Ops.BSD.StepTest do
           bin_path: "bin",
           build_path: "/usr/local/opt/my_app/build",
           releases_path: ".releases",
-          build_host_ssh: "USER@HOSTUNKNOWN"
+          build_host_ssh: "USER@HOSTUNKNOWN",
+          env_path: nil
         ],
         overlays: nil,
         steps: nil
@@ -73,7 +75,8 @@ defmodule Horizon.Ops.BSD.StepTest do
         applications: [:my_custom_app],
         options: [
           path: "/usr/phoenix/my_app",
-          bin_path: "bin_myapp"
+          bin_path: "bin_myapp",
+          env_path: "foo/bar"
         ]
       }
 
@@ -92,7 +95,8 @@ defmodule Horizon.Ops.BSD.StepTest do
           releases_path: ".releases",
           build_host_ssh: "USER@HOSTUNKNOWN",
           path: "/usr/phoenix/my_app",
-          bin_path: "bin_myapp"
+          bin_path: "bin_myapp",
+          env_path: "foo/bar"
         ],
         overlays: nil,
         steps: nil

@@ -12,7 +12,8 @@ defmodule Horizon.Ops.BSD.ConfigTest do
           {:bin_path, "bin"},
           {:build_path, "/usr/local/opt/my_app/build"},
           {:releases_path, ".releases"},
-          {:build_host_ssh, "USER@HOSTUNKNOWN"}
+          {:build_host_ssh, "USER@HOSTUNKNOWN"},
+          {:env_path, nil}
         ]
       ]
 
@@ -35,6 +36,7 @@ defmodule Horizon.Ops.BSD.ConfigTest do
           {:build_path, "/usr/local/opt/my_app/build"},
           {:releases_path, ".releases"},
           {:build_host_ssh, "USER@HOSTUNKNOWN"},
+          {:env_path, nil},
           {:name, :my_app},
           {:version, "1.0.0"},
           {:path, "/some/full/path/my_app"},
