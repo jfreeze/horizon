@@ -121,7 +121,9 @@ defmodule Horizon.Ops.BSD.Step do
 
     # Store the env_path in the release options
     updated_options = Keyword.put(options, :env_path, env_path)
+
     %{release | options: updated_options}
+    |> dbg()
   end
 
   defp get_path([rel_template_path | _]), do: rel_template_path
