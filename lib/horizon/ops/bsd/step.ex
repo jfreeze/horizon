@@ -20,7 +20,15 @@ defmodule Horizon.Ops.BSD.Step do
       |> merge_defaults()
       |> setup_rcd()
 
-    release
+      release
+    rescue
+      e ->
+        IO.puts(
+          "#{IO.ANSI.red()}[ERROR] Failed to setup release: #{inspect(e)}#{IO.ANSI.reset()}"
+        )
+
+        release
+    end
   end
 
   @doc """
@@ -54,74 +62,41 @@ defmodule Horizon.Ops.BSD.Step do
   """
   @spec setup_rcd(Mix.Release.t()) :: Mix.Release.t()
   def setup_rcd(%Mix.Release{name: name, options: options} = release) do
-    overwrite = Keyword.get(options, :overwrite, false)
+    try do
+      overwrite = Keyword.get(options, :overwrite, false)
 
-    IO.puts("#{IO.ANSI.yellow()}[INFO] Creating rc.d script for #{name}#{IO.ANSI.reset()}")
+      IO.puts("#{IO.ANSI.yellow()}[INFO] Creating rc.d script for #{name}#{IO.ANSI.reset()}")
 
-    rel_template_path = get_rel_template_path(release)
-    dir = Path.join(rel_template_path, "rc_d")
-    File.mkdir_p(dir)
-    file = Path.join(dir, "#{name}")
+      rel_template_path = get_rel_template_path(release)
+      dir = Path.join(rel_template_path, "rc_d")
+      File.mkdir_p(dir)
+      file = Path.join(dir, "#{name}")
 
-    Horizon.Ops.Utils.create_file_from_template(
-      Horizon.Ops.BSD.Utils.get_src_tgt(:rc_d, name),
-      name,
-      overwrite,
-      true,
-      options,
-      &Horizon.Ops.BSD.Utils.assigns/2,
-      fn _app, _opts -> file end
-    )
+      Horizon.Ops.Utils.create_file_from_template(
+        Horizon.Ops.BSD.Utils.get_src_tgt(:rc_d, name),
+        name,
+        overwrite,
+        true,
+        options,
+        &Horizon.Ops.BSD.Utils.assigns/2,
+        fn _app, _opts -> file end
+      )
 
-    release
+      release
+    rescue
+      e ->
+        IO.puts(
+          "#{IO.ANSI.red()}[ERROR] Failed to setup rc.d script: #{inspect(e)}#{IO.ANSI.reset()}"
+        )
+
+        release
+    end
   end
 
   defp get_rel_template_path(release) do
     release.options
     |> Keyword.get(:rel_templates_path, "rel/overlays")
     |> get_path()
-  end
-
-  @doc """
-  Configure the environment file path for the release.
-
-  This function sets the environment file path in the release options.
-  The path is used in the build script to source environment variables
-  needed during compilation, especially when using Application.compile_env.
-
-  ## Parameters
-
-    * `release` - The release configuration
-    * `env_path` - The path to the environment file (default: "rel/overlays/.env")
-
-  ## Examples
-
-      steps: [
-        &Horizon.Ops.BSD.Step.setup/1,
-        &(Horizon.Ops.BSD.Step.setup_env(&1, "path/to/custom/env")),
-        :assemble,
-        :tar
-      ]
-
-    # or with the default path
-      steps: [
-        &Horizon.Ops.BSD.Step.setup/1,
-        :assemble,
-        :tar
-      ]
-
-  """
-  @spec setup_env(Mix.Release.t(), String.t()) :: Mix.Release.t()
-  def setup_env(%Mix.Release{options: options} = release, env_path \\ "rel/overlays/.env") do
-    IO.puts(
-      "#{IO.ANSI.yellow()}[INFO] Setting environment file path to #{env_path}#{IO.ANSI.reset()}"
-    )
-
-    # Store the env_path in the release options
-    updated_options = Keyword.put(options, :env_path, env_path)
-
-    %{release | options: updated_options}
-    |> dbg()
   end
 
   defp get_path([rel_template_path | _]), do: rel_template_path
