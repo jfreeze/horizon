@@ -17,6 +17,7 @@ defmodule Horizon.Ops.BSD.Config do
           build_path: "/usr/local/opt/my_app/build",
           releases_path: ".releases",
           build_host_ssh: "USER@HOSTUNKNOWN",
+          env_path: "rel/overlays/.env",
           path: "/usr/apps/my_app"
         ]
       ]
@@ -28,6 +29,7 @@ defmodule Horizon.Ops.BSD.Config do
           build_path: "/usr/local/opt/my_app/build",
           releases_path: ".releases",
           build_host_ssh: "USER@HOSTUNKNOWN",
+          env_path: "rel/overlays/.env"
         ]
       ]
 
@@ -70,6 +72,7 @@ defmodule Horizon.Ops.BSD.Config do
           build_path: "/usr/local/opt/foo/build",
           releases_path: ".releases",
           build_host_ssh: "USER@HOSTUNKNOWN",
+          env_path: "rel/overlays/.env"
         ]
 
   """
@@ -84,7 +87,8 @@ defmodule Horizon.Ops.BSD.Config do
       bin_path: "bin",
       build_path: "/usr/local/opt/#{name}/build",
       releases_path: ".releases",
-      build_host_ssh: "USER@HOSTUNKNOWN"
+      build_host_ssh: "USER@HOSTUNKNOWN",
+      env_path: "rel/overlays/.env"
     ]
   end
 end

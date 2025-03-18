@@ -47,6 +47,8 @@ defmodule Mix.Tasks.Horizon.Init do
   - `releases_path`: `[.releases]`
     - The directory where releases are stored on the local host. The build script places the release tarball in this directory and the deploy
   script copies the release from this directory.
+  - `env_path`: `[rel/overlays/.env]`
+    - The path to the environment file that is sourced during the build process. This is particularly important when using `Application.compile_env` as the environment variables are required for compilation.
 
 
   ### Files Created
