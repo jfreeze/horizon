@@ -294,7 +294,7 @@ defmodule Horizon.NginxConfig do
     end
   end
 
-  @spec render_partial(String.t(), map()) :: String.t()
+  @spec render_partial(atom(), keyword()) :: String.t()
   def render_partial(partial_name, assigns) do
     partial_path = template_path(partial_name)
     EEx.eval_file(partial_path, assigns)

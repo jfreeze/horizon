@@ -97,6 +97,7 @@ and to create the run control script](Horizon.Ops.BSD.Step.html) in the `rel/ove
           # app_path: "/usr/local/my_app",
           # bin_path: "bin",
           # build_path: "/usr/local/opt/my_app/build",
+          # env_path: "rel/overlays/.env",
           # release_commands: ["migrate"],
           # releases_path: ".releases",
           steps: [

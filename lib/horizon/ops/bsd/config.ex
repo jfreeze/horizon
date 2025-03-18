@@ -88,7 +88,7 @@ defmodule Horizon.Ops.BSD.Config do
       build_path: "/usr/local/opt/#{name}/build",
       releases_path: ".releases",
       build_host_ssh: "USER@HOSTUNKNOWN",
-      env_path: "rel/overlays/.env"
+      env_path: nil
     ]
   end
 end
