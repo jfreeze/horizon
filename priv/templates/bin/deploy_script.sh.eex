@@ -65,7 +65,6 @@ doas service $APP restart
 
 echo ""
 printf "${GREEN}App '$APP' deployed successfully.${RESET}\n"
-printf "${GREEN}    VERSION:  <%= @version %>${RESET}\n"
 printf "${GREEN}    RELEASE:  $RELEASE${RESET}\n"
 printf "${GREEN}    PATH:     $APP_PATH/bin/${APP}${RESET}\n"
 echo ""
