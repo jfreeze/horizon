@@ -192,6 +192,40 @@ Note: Since the `--if-missing` flag does not work with `tailwind.install` when p
 
 ### For TailwindCSS v4
 
+Recently it has been realized that the linux release of tailwindcss v4 can be used for FreeBSD. 
+
+More detailed docs to follow, but the gist is to do the following:
+```shell
+doas pkg install -y linux_base-rl9
+doas service linux start
+```
+
+Download a tailwind for your architecture:
+```shell
+curl -#LO https://github.com/tailwindlabs/tailwindcss/releases/download/v4.0.13/tailwindcss-linux-arm64
+```
+or
+```shell
+curl -#LO https://github.com/tailwindlabs/tailwindcss/releases/download/v4.0.13/tailwindcss-linux-x64
+```
+
+Set the file to executable:
+
+```shell
+chmod +x tailwindcss-linux-arm64
+brandelf -t Linux tailwindcss-linux-arm64
+./tailwindcss-linux-arm64 -h
+```
+or for x86_64
+
+```shell
+chmod +x tailwindcss-linux-x64
+brandelf -t Linux tailwindcss-linux-x64
+./tailwindcss-linux-x64 -h
+```
+
+#### Legacy installation instructions for TailwindCSS v4
+
 Using TailwindCSS v4 requires the `npm-node` package on the build host and a `assets/package.json` file in your project. Create this file with the following structure and your choice of versions:
 
 ```json

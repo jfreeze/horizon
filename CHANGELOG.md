@@ -4,12 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## [0.3.1 unreleased]
 ### Fixed
 - Fixed missing host in final instructions at the end of freebsd_setup.sh
 
 ### Added
 - Added example `release_commands: ["migrate"]` to README.md as a better default than `[""]`.
+- Added mix task `horizon.git.gen.git_ref` convenience task to write the git ref to a file that can be used as part of the version. It is the users responsibility to add the file to .gitignore.
+- Added `env_path` so that builds that use `compile_env` may load the environment from a file so compiling can succeed.
+- Added `mix deps.clean <@app> --build` to the build stage to automatically recover from changed environment variables.
 
 
 ## [0.3.0] - 2025-02-27
@@ -150,6 +153,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Basic support for PostgreSQL installation and configuration on FreeBSD.
 
 [Unreleased]: https://github.com/jfreeze/horizon/compare/v0.1.1...HEAD
+[0.3.1]: https://github.com/jfreeze/horizon/tree/0.3.1
 [0.3.0]: https://github.com/jfreeze/horizon/tree/0.3.0
 [0.2.7]: https://github.com/jfreeze/horizon/tree/0.2.7
 [0.2.6]: https://github.com/jfreeze/horizon/tree/0.2.6
