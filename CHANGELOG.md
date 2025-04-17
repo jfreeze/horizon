@@ -7,18 +7,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [unreleased] 
 
 
+
 ## [0.3.4] - 2025-04-17
+
 ### Fixed
 - Fixed reference to `/bin/bash` in stage script to be `/bin/sh` for FreeBSD.
-- Fixed `build` and `build_script` to properly return exit codes. Build failures and now be relied on before deploying.
+- Fixed `build` and `build_script` to properly return exit codes. Build failures can now be relied on before deploying.
+
 
 
 ## [0.3.3] - 2025-03-18
+
 ### Changed
 - Removed confusing VERSION from deploy script output.
 
 
+
 ## [0.3.2] - 2025-03-18
+
 ### Fixed
 - Fixed missing host in final instructions at the end of freebsd_setup.sh
 
@@ -30,7 +36,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added quick example of installing TailwindCSS v4 with `linux` server.
 
 
+
 ## [0.3.0] - 2025-02-27
+
 ### Changed
 - Combined user and host changing Horizon.NginxConf.send/4 to Horizon.NginxConf.send/3
 - Now require the mix alias `assets.setup.freebsd` to accommodate TailwindCSS v3 and v4.
@@ -49,12 +57,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Fixed incorrect env var override in stage script documentation. Corrected `BUILD_USER_SSH` to `BUILD_HOST_SSH`
 
 
+
 ## [0.2.7] - 2025-02-01
+
 ### Fixed
 - Fixed issue in `Horizon.NginxConf.generate` where the static file config was not redirecting to https.
 
 
+
 ## [0.2.6] - 2025-01-29
+
 ### Added
 - `Horizon.Project.static_index` is available to set a static index file. Useful for maintenance periods.
 - Option `Horizon.Project.static_index_root` is available to set the root directory for the static index file.
@@ -71,13 +83,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Updated `proxy-conf.livemd` sample.
 
 
+
 ## [0.2.5] - 2024-12-05
+
 ### Added
 - Added `-n` option to `restore_database.sh` to activate the `--no-owner` option on `pg_restore`.
 
 
 
 ## [0.2.4] - 2024-12-02
+
 ### Changed
 - Cleaned up Deploying with Horizon docs.
 
@@ -141,6 +156,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 - Updates for adding to Hex
 
+
+
 ## [0.1.1] - 2024-10-29
 ### Added
 - Added zfs_snapshot script
@@ -156,6 +173,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 - Minor bug fixes related to FreeBSD deployment scripts.
+
+
 
 ## [0.1.0] - 2024-10-19
 ### Added
