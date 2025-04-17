@@ -31,7 +31,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 
 ## [0.3.0] - 2025-02-27
-
 ### Changed
 - Combined user and host changing Horizon.NginxConf.send/4 to Horizon.NginxConf.send/3
 - Now require the mix alias `assets.setup.freebsd` to accommodate TailwindCSS v3 and v4.
@@ -51,13 +50,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 
 ## [0.2.7] - 2025-02-01
-
 ### Fixed
 - Fixed issue in `Horizon.NginxConf.generate` where the static file config was not redirecting to https.
 
 
 ## [0.2.6] - 2025-01-29
-
 ### Added
 - `Horizon.Project.static_index` is available to set a static index file. Useful for maintenance periods.
 - Option `Horizon.Project.static_index_root` is available to set the root directory for the static index file.
