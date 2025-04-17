@@ -78,7 +78,7 @@ defmodule Horizon.Ops.Utils.Test do
 
     test "sets executable permission when specified", %{tmp_dir: tmp_dir} do
       file = Path.join(tmp_dir, "test_file.sh")
-      data = "#!/bin/bash\necho 'Hello World'"
+      data = "#!/bin/sh\necho 'Hello World'"
 
       output =
         capture_io(fn ->
@@ -210,7 +210,7 @@ defmodule Horizon.Ops.Utils.Test do
     test "sets executable permission when specified", %{tmp_dir: tmp_dir} do
       source = Path.join(tmp_dir, "source_script.sh")
       target = Path.join(tmp_dir, "target_script.sh")
-      File.write!(source, "#!/bin/bash\necho 'Hello World'")
+      File.write!(source, "#!/bin/sh\necho 'Hello World'")
 
       output =
         capture_io(fn ->
@@ -218,7 +218,7 @@ defmodule Horizon.Ops.Utils.Test do
         end)
 
       assert File.exists?(target)
-      assert File.read!(target) == "#!/bin/bash\necho 'Hello World'"
+      assert File.read!(target) == "#!/bin/sh\necho 'Hello World'"
       assert (File.stat!(target).mode &&& 0o111) != 0
       assert output =~ "\e[32mCreated   \e[0m#{target}"
     end

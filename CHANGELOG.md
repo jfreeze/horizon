@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased] 
+
+
+## [0.3.4] - 2025-04-17
+### Fixed
+- Fixed reference to `/bin/bash` in stage script to be `/bin/sh` for FreeBSD.
+- Fixed `build` and `build_script` to properly return exit codes. Build failures and now be relied on before deploying.
+
+
 ## [0.3.3] - 2025-03-18
 ### Changed
 - Removed confusing VERSION from deploy script output.
@@ -18,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Added mix task `horizon.git.gen.git_ref` convenience task to write the git ref to a file that can be used as part of the version. It is the users responsibility to add the file to .gitignore.
 - Added `env_path` so that builds that use `compile_env` may load the environment from a file so compiling can succeed.
 - Added `mix deps.clean <@app> --build` to the build stage to automatically recover from changed environment variables.
+- Added quick example of installing TailwindCSS v4 with `linux` server.
 
 
 ## [0.3.0] - 2025-02-27
@@ -28,7 +38,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Now require the mix alias `assets.deploy.freebsd` for asset deployment on FreeBSD with TailwindCSS v3 and v4 support.
 
 ### Added
-- Added ability to build assets with [TailwindCSS v4](README.md#for-tailwindcss-v4).
+- Added ability to build assets with [TailwindCSS v4](Projects/dev/Horizon%20Project/horizon/README.md#for-tailwindcss-v4).
 - Added `npm-node23` to `build.conf` samples for TailwindCSS v4.
 - Added `--reset` option to `stage` script to clear build artifacts.
 - Added `assets/node_modules` and `assets/package-lock.json` to the stage exclusion list.
@@ -158,7 +168,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Basic support for PostgreSQL installation and configuration on FreeBSD.
 
 [Unreleased]: https://github.com/jfreeze/horizon/compare/v0.1.1...HEAD
-[0.3.2]: https://github.com/jfreeze/horizon/tree/0.3.2
+[0.3.4]: https://github.com/jfreeze/horizon/tree/0.3.4
+[0.3.3]: https://github.com/jfreeze/horizon/tree/0.3.3
 [0.3.0]: https://github.com/jfreeze/horizon/tree/0.3.0
 [0.2.7]: https://github.com/jfreeze/horizon/tree/0.2.7
 [0.2.6]: https://github.com/jfreeze/horizon/tree/0.2.6

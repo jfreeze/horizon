@@ -71,17 +71,16 @@ mix_release() {
 
 puts "info" "Creating/Updating the release"
 
-create_app_dir
-mix_assets_setup_freebsd
-mix_phx_digest_clean
-mix_assets_deploy
-mix_release
-
-# move this to deploy/release
-# sysrc <%= @app %>_enable="YES"
-# add_user <%= @app %>
-
-version="$(cut -d' ' -f2 "<%= @app_path %>/releases/start_erl.data")"
+if create_app_dir && \
+   mix_assets_setup_freebsd && \
+   mix_phx_digest_clean && \
+   mix_assets_deploy && \
+   mix_release; then
+  version="$(cut -d' ' -f2 "<%= @app_path %>/releases/start_erl.data")"
+else
+  puts "error" "Build process failed"
+  exit 1
+fi
 
 # App is in folder <%= @app_path %> <%= @app %>-$version.tar.gz
 # App is ready for deployment to another host or started on the build host.
