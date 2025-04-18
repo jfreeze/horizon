@@ -13,14 +13,19 @@
 #    # Version: <%= @version %>
 #
 
-set -e
-
 export SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 BUILD_HOST_SSH="${BUILD_HOST_SSH:-<%= @build_host_ssh %>}"
-BUILD_SCRIPT="${SCRIPT_DIR}/build_script-<%= @app %>.sh"
 
-ssh ${BUILD_HOST_SSH} 'export PATH=$(cat .path):$PATH; (cd <%= @build_path %>; MIX_ENV=prod ./<%= @bin_path %>/build_script-<%= @app %>.sh)'
+ssh ${BUILD_HOST_SSH} 'export PATH=$(cat .path):$PATH; (cd <%= @build_path %>; MIX_ENV=prod ./<%= @bin_path %>/build_script-<%= @app %>.sh)' 2>&1
+ssh_exit_code=$?
+
+if [ $ssh_exit_code -ne 0 ]; then
+  echo "Build script failed with exit code $ssh_exit_code on ${BUILD_HOST_SSH}"
+  echo "Error building <%= @app %>"
+  exit $ssh_exit_code
+fi
+
 version=$(ssh ${BUILD_HOST_SSH} "cat <%= @app_path %>/releases/start_erl.data")
 
 if [ -z "$version" ]; then

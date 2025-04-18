@@ -200,6 +200,12 @@ doas pkg install -y linux_base-rl9
 doas service linux start
 ```
 
+If the installation fails, you may need to add support for the 64-bit Linux kernel with:
+```shell
+doas kldload linux64
+doas sysrc linux_enable="YES"
+```
+
 Download a tailwind for your architecture:
 ```shell
 curl -#LO https://github.com/tailwindlabs/tailwindcss/releases/download/v4.0.13/tailwindcss-linux-arm64
